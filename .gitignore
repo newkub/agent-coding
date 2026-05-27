@@ -1,0 +1,40 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Agent TUI specific
+.agent-tui/
+sessions.json
+*.toml.bak
+
+# Logs
+logs/
+*.trace
+
+

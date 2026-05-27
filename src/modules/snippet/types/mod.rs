@@ -1,0 +1,1 @@
+// Snippet module type aliases

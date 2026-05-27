@@ -1,0 +1,133 @@
+[package]
+name = "agent-tui"
+description = "Terminal-based AI assistant interface with clean architecture"
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["tui", "terminal", "ai", "assistant", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "agent-tui"
+path = "src/main.rs"
+
+[lib]
+name = "agent_tui"
+path = "src/lib.rs"
+
+[package.metadata.scripts]
+# Core scripts (Minimal)
+dev = "cargo run --bin agent-tui"
+build = "cargo build --release"
+typecheck = "cargo check"
+lint = "cargo clippy --all-targets --all-features"
+format = "cargo fmt"
+test = "cargo test"
+verify = "cargo clippy --all-targets --all-features && cargo check && cargo test"
+ci = "cargo clippy --all-targets --all-features && cargo check && cargo test && cargo build --release"
+
+# Standard scripts
+test_watch = "cargo watch --test"
+test_coverage = "cargo llvm-cov --lcov --output-path lcov.info"
+deps_analyze = "cargo outdated"
+deps_update = "cargo update"
+clean = "cargo clean"
+
+# Additional scripts (kept for convenience)
+build_dev = "cargo build"
+format_check = "cargo fmt --check"
+run = "cargo run --bin agent-tui"
+watch = "cargo watch --bin agent-tui"
+doc = "cargo doc --no-deps --open"
+
+[dependencies]
+# Workspace dependencies
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+reqwest = { workspace = true }
+async-trait = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# TUI dependencies
+ratatui = "0.30.0"
+crossterm = "0.29.0"
+tokio-stream = "0.1.18"
+
+# CLI dependencies
+clap = { version = "4.6.1", features = ["derive"] }
+
+# Configuration
+toml = "1.1.2+spec-1.1.0"
+
+# Additional dependencies
+regex = "1.12.3"
+num-traits = "0.2.19"
+rand = "0.10.1"
+serde_yaml = "0.9.34+deprecated"
+dirs = "6.0.0"
+terminal_size = "0.4.4"
+textwrap = "0.16.2"
+glob = "0.3.3"
+
+# Cryptographic utilities
+sha2 = "0.11.0"
+hex = "0.4.3"
+base64 = "0.22.1"
+aes-gcm = "0.10.3"
+
+# Database
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "tls-rustls", "sqlite"], default-features = false }
+
+# Git
+git2 = "0.21.0"
+
+# AI providers
+openai = "1.1.1"
+async-openai = "0.40.2"
+
+# LSP
+lsp-types = "0.97.0"
+tower-lsp = "0.20.0"
+jsonrpc = "0.20.0"
+
+# Cron scheduling
+cron = "0.16.0"
+
+# WASM plugin system (temporarily disabled due to toolchain memory issues)
+# wasmtime = "25.0"
+# wasmtime-wasi = "25.0"
+
+# Cache for offline mode
+moka = { version = "0.12.15", features = ["future"] }
+
+# Search and parsing
+# (regex already defined above)
+
+# Markdown parsing
+pulldown-cmark = "0.13.4"
+
+# File system operations
+walkdir = "2.5.0"
+
+# Temporary file handling
+tempfile = "3.27.0"
+
+# Performance optimization
+once_cell = "1.20.2"
+
+[features]
+default = []
+terminal = []
+
+[lints]
+workspace = true

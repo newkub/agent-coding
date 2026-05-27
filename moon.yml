@@ -1,0 +1,71 @@
+$schema: https://moonrepo.dev/schemas/project.json
+
+# Project metadata
+stack: systems
+language: rust
+
+# File groups for tasks
+fileGroups:
+  sources:
+    - 'src/**/*.rs'
+    - 'Cargo.toml'
+    - 'Cargo.lock'
+  tests:
+    - 'tests/**/*.rs'
+    - 'src/**/*.rs'
+    - 'Cargo.toml'
+  config:
+    - '.moon/*.yml'
+    - 'moon.yml'
+  docs:
+    - 'README.md'
+    - 'CHANGELOG.md'
+    - 'docs/**/*'
+
+tasks:
+  build:
+    command: 'cargo build --release'
+    inputs:
+      - '@group(sources)'
+    outputs:
+      - 'target/release/agent-tui'
+    options:
+      cache: true
+      
+  build_dev:
+    command: 'cargo build'
+    inputs:
+      - '@group(sources)'
+    outputs:
+      - 'target/debug/agent-tui'
+    options:
+      cache: true
+      
+  dev:
+    command: 'cargo run --bin agent-tui'
+    inputs:
+      - '@group(sources)'
+    options:
+      cache: false
+      
+  run:
+    command: 'cargo run --bin agent-tui'
+    inputs:
+      - '@group(sources)'
+    options:
+      cache: false
+      
+  watch:
+    command: 'cargo watch --bin agent-tui'
+    inputs:
+      - '@group(sources)'
+    options:
+      cache: false
+
+# Environment variables
+env:
+  RUST_LOG: 'info'
+  RUST_BACKTRACE: '1'
+
+# Project dependencies
+dependsOn: []

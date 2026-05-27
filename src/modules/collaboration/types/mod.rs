@@ -1,0 +1,1 @@
+// Collaboration module type aliases
