@@ -2,6 +2,7 @@
 // Centralized DI for testability and flexibility
 
 use crate::adapters::db::share_link_repository::SqliteShareLinkRepository;
+use crate::adapters::db::share_repository::SqliteShareRepository;
 use crate::adapters::external::{
     dependency_parser::DefaultDependencyParser, file_scanner::DefaultFileScanner,
     git_operations::Git2Adapter, github_client::ReqwestGitHubClient,
@@ -17,6 +18,7 @@ use crate::modules::headless::application::usecases::execute_headless::ExecuteHe
 use crate::modules::onboarding::application::usecases::analyze_codebase::AnalyzeCodebaseUseCase;
 use crate::modules::session::ports::SessionRepository;
 use crate::modules::share::ports::ShareLinkRepository as ShareLinkRepoPort;
+use crate::modules::share::ports::ShareRepository as ShareRepoPort;
 use crate::shared::kernel::result::AppResult;
 use sqlx::SqlitePool;
 
@@ -34,6 +36,7 @@ pub struct DIContainer {
     audit_repo: Option<Box<dyn AuditRepository>>,
     collaboration_repo: Option<Box<dyn CollaborationRepository>>,
     share_link_repo: Option<Box<dyn ShareLinkRepoPort>>,
+    share_repo: Option<Box<dyn ShareRepoPort>>,
 
     // External services
     git_adapter: Option<Git2Adapter>,
@@ -57,6 +60,7 @@ impl DIContainer {
             audit_repo: None,
             collaboration_repo: None,
             share_link_repo: None,
+            share_repo: None,
             git_adapter: None,
             github_client: None,
             input_handler: None,
@@ -110,8 +114,13 @@ impl DIContainer {
     pub(crate) async fn init_db(&mut self) -> AppResult<()> {
         if self.share_link_repo.is_none() {
             let pool = SqlitePool::connect("sqlite:share_links.db").await?;
-            let share_link_repo = Box::new(SqliteShareLinkRepository::new(pool));
+            let share_link_repo = Box::new(SqliteShareLinkRepository::new(pool.clone()));
             self.share_link_repo = Some(share_link_repo);
+
+            // Wire ShareRepository (session export/import) on the same pool
+            let share_repo = SqliteShareRepository::new(pool);
+            share_repo.init_table().await?;
+            self.share_repo = Some(Box::new(share_repo));
         }
         Ok(())
     }
@@ -134,6 +143,11 @@ impl DIContainer {
     /// Get share link repository
     pub(crate) fn share_link_repo(&self) -> Option<&Box<dyn ShareLinkRepoPort>> {
         self.share_link_repo.as_ref()
+    }
+
+    /// Get share repository (session export/import)
+    pub(crate) fn share_repo(&self) -> Option<&Box<dyn ShareRepoPort>> {
+        self.share_repo.as_ref()
     }
 
     /// Get git adapter
@@ -201,6 +215,12 @@ impl DIContainer {
     /// Set custom share link repository (for testing)
     pub(crate) fn with_share_link_repo(mut self, repo: Box<dyn ShareLinkRepoPort>) -> Self {
         self.share_link_repo = Some(repo);
+        self
+    }
+
+    /// Set custom share repository (for testing)
+    pub(crate) fn with_share_repo(mut self, repo: Box<dyn ShareRepoPort>) -> Self {
+        self.share_repo = Some(repo);
         self
     }
 }
