@@ -1,5 +1,5 @@
+use crate::modules::audit::domain::models::{Actor, AuditAction, AuditEntry, AuditId, Resource};
 use crate::modules::audit::ports::AuditRepository;
-use crate::modules::audit::domain::models::{AuditEntry, AuditAction, Actor, Resource, AuditId};
 use crate::shared::kernel::result::AppResult;
 use chrono::Utc;
 
@@ -16,17 +16,14 @@ where
     // Side effects (ID generation, timestamp) in application layer
     let id = AuditId::from_string(uuid::Uuid::new_v4().to_string());
     let timestamp = Utc::now();
-    
+
     let entry = AuditEntry::create(id, timestamp, action, actor, resource);
     repo.save(&entry).await?;
     Ok(entry)
 }
 
 /// Use case: Query audit logs
-pub(crate) async fn query_logs<R>(
-    repo: &R,
-    filters: AuditQuery,
-) -> AppResult<Vec<AuditEntry>>
+pub(crate) async fn query_logs<R>(repo: &R, filters: AuditQuery) -> AppResult<Vec<AuditEntry>>
 where
     R: AuditRepository,
 {

@@ -1,8 +1,8 @@
 use crate::modules::ui::application::tab_navigation::NavigationDirection;
 use crate::modules::ui::application::tab_navigators::{
-    navigate_agent_tab, navigate_git_tab, navigate_files_tab, navigate_packages_tab,
-    navigate_terminal_tab, navigate_snippets_tab, navigate_api_tab, navigate_database_tab,
-    navigate_tasks_tab, navigate_notes_tab, navigate_logs_tab, navigate_system_tab,
+    navigate_agent_tab, navigate_api_tab, navigate_database_tab, navigate_files_tab,
+    navigate_git_tab, navigate_logs_tab, navigate_notes_tab, navigate_packages_tab,
+    navigate_snippets_tab, navigate_system_tab, navigate_tasks_tab, navigate_terminal_tab,
 };
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::types::{Column, Tab};

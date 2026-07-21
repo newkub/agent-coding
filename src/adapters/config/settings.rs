@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Application settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppSettings {
     /// UI settings
     pub ui: UISettings,
@@ -123,7 +122,6 @@ pub struct SecuritySettings {
     pub mask_sensitive_data: bool,
 }
 
-
 impl Default for UISettings {
     fn default() -> Self {
         Self {
@@ -199,7 +197,7 @@ impl Default for MemorySettings {
 impl Default for SecuritySettings {
     fn default() -> Self {
         Self {
-            enable_encryption: false, // Disabled by default for backward compatibility
+            enable_encryption: false,  // Disabled by default for backward compatibility
             encryption_password: None, // Should be loaded from env var AGENT_TUI_ENCRYPTION_KEY
             enable_audit_logging: true,
             enable_sandbox: true,

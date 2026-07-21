@@ -1,28 +1,34 @@
-use crate::modules::automation::domain::models::issue_pr::{Issue, AutomationConfig};
+use crate::modules::automation::domain::models::issue_pr::{AutomationConfig, Issue};
 use std::collections::HashMap;
 
 /// Pure function to generate branch name from issue
 pub fn generate_branch_name(issue: &Issue, config: &AutomationConfig) -> String {
     let template = &config.branch_name_template;
     let mut branch_name = template.clone();
-    
+
     // Replace placeholders
     branch_name = branch_name.replace("{number}", &issue.number.to_string());
     branch_name = branch_name.replace("{title}", &slugify(&issue.title));
     branch_name = branch_name.replace("{author}", &slugify(&issue.author));
-    
+
     // Sanitize branch name
     branch_name = branch_name
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' || c == '/' { c } else { '-' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' || c == '/' {
+                c
+            } else {
+                '-'
+            }
+        })
         .collect::<String>()
         .to_lowercase();
-    
+
     // Remove consecutive hyphens
     while branch_name.contains("--") {
         branch_name = branch_name.replace("--", "-");
     }
-    
+
     // Trim hyphens from start/end
     branch_name.trim_matches('-').to_string()
 }
@@ -31,11 +37,11 @@ pub fn generate_branch_name(issue: &Issue, config: &AutomationConfig) -> String 
 pub fn generate_commit_message(issue: &Issue, config: &AutomationConfig) -> String {
     let template = &config.commit_message_template;
     let mut message = template.clone();
-    
+
     message = message.replace("{title}", &issue.title);
     message = message.replace("{number}", &format!("#{}", issue.number));
     message = message.replace("{author}", &issue.author);
-    
+
     // Add issue reference
     format!("{}\n\nCloses #{}", message, issue.number)
 }
@@ -52,33 +58,33 @@ pub fn generate_pr_body(issue: &Issue, config: &AutomationConfig) -> String {
     } else {
         String::new()
     };
-    
+
     body = body.replace("{title}", &issue.title);
     body = body.replace("{number}", &issue.number.to_string());
     body = body.replace("{author}", &issue.author);
     body = body.replace("{body}", &issue.body);
-    
+
     if body.is_empty() {
         body = format!(
             "Closes #{}\n\n{}\n\nAutomated PR from issue #{}",
             issue.number, issue.body, issue.number
         );
     }
-    
+
     body
 }
 
 /// Pure function to extract labels from issue
 pub fn extract_labels(issue: &Issue, config: &AutomationConfig) -> Vec<String> {
     let mut labels = config.default_labels.clone();
-    
+
     // Add labels from issue that are not already in defaults
     for label in &issue.labels {
         if !labels.contains(label) {
             labels.push(label.clone());
         }
     }
-    
+
     labels
 }
 
@@ -90,15 +96,18 @@ pub fn determine_target_branch(issue: &Issue) -> String {
         ("develop", "develop"),
         ("staging", "staging"),
         ("production", "main"),
-    ].iter().cloned().collect();
-    
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
     for label in &issue.labels {
         let label_lower = label.to_lowercase();
         if let Some(branch) = branch_labels.get(label_lower.as_str()) {
             return branch.to_string();
         }
     }
-    
+
     // Default to main
     "main".to_string()
 }
@@ -128,12 +137,12 @@ mod tests {
             "user".to_string(),
             "repo".to_string(),
         );
-        
+
         let config = AutomationConfig {
             branch_name_template: "feature/{number}-{title}".to_string(),
             ..Default::default()
         };
-        
+
         let branch = generate_branch_name(&issue, &config);
         assert!(branch.contains("1"));
         assert!(branch.contains("test-feature"));
@@ -148,12 +157,12 @@ mod tests {
             "user".to_string(),
             "repo".to_string(),
         );
-        
+
         let config = AutomationConfig {
             commit_message_template: "feat: {title}".to_string(),
             ..Default::default()
         };
-        
+
         let message = generate_commit_message(&issue, &config);
         assert!(message.contains("Add new feature"));
         assert!(message.contains("Closes #1"));

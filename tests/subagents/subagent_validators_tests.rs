@@ -1,5 +1,7 @@
+use agent_tui::modules::subagents::domain::models::subagent::{
+    AgentType, Subagent, SubagentConfig, SubagentTask, TaskContext, TaskType,
+};
 use agent_tui::modules::subagents::domain::validators::subagent_validators;
-use agent_tui::modules::subagents::domain::models::subagent::{Subagent, SubagentConfig, SubagentTask, TaskContext, TaskType, AgentType};
 
 #[test]
 fn test_validate_subagent_config_invalid_temperature() {
@@ -43,5 +45,7 @@ fn test_validate_task_context_invalid_repo() {
 
 #[test]
 fn test_validate_task_context_success() {
-    assert!(subagent_validators::validate_task_context(Some("file.rs"), Some("owner/repo")).is_ok());
+    assert!(
+        subagent_validators::validate_task_context(Some("file.rs"), Some("owner/repo")).is_ok()
+    );
 }

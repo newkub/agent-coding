@@ -1,5 +1,5 @@
 use agent_tui::modules::performance::domain::models::metrics::{
-    PerformanceMetrics, PerformanceSnapshot
+    PerformanceMetrics, PerformanceSnapshot,
 };
 
 #[test]

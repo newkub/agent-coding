@@ -1,6 +1,6 @@
+use super::tab_action_types::TabAction;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
-use super::tab_action_types::TabAction;
 
 /// Files tab action handler
 pub(crate) fn handle_files_action(state: &mut AppState, action: TabAction) -> AppResult<()> {

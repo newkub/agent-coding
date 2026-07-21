@@ -1,7 +1,7 @@
 use uuid::Uuid;
 
 use crate::modules::share::domain::models::share_link::ShareLink;
-use crate::modules::share::ports::{ShareLinkRepository, ShareLinkNotifier};
+use crate::modules::share::ports::{ShareLinkNotifier, ShareLinkRepository};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for deactivating a share link
@@ -60,9 +60,7 @@ where
 
     /// Execute the use case to deactivate all share links for a session
     pub(crate) async fn execute_by_session_id(&self, session_id: Uuid) -> Result<(), AppError> {
-        self.repository
-            .deactivate_by_session_id(session_id)
-            .await?;
+        self.repository.deactivate_by_session_id(session_id).await?;
         Ok(())
     }
 }

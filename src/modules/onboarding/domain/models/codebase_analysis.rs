@@ -18,8 +18,7 @@ pub struct CodebaseAnalysis {
 }
 
 /// Project structure information
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ProjectStructure {
     pub root_files: Vec<String>,
     pub directories: Vec<DirectoryInfo>,
@@ -52,8 +51,7 @@ pub struct DependencyInfo {
 }
 
 /// Technology stack
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct TechStack {
     pub languages: Vec<String>,
     pub frameworks: Vec<String>,
@@ -81,8 +79,7 @@ pub enum EntryPointType {
 }
 
 /// Test setup information
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct TestSetup {
     pub has_tests: bool,
     pub test_framework: Option<String>,
@@ -107,27 +104,29 @@ impl CodebaseAnalysis {
     }
 
     pub fn generate_summary(&mut self) {
-        let mut summary = format!(
-            "Project at {}\n",
-            self.project_path.display()
-        );
-        
+        let mut summary = format!("Project at {}\n", self.project_path.display());
+
         summary.push_str(&format!("Total files: {}\n", self.structure.total_files));
         summary.push_str(&format!("Total lines: {}\n", self.structure.total_lines));
-        
+
         if !self.structure.languages.is_empty() {
             summary.push_str("Languages: ");
-            let langs: Vec<_> = self.structure.languages.keys().map(|s| s.as_str()).collect();
+            let langs: Vec<_> = self
+                .structure
+                .languages
+                .keys()
+                .map(|s| s.as_str())
+                .collect();
             summary.push_str(&langs.join(", "));
             summary.push('\n');
         }
-        
+
         if !self.tech_stack.frameworks.is_empty() {
             summary.push_str("Frameworks: ");
             summary.push_str(&self.tech_stack.frameworks.join(", "));
             summary.push('\n');
         }
-        
+
         if !self.entry_points.is_empty() {
             summary.push_str("Entry points: ");
             for ep in &self.entry_points {
@@ -135,19 +134,25 @@ impl CodebaseAnalysis {
             }
             summary.push('\n');
         }
-        
+
         if self.test_setup.has_tests {
             summary.push_str(&format!(
                 "Tests: {} using {}\n",
-                if self.test_setup.has_tests { "Yes" } else { "No" },
-                self.test_setup.test_framework.as_deref().unwrap_or("unknown")
+                if self.test_setup.has_tests {
+                    "Yes"
+                } else {
+                    "No"
+                },
+                self.test_setup
+                    .test_framework
+                    .as_deref()
+                    .unwrap_or("unknown")
             ));
         }
-        
+
         self.summary = summary;
     }
 }
-
 
 impl Default for Dependencies {
     fn default() -> Self {
@@ -158,8 +163,6 @@ impl Default for Dependencies {
         }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -177,13 +180,16 @@ mod tests {
         let mut analysis = CodebaseAnalysis::new(PathBuf::from("/test"));
         analysis.structure.total_files = 100;
         analysis.structure.total_lines = 10000;
-        analysis.structure.languages.insert("Rust".to_string(), 100.0);
+        analysis
+            .structure
+            .languages
+            .insert("Rust".to_string(), 100.0);
         analysis.tech_stack.frameworks.push("Actix".to_string());
         analysis.test_setup.has_tests = true;
         analysis.test_setup.test_framework = Some("cargo test".to_string());
-        
+
         analysis.generate_summary();
-        
+
         assert!(analysis.summary.contains("Total files: 100"));
         assert!(analysis.summary.contains("Rust"));
         assert!(analysis.summary.contains("Actix"));

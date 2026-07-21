@@ -1,6 +1,6 @@
+use super::tab_action_types::TabAction;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
-use super::tab_action_types::TabAction;
 
 /// Workflows tab action handler
 pub(super) fn handle_workflows_action(state: &mut AppState, action: TabAction) -> AppResult<()> {

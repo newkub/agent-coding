@@ -1,6 +1,6 @@
 //! Tab and Column enum tests
 
-use agent_tui::shared::kernel::types::{Tab, Column};
+use agent_tui::shared::kernel::types::{Column, Tab};
 
 #[test]
 fn test_tab_all() {

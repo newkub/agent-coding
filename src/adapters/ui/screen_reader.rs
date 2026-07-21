@@ -24,7 +24,7 @@ impl ScreenReaderAnnouncer {
         if !self.enabled {
             return;
         }
-        
+
         // In a real implementation, this would use a screen reader API
         // For now, we'll output to stderr which can be captured by screen readers
         eprintln!("[SCREEN READER] {}", message);
@@ -34,13 +34,13 @@ impl ScreenReaderAnnouncer {
         if !self.enabled || !self.announce_focus {
             return;
         }
-        
+
         let message = if let Some(ctx) = context {
             format!("Focused on {}: {}", element, ctx)
         } else {
             format!("Focused on {}", element)
         };
-        
+
         self.announce(&message);
     }
 
@@ -48,7 +48,7 @@ impl ScreenReaderAnnouncer {
         if !self.enabled || !self.announce_content {
             return;
         }
-        
+
         self.announce(&format!("Content: {}", content));
     }
 
@@ -56,13 +56,13 @@ impl ScreenReaderAnnouncer {
         if !self.enabled {
             return;
         }
-        
+
         let message = if let Some(t) = target {
             format!("{}: {}", action, t)
         } else {
             action.to_string()
         };
-        
+
         self.announce(&message);
     }
 
@@ -70,7 +70,7 @@ impl ScreenReaderAnnouncer {
         if !self.enabled {
             return;
         }
-        
+
         self.announce(&format!("Error: {}", error));
     }
 
@@ -78,7 +78,7 @@ impl ScreenReaderAnnouncer {
         if !self.enabled {
             return;
         }
-        
+
         self.announce(&format!("Success: {}", message));
     }
 
@@ -115,7 +115,7 @@ mod tests {
             font_scale: 1.0,
         };
         let announcer = ScreenReaderAnnouncer::new(&settings);
-        
+
         assert!(!announcer.is_enabled());
     }
 
@@ -131,14 +131,14 @@ mod tests {
             font_scale: 1.0,
         };
         let announcer = ScreenReaderAnnouncer::new(&settings);
-        
+
         assert!(announcer.is_enabled());
     }
 
     #[test]
     fn test_update_settings() {
         let mut announcer = ScreenReaderAnnouncer::default();
-        
+
         let settings = AccessibilitySettings {
             enable_screen_reader: true,
             high_contrast: false,
@@ -148,7 +148,7 @@ mod tests {
             theme: "default".to_string(),
             font_scale: 1.0,
         };
-        
+
         announcer.update_settings(&settings);
         assert!(announcer.is_enabled());
     }

@@ -16,11 +16,21 @@ fn create_test_audit_entry(action: AuditAction, actor: Actor, resource: Resource
 #[test]
 fn test_audit_entry_serialization() {
     let entry = create_test_audit_entry(
-        AuditAction::FileRead { path: "test.txt".to_string() },
-        Actor { type_: ActorType::User, id: "1".to_string(), name: "User".to_string() },
-        Resource { type_: "file".to_string(), id: "1".to_string(), path: None },
+        AuditAction::FileRead {
+            path: "test.txt".to_string(),
+        },
+        Actor {
+            type_: ActorType::User,
+            id: "1".to_string(),
+            name: "User".to_string(),
+        },
+        Resource {
+            type_: "file".to_string(),
+            id: "1".to_string(),
+            path: None,
+        },
     );
-    
+
     let json = serde_json::to_string(&entry).unwrap();
     let parsed: AuditEntry = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.id.0, entry.id.0);
@@ -31,7 +41,7 @@ fn test_audit_metadata_serialization() {
     let mut meta = AuditMetadata::default();
     meta.ip_address = Some("127.0.0.1".to_string());
     meta.extra.insert("key".to_string(), "value".to_string());
-    
+
     let json = serde_json::to_string(&meta).unwrap();
     let parsed: AuditMetadata = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.ip_address, Some("127.0.0.1".to_string()));
@@ -44,7 +54,7 @@ fn test_resource_serialization() {
         id: "123".to_string(),
         path: Some("test.txt".to_string()),
     };
-    
+
     let json = serde_json::to_string(&resource).unwrap();
     let parsed: Resource = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.path, Some("test.txt".to_string()));
@@ -57,7 +67,7 @@ fn test_actor_serialization() {
         id: "user-123".to_string(),
         name: "Test User".to_string(),
     };
-    
+
     let json = serde_json::to_string(&actor).unwrap();
     let parsed: Actor = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.name, "Test User");

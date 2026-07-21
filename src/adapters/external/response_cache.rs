@@ -75,10 +75,10 @@ mod tests {
             content: "test response".to_string(),
             timestamp: chrono::Utc::now(),
         };
-        
+
         cache.put(key.clone(), response.clone()).await;
         let cached = cache.get(&key).await;
-        
+
         assert!(cached.is_some());
         assert_eq!(cached.unwrap().content, "test response");
     }
@@ -91,7 +91,7 @@ mod tests {
             prompt_hash: 123,
             temperature: 70,
         };
-        
+
         let cached = cache.get(&key).await;
         assert!(cached.is_none());
     }
@@ -108,11 +108,11 @@ mod tests {
             content: "test response".to_string(),
             timestamp: chrono::Utc::now(),
         };
-        
+
         cache.put(key.clone(), response).await;
         cache.invalidate(&key).await;
         let cached = cache.get(&key).await;
-        
+
         assert!(cached.is_none());
     }
 }

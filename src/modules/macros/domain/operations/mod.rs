@@ -48,7 +48,10 @@ pub fn calculate_macro_complexity(macro_def: &Macro) -> MacroComplexity {
     MacroComplexity {
         step_count: macro_def.step_count(),
         estimated_duration_ms: macro_def.estimated_duration_ms(),
-        has_variables: macro_def.steps.iter().any(|s| matches!(s, super::models::MacroStep::Command { .. })),
+        has_variables: macro_def
+            .steps
+            .iter()
+            .any(|s| matches!(s, super::models::MacroStep::Command { .. })),
     }
 }
 

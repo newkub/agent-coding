@@ -1,6 +1,6 @@
-use async_trait::async_trait;
 use crate::modules::sandbox::domain::models::{Command, CommandResult, SandboxConfig};
 use crate::shared::kernel::result::AppResult;
+use async_trait::async_trait;
 
 /// Port: Command Executor
 #[async_trait]
@@ -28,7 +28,11 @@ pub(crate) struct ApprovalRequest {
 #[async_trait]
 pub(crate) trait SandboxManager: Send + Sync {
     async fn create_sandbox(&self, config: &SandboxConfig) -> AppResult<SandboxId>;
-    async fn execute_in_sandbox(&self, sandbox_id: &SandboxId, command: &str) -> AppResult<CommandResult>;
+    async fn execute_in_sandbox(
+        &self,
+        sandbox_id: &SandboxId,
+        command: &str,
+    ) -> AppResult<CommandResult>;
     async fn destroy_sandbox(&self, sandbox_id: &SandboxId) -> AppResult<()>;
     async fn get_sandbox_status(&self, sandbox_id: &SandboxId) -> AppResult<SandboxStatus>;
 }

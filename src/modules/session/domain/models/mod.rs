@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Session ID type
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

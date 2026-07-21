@@ -1,10 +1,10 @@
+use crate::modules::ui::domain::models::AppState;
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
-use crate::modules::ui::domain::models::AppState;
 
 pub mod core_tabs;
-pub mod development_tabs;
 pub mod data_tabs;
+pub mod development_tabs;
 pub mod system_tabs;
 
 /// Result of rendering a tab
@@ -23,7 +23,7 @@ impl<'a> TabRenderResult<'a> {
 /// Render current tab based on app state
 pub fn render_current_tab(state: &AppState, area: Rect) -> TabRenderResult<'_> {
     use crate::shared::types::Tab;
-    
+
     match state.ui_state.current_tab {
         Tab::Agent => core_tabs::render_agent_tab(state),
         Tab::Git => core_tabs::render_git_tab(state),

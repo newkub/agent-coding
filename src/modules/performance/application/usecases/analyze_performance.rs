@@ -1,7 +1,9 @@
-use crate::modules::performance::domain::models::metrics::{PerformanceMetrics, PerformanceSnapshot, OptimizationSuggestion};
+use crate::modules::performance::domain::models::metrics::{
+    OptimizationSuggestion, PerformanceMetrics, PerformanceSnapshot,
+};
 use crate::modules::performance::domain::operations::performance_operations::calculate_performance_score;
 use crate::modules::performance::domain::validators::performance_validators;
-use crate::modules::performance::ports::{MetricsCollector, SnapshotManager, OptimizationManager};
+use crate::modules::performance::ports::{MetricsCollector, OptimizationManager, SnapshotManager};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for performance analysis
@@ -36,7 +38,10 @@ where
         performance_validators::validate_performance_metrics(&metrics)?;
 
         let score = calculate_performance_score(&metrics);
-        let suggestions = self.optimization_manager.generate_suggestions(&metrics).await?;
+        let suggestions = self
+            .optimization_manager
+            .generate_suggestions(&metrics)
+            .await?;
         let is_healthy = metrics.is_healthy();
 
         Ok(PerformanceAnalysisResult {
@@ -48,17 +53,26 @@ where
     }
 
     /// Create a performance snapshot
-    pub(crate) async fn create_snapshot(&self, name: String) -> Result<PerformanceSnapshot, AppError> {
+    pub(crate) async fn create_snapshot(
+        &self,
+        name: String,
+    ) -> Result<PerformanceSnapshot, AppError> {
         let metrics = self.collector.collect_metrics().await?;
         self.snapshot_manager.create_snapshot(name, metrics).await
     }
 
     /// Compare current performance with snapshot
-    pub(crate) async fn compare_with_snapshot(&self, snapshot_id: &str) -> Result<PerformanceComparisonResult, AppError> {
+    pub(crate) async fn compare_with_snapshot(
+        &self,
+        snapshot_id: &str,
+    ) -> Result<PerformanceComparisonResult, AppError> {
         let current_metrics = self.collector.collect_metrics().await?;
         let snapshot = self.snapshot_manager.get_snapshot(snapshot_id).await?;
 
-        let comparison = self.snapshot_manager.compare_snapshots(snapshot_id, &snapshot.id).await?;
+        let comparison = self
+            .snapshot_manager
+            .compare_snapshots(snapshot_id, &snapshot.id)
+            .await?;
 
         Ok(PerformanceComparisonResult {
             current_metrics,
@@ -84,12 +98,16 @@ where
 
     /// Apply an optimization suggestion
     pub(crate) async fn apply_suggestion(&self, suggestion_id: &str) -> Result<(), AppError> {
-        self.optimization_manager.apply_suggestion(suggestion_id).await
+        self.optimization_manager
+            .apply_suggestion(suggestion_id)
+            .await
     }
 
     /// Dismiss a suggestion
     pub(crate) async fn dismiss_suggestion(&self, suggestion_id: &str) -> Result<(), AppError> {
-        self.optimization_manager.dismiss_suggestion(suggestion_id).await
+        self.optimization_manager
+            .dismiss_suggestion(suggestion_id)
+            .await
     }
 }
 

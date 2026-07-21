@@ -33,7 +33,7 @@ impl ReqwestGitHubClient {
 impl GitHubClient for ReqwestGitHubClient {
     async fn get_issue(&self, repository: &str, number: u32) -> Result<Issue, AppError> {
         let url = format!("{}/repos/{}/issues/{}", self.base_url, repository, number);
-        
+
         let response = self
             .client
             .get(&url)
@@ -68,7 +68,7 @@ impl GitHubClient for ReqwestGitHubClient {
         target_branch: &str,
     ) -> Result<PullRequest, AppError> {
         let url = format!("{}/repos/{}/pulls", self.base_url, repository);
-        
+
         let payload = serde_json::json!({
             "title": title,
             "body": body,
@@ -109,7 +109,7 @@ impl GitHubClient for ReqwestGitHubClient {
         pr: &PullRequest,
     ) -> Result<PullRequest, AppError> {
         let url = format!("{}/repos/{}/pulls/{}", self.base_url, repository, number);
-        
+
         let payload = serde_json::json!({
             "title": pr.title,
             "body": pr.body,
@@ -141,9 +141,17 @@ impl GitHubClient for ReqwestGitHubClient {
         Ok(parse_pr_from_json(&json, repository)?)
     }
 
-    async fn add_labels(&self, repository: &str, issue_number: u32, labels: Vec<String>) -> Result<(), AppError> {
-        let url = format!("{}/repos/{}/issues/{}/labels", self.base_url, repository, issue_number);
-        
+    async fn add_labels(
+        &self,
+        repository: &str,
+        issue_number: u32,
+        labels: Vec<String>,
+    ) -> Result<(), AppError> {
+        let url = format!(
+            "{}/repos/{}/issues/{}/labels",
+            self.base_url, repository, issue_number
+        );
+
         let response = self
             .client
             .post(&url)
@@ -165,9 +173,17 @@ impl GitHubClient for ReqwestGitHubClient {
         Ok(())
     }
 
-    async fn add_reviewers(&self, repository: &str, pr_number: u32, reviewers: Vec<String>) -> Result<(), AppError> {
-        let url = format!("{}/repos/{}/pulls/{}/requested_reviewers", self.base_url, repository, pr_number);
-        
+    async fn add_reviewers(
+        &self,
+        repository: &str,
+        pr_number: u32,
+        reviewers: Vec<String>,
+    ) -> Result<(), AppError> {
+        let url = format!(
+            "{}/repos/{}/pulls/{}/requested_reviewers",
+            self.base_url, repository, pr_number
+        );
+
         let response = self
             .client
             .post(&url)
@@ -191,7 +207,7 @@ impl GitHubClient for ReqwestGitHubClient {
 
     async fn get_default_branch(&self, repository: &str) -> Result<String, AppError> {
         let url = format!("{}/repos/{}", self.base_url, repository);
-        
+
         let response = self
             .client
             .get(&url)

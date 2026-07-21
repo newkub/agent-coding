@@ -1,21 +1,30 @@
-use agent_tui::modules::headless::domain::operations::command_operations::{
-    parse_command, format_output, truncate_output, extract_arguments
-};
 use agent_tui::modules::headless::domain::models::command::OutputFormat;
+use agent_tui::modules::headless::domain::operations::command_operations::{
+    extract_arguments, format_output, parse_command, truncate_output,
+};
 
 #[test]
 fn test_parse_command_chat() {
-    assert_eq!(parse_command("/chat hello"), Ok(agent_tui::modules::headless::domain::models::command::CommandType::Chat));
+    assert_eq!(
+        parse_command("/chat hello"),
+        Ok(agent_tui::modules::headless::domain::models::command::CommandType::Chat)
+    );
 }
 
 #[test]
 fn test_parse_command_read() {
-    assert_eq!(parse_command("/read file.txt"), Ok(agent_tui::modules::headless::domain::models::command::CommandType::FileRead));
+    assert_eq!(
+        parse_command("/read file.txt"),
+        Ok(agent_tui::modules::headless::domain::models::command::CommandType::FileRead)
+    );
 }
 
 #[test]
 fn test_parse_command_default() {
-    assert_eq!(parse_command("hello world"), Ok(agent_tui::modules::headless::domain::models::command::CommandType::Chat));
+    assert_eq!(
+        parse_command("hello world"),
+        Ok(agent_tui::modules::headless::domain::models::command::CommandType::Chat)
+    );
 }
 
 #[test]

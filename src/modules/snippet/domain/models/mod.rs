@@ -93,7 +93,7 @@ impl Snippet {
     pub fn extract_variables(&self) -> Vec<String> {
         let mut vars = Vec::new();
         let mut chars = self.code.chars().peekable();
-        
+
         while let Some(c) = chars.next() {
             if c == '{' && chars.peek() == Some(&'{') {
                 chars.next(); // consume second {
@@ -114,7 +114,7 @@ impl Snippet {
                 }
             }
         }
-        
+
         vars
     }
 }
@@ -127,7 +127,9 @@ pub struct SnippetLibrary {
 
 impl SnippetLibrary {
     pub const fn new() -> Self {
-        Self { snippets: Vec::new() }
+        Self {
+            snippets: Vec::new(),
+        }
     }
 
     pub fn add(&mut self, snippet: Snippet) {
@@ -141,7 +143,9 @@ impl SnippetLibrary {
             .filter(|s| {
                 s.name.to_lowercase().contains(&query_lower)
                     || s.description.to_lowercase().contains(&query_lower)
-                    || s.tags.iter().any(|t| t.to_lowercase().contains(&query_lower))
+                    || s.tags
+                        .iter()
+                        .any(|t| t.to_lowercase().contains(&query_lower))
             })
             .collect()
     }
@@ -156,7 +160,11 @@ impl SnippetLibrary {
     pub fn by_tag(&self, tag: &str) -> Vec<&Snippet> {
         self.snippets
             .iter()
-            .filter(|s| s.tags.iter().any(|t| t.to_lowercase() == tag.to_lowercase()))
+            .filter(|s| {
+                s.tags
+                    .iter()
+                    .any(|t| t.to_lowercase() == tag.to_lowercase())
+            })
             .collect()
     }
 }

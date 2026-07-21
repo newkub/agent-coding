@@ -1,7 +1,9 @@
-use agent_tui::modules::performance::domain::operations::performance_operations::{
-    analyze_performance, calculate_performance_score, sort_suggestions_by_priority
+use agent_tui::modules::performance::domain::models::metrics::{
+    EffortLevel, ImpactLevel, OptimizationCategory, PerformanceMetrics,
 };
-use agent_tui::modules::performance::domain::models::metrics::{PerformanceMetrics, OptimizationCategory, ImpactLevel, EffortLevel};
+use agent_tui::modules::performance::domain::operations::performance_operations::{
+    analyze_performance, calculate_performance_score, sort_suggestions_by_priority,
+};
 
 #[test]
 fn test_analyze_performance() {
@@ -34,7 +36,7 @@ fn test_calculate_performance_score() {
     metrics.memory_total = 1000;
     metrics.response_time_ms = 300;
     metrics.error_rate = 0.01;
-    
+
     let score = calculate_performance_score(&metrics);
     assert!(score > 0.8);
 }

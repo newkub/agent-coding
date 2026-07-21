@@ -4,12 +4,15 @@ use std::collections::VecDeque;
 
 use super::{
     custom_commands::CustomCommands,
-    legacy_states::{CollaborationState, DiffReviewState, MacroState, MetricsState, SandboxState, SnippetState, TimelineState},
+    legacy_states::{
+        CollaborationState, DiffReviewState, MacroState, MetricsState, SandboxState, SnippetState,
+        TimelineState,
+    },
     tab_content::TabContent,
     tab_states::{
         AgentTabState, ApiTabState, CliTabState, DatabaseTabState, FilesTabState, GitTabState,
-        LogsTabState, NotesTabState, PackagesTabState, SettingsTabState, SkillsTabState, SnippetTabState,
-        SystemTabState, TasksTabState, TerminalTabState, WorkflowsTabState,
+        LogsTabState, NotesTabState, PackagesTabState, SettingsTabState, SkillsTabState,
+        SnippetTabState, SystemTabState, TasksTabState, TerminalTabState, WorkflowsTabState,
     },
     toast::ToastNotification,
 };
@@ -90,14 +93,24 @@ impl AppState {
             terminal_tab: TabContent::with_content(Tab::Terminal, "Sessions", "Output", "Commands"),
             snippets_tab: TabContent::with_content(Tab::Snippets, "Library", "Editor", "Tags"),
             api_tab: TabContent::with_content(Tab::Api, "Collections", "Request", "Response"),
-            database_tab: TabContent::with_content(Tab::Database, "Connections", "Query", "Results"),
+            database_tab: TabContent::with_content(
+                Tab::Database,
+                "Connections",
+                "Query",
+                "Results",
+            ),
             tasks_tab: TabContent::with_content(Tab::Tasks, "Lists", "Details", "Filters"),
             notes_tab: TabContent::with_content(Tab::Notes, "Folders", "Editor", "Tags"),
             logs_tab: TabContent::with_content(Tab::Logs, "Sources", "Viewer", "Filters"),
             system_tab: TabContent::with_content(Tab::System, "Overview", "Details", "Alerts"),
             skills_tab: TabContent::with_content(Tab::Skills, "Library", "Editor", "Tags"),
             workflows_tab: TabContent::with_content(Tab::Workflows, "Library", "Editor", "Tags"),
-            settings_tab: TabContent::with_content(Tab::Settings, "General", "Appearance", "Advanced"),
+            settings_tab: TabContent::with_content(
+                Tab::Settings,
+                "General",
+                "Appearance",
+                "Advanced",
+            ),
             cli_tab: TabContent::with_content(Tab::Cli, "Input", "Output", "History"),
             // Initialize tab-specific states
             agent_tab_state: AgentTabState::default(),
@@ -179,12 +192,6 @@ impl AppState {
             Tab::Settings => &mut self.settings_tab,
             Tab::Cli => &mut self.cli_tab,
         }
-    }
-
-    pub fn current_tab_state<T: Default>(&self) -> &T {
-        // This would need to be implemented with a macro or trait
-        // For now, return default - we'll implement proper dispatching
-        unimplemented!("Use specific tab state accessor instead")
     }
 
     // Legacy state methods for backward compatibility

@@ -39,7 +39,8 @@ impl InMemoryGuardrailManager {
         ];
 
         for (name, guardrail_type, description) in default_guardrails {
-            let guardrail = Guardrail::new(name.to_string(), guardrail_type, description.to_string());
+            let guardrail =
+                Guardrail::new(name.to_string(), guardrail_type, description.to_string());
             self.create_guardrail(guardrail).await?;
         }
 
@@ -80,7 +81,10 @@ impl GuardrailManager for InMemoryGuardrailManager {
             guardrails.insert(guardrail.id.clone(), guardrail.clone());
             Ok(guardrail)
         } else {
-            Err(AppError::NotFound(format!("Guardrail {} not found", guardrail.id)))
+            Err(AppError::NotFound(format!(
+                "Guardrail {} not found",
+                guardrail.id
+            )))
         }
     }
 

@@ -1,4 +1,6 @@
-use crate::modules::headless::domain::models::command::{HeadlessCommand, HeadlessConfig, CommandType};
+use crate::modules::headless::domain::models::command::{
+    CommandType, HeadlessCommand, HeadlessConfig,
+};
 use crate::modules::headless::domain::operations::command_operations::parse_command;
 use crate::modules::headless::domain::validators::command_validators;
 use crate::modules::headless::ports::{HeadlessCommandExecutor, HeadlessSessionManager};
@@ -61,7 +63,9 @@ where
         };
 
         // Create context
-        let mut context = crate::modules::headless::domain::models::command::CommandContext::new(working_directory);
+        let mut context = crate::modules::headless::domain::models::command::CommandContext::new(
+            working_directory,
+        );
         if let Some(sid) = session_id {
             context = context.with_session(sid);
         }
@@ -85,7 +89,9 @@ where
         let mut commands = Vec::new();
 
         for input in inputs {
-            let command = self.execute(input, working_directory.clone(), config).await?;
+            let command = self
+                .execute(input, working_directory.clone(), config)
+                .await?;
             commands.push(command);
         }
 

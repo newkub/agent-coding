@@ -1,4 +1,4 @@
-use super::models::{Session, Message};
+use super::models::{Message, Session};
 
 /// Pure domain operation: Validate session name
 pub fn validate_session_name(name: &str) -> Result<(), SessionValidationError> {
@@ -9,7 +9,10 @@ pub fn validate_session_name(name: &str) -> Result<(), SessionValidationError> {
         return Err(SessionValidationError::NameTooLong);
     }
     // Check for invalid characters
-    if name.chars().any(|c| c.is_control() || c == '/' || c == '\\') {
+    if name
+        .chars()
+        .any(|c| c.is_control() || c == '/' || c == '\\')
+    {
         return Err(SessionValidationError::InvalidCharacters);
     }
     Ok(())
@@ -55,7 +58,9 @@ impl std::fmt::Display for SessionValidationError {
 /// Pure domain operation: Create new session
 pub fn create_session(name: String) -> Result<Session, SessionValidationError> {
     validate_session_name(&name)?;
-    let id = crate::modules::session::domain::models::SessionId::from_string(uuid::Uuid::new_v4().to_string());
+    let id = crate::modules::session::domain::models::SessionId::from_string(
+        uuid::Uuid::new_v4().to_string(),
+    );
     let now = chrono::Utc::now();
     Ok(Session::create(id, name, now, now))
 }

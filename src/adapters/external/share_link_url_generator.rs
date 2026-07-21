@@ -1,6 +1,6 @@
-use async_trait::async_trait;
 use crate::modules::share::ports::ShareLinkUrlGenerator;
 use crate::shared::kernel::result::AppError;
+use async_trait::async_trait;
 
 /// Default implementation for generating share link URLs
 pub struct DefaultShareLinkUrlGenerator {
@@ -49,14 +49,20 @@ mod tests {
     #[tokio::test]
     async fn test_validate_url_valid() {
         let generator = DefaultShareLinkUrlGenerator::new("https://share.example.com".to_string());
-        let token = generator.validate_url("https://share.example.com/abc123").await.unwrap();
+        let token = generator
+            .validate_url("https://share.example.com/abc123")
+            .await
+            .unwrap();
         assert_eq!(token, Some("abc123".to_string()));
     }
 
     #[tokio::test]
     async fn test_validate_url_invalid() {
         let generator = DefaultShareLinkUrlGenerator::new("https://share.example.com".to_string());
-        let token = generator.validate_url("https://other.com/abc123").await.unwrap();
+        let token = generator
+            .validate_url("https://other.com/abc123")
+            .await
+            .unwrap();
         assert_eq!(token, None);
     }
 }

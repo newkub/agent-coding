@@ -1,9 +1,9 @@
-use agent_tui::{AppSettings, AISettings, UISettings, AccessibilitySettings, MemorySettings};
+use agent_tui::{AISettings, AccessibilitySettings, AppSettings, MemorySettings, UISettings};
 
 #[test]
 fn test_app_settings_default() {
     let settings = AppSettings::default();
-    
+
     assert_eq!(settings.ui.theme, "default");
     assert_eq!(settings.ai.default_model, "gpt-4");
     assert_eq!(settings.git.default_branch, "main");
@@ -13,7 +13,7 @@ fn test_app_settings_default() {
 #[test]
 fn test_ai_settings_default() {
     let settings = AISettings::default();
-    
+
     assert_eq!(settings.default_model, "gpt-4");
     assert_eq!(settings.api_endpoint, "https://api.openai.com/v1");
     assert_eq!(settings.max_tokens, 4096);
@@ -27,7 +27,7 @@ fn test_ai_settings_default() {
 #[test]
 fn test_ui_settings_default() {
     let settings = UISettings::default();
-    
+
     assert_eq!(settings.theme, "default");
     assert_eq!(settings.font_size, 12);
     assert!(settings.show_line_numbers);
@@ -39,7 +39,7 @@ fn test_ui_settings_default() {
 #[test]
 fn test_accessibility_settings_default() {
     let settings = AccessibilitySettings::default();
-    
+
     assert!(!settings.enable_screen_reader);
     assert!(!settings.high_contrast);
     assert!(!settings.reduced_motion);
@@ -50,7 +50,7 @@ fn test_accessibility_settings_default() {
 #[test]
 fn test_memory_settings_default() {
     let settings = MemorySettings::default();
-    
+
     assert_eq!(settings.max_cache_size_mb, 50);
     assert!(settings.enable_memory_pooling);
     assert_eq!(settings.session_history_limit, 100);
@@ -62,7 +62,7 @@ fn test_serialize_deserialize_settings() {
     let settings = AppSettings::default();
     let serialized = serde_json::to_string(&settings).unwrap();
     let deserialized: AppSettings = serde_json::from_str(&serialized).unwrap();
-    
+
     assert_eq!(deserialized.ui.theme, settings.ui.theme);
     assert_eq!(deserialized.ai.default_model, settings.ai.default_model);
 }

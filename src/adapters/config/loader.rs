@@ -23,9 +23,8 @@ impl ConfigLoader {
     /// Get default configuration path
     fn default_config_path() -> PathBuf {
         // Use XDG config directory or fallback to .config
-        let config_dir = dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from(".config"));
-        
+        let config_dir = dirs::config_dir().unwrap_or_else(|| PathBuf::from(".config"));
+
         config_dir.join("agent-tui").join("config.toml")
     }
 
@@ -39,8 +38,8 @@ impl ConfigLoader {
         let content = fs::read_to_string(&self.config_path)
             .map_err(|e| ConfigError::ReadError(e.to_string()))?;
 
-        let settings: AppSettings = toml::from_str(&content)
-            .map_err(|e| ConfigError::ParseError(e.to_string()))?;
+        let settings: AppSettings =
+            toml::from_str(&content).map_err(|e| ConfigError::ParseError(e.to_string()))?;
 
         Ok(settings)
     }
@@ -49,8 +48,7 @@ impl ConfigLoader {
     pub(crate) fn save(&self, settings: &AppSettings) -> Result<(), ConfigError> {
         // Ensure parent directory exists
         if let Some(parent) = self.config_path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|e| ConfigError::WriteError(e.to_string()))?;
+            fs::create_dir_all(parent).map_err(|e| ConfigError::WriteError(e.to_string()))?;
         }
 
         let content = toml::to_string_pretty(settings)
@@ -74,13 +72,13 @@ impl Default for ConfigLoader {
 pub enum ConfigError {
     #[error("Failed to read config file: {0}")]
     ReadError(String),
-    
+
     #[error("Failed to parse config: {0}")]
     ParseError(String),
-    
+
     #[error("Failed to serialize config: {0}")]
     SerializeError(String),
-    
+
     #[error("Failed to write config file: {0}")]
     WriteError(String),
 }

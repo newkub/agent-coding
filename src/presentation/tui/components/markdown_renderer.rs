@@ -18,9 +18,15 @@ pub fn render_markdown(text: &str) -> Vec<Line<'static>> {
             Event::Start(tag) => match tag {
                 Tag::Heading { level, .. } => {
                     let style = match level {
-                        pulldown_cmark::HeadingLevel::H1 => Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
-                        pulldown_cmark::HeadingLevel::H2 => Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
-                        pulldown_cmark::HeadingLevel::H3 => Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD),
+                        pulldown_cmark::HeadingLevel::H1 => Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                        pulldown_cmark::HeadingLevel::H2 => Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                        pulldown_cmark::HeadingLevel::H3 => Style::default()
+                            .fg(Color::Blue)
+                            .add_modifier(Modifier::BOLD),
                         _ => Style::default().fg(Color::Blue),
                     };
                     let level_num = match level {
@@ -55,16 +61,28 @@ pub fn render_markdown(text: &str) -> Vec<Line<'static>> {
                 }
                 Tag::Item => {
                     let indent = "  ".repeat(list_level - 1);
-                    current_line.push(Span::styled(format!("{}• ", indent), Style::default().fg(Color::Yellow)));
+                    current_line.push(Span::styled(
+                        format!("{}• ", indent),
+                        Style::default().fg(Color::Yellow),
+                    ));
                 }
                 Tag::Emphasis => {
-                    current_line.push(Span::styled("", Style::default().add_modifier(Modifier::ITALIC)));
+                    current_line.push(Span::styled(
+                        "",
+                        Style::default().add_modifier(Modifier::ITALIC),
+                    ));
                 }
                 Tag::Strong => {
-                    current_line.push(Span::styled("", Style::default().add_modifier(Modifier::BOLD)));
+                    current_line.push(Span::styled(
+                        "",
+                        Style::default().add_modifier(Modifier::BOLD),
+                    ));
                 }
                 Tag::Strikethrough => {
-                    current_line.push(Span::styled("", Style::default().add_modifier(Modifier::CROSSED_OUT)));
+                    current_line.push(Span::styled(
+                        "",
+                        Style::default().add_modifier(Modifier::CROSSED_OUT),
+                    ));
                 }
                 _ => {}
             },
@@ -80,18 +98,20 @@ pub fn render_markdown(text: &str) -> Vec<Line<'static>> {
                 }
                 TagEnd::CodeBlock => {
                     in_code_block = false;
-                    lines.push(Line::from(Span::styled("└────────", Style::default().fg(Color::Green))));
+                    lines.push(Line::from(Span::styled(
+                        "└────────",
+                        Style::default().fg(Color::Green),
+                    )));
                     lines.push(Line::from(""));
                 }
                 TagEnd::List(_) => {
                     in_list = false;
                     list_level = list_level.saturating_sub(1);
                 }
-                TagEnd::Item
-                    if !current_line.is_empty() => {
-                        lines.push(Line::from(current_line.clone()));
-                        current_line.clear();
-                    }
+                TagEnd::Item if !current_line.is_empty() => {
+                    lines.push(Line::from(current_line.clone()));
+                    current_line.clear();
+                }
                 _ => {}
             },
             Event::Text(text) => {
@@ -108,11 +128,10 @@ pub fn render_markdown(text: &str) -> Vec<Line<'static>> {
                     Style::default().fg(Color::Green),
                 ));
             }
-            Event::SoftBreak
-                if !current_line.is_empty() => {
-                    lines.push(Line::from(current_line.clone()));
-                    current_line.clear();
-                }
+            Event::SoftBreak if !current_line.is_empty() => {
+                lines.push(Line::from(current_line.clone()));
+                current_line.clear();
+            }
             Event::HardBreak => {
                 if !current_line.is_empty() {
                     lines.push(Line::from(current_line.clone()));

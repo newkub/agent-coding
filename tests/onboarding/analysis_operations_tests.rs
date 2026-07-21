@@ -1,7 +1,9 @@
-use agent_tui::modules::onboarding::domain::models::codebase_analysis::{ProjectStructure, TechStack, Dependencies};
+use agent_tui::modules::onboarding::domain::models::codebase_analysis::{
+    Dependencies, ProjectStructure, TechStack,
+};
 use agent_tui::modules::onboarding::domain::operations::analysis_operations::{
-    detect_project_type, estimate_complexity, identify_main_directories, calculate_language_distribution,
-    infer_tech_stack_from_deps, ComplexityLevel
+    calculate_language_distribution, detect_project_type, estimate_complexity,
+    identify_main_directories, infer_tech_stack_from_deps, ComplexityLevel,
 };
 
 #[test]
@@ -44,7 +46,7 @@ fn test_calculate_language_distribution() {
     structure.total_files = 10;
     structure.languages.insert("Rust".to_string(), 70.0);
     structure.languages.insert("JavaScript".to_string(), 30.0);
-    
+
     calculate_language_distribution(&mut structure);
     // Verify normalization happened (percentages should sum to 100)
     let total: f64 = structure.languages.values().sum();
@@ -54,13 +56,15 @@ fn test_calculate_language_distribution() {
 #[test]
 fn test_infer_tech_stack_from_deps() {
     let mut deps = Dependencies::default();
-    deps.dependencies.insert("react".to_string(), 
+    deps.dependencies.insert(
+        "react".to_string(),
         agent_tui::modules::onboarding::domain::models::codebase_analysis::DependencyInfo {
             version: "18.0.0".to_string(),
             description: None,
             category: "runtime".to_string(),
-        });
-    
+        },
+    );
+
     let stack = infer_tech_stack_from_deps(&deps);
     assert!(stack.frameworks.contains(&"React".to_string()));
 }

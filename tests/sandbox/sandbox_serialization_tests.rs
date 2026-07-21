@@ -1,6 +1,8 @@
 //! Sandbox serialization tests
 
-use agent_tui::modules::sandbox::domain::models::{ApprovalRule, RuleId, RuleAction, SecurityLevel};
+use agent_tui::modules::sandbox::domain::models::{
+    ApprovalRule, RuleAction, RuleId, SecurityLevel,
+};
 
 #[test]
 fn test_rule_serialization() {
@@ -12,7 +14,7 @@ fn test_rule_serialization() {
         security_level: SecurityLevel::Safe,
         description: "Approve git commands".to_string(),
     };
-    
+
     let json = serde_json::to_string(&rule).unwrap();
     let parsed: ApprovalRule = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.name, "Test Rule");

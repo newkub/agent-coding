@@ -1,8 +1,8 @@
+use agent_tui::modules::automation::domain::models::issue_pr::{AutomationConfig, Issue};
 use agent_tui::modules::automation::domain::operations::automation_operations::{
-    generate_branch_name, generate_commit_message, generate_pr_title, generate_pr_body, 
-    extract_labels, determine_target_branch
+    determine_target_branch, extract_labels, generate_branch_name, generate_commit_message,
+    generate_pr_body, generate_pr_title,
 };
-use agent_tui::modules::automation::domain::models::issue_pr::{Issue, AutomationConfig};
 
 #[test]
 fn test_generate_branch_name() {
@@ -13,12 +13,12 @@ fn test_generate_branch_name() {
         "user".to_string(),
         "owner/repo".to_string(),
     );
-    
+
     let config = AutomationConfig {
         branch_name_template: "feature/{number}-{title}".to_string(),
         ..Default::default()
     };
-    
+
     let branch = generate_branch_name(&issue, &config);
     assert!(branch.contains("1"));
     assert!(branch.contains("test-feature"));
@@ -33,12 +33,12 @@ fn test_generate_commit_message() {
         "user".to_string(),
         "owner/repo".to_string(),
     );
-    
+
     let config = AutomationConfig {
         commit_message_template: "feat: {title}".to_string(),
         ..Default::default()
     };
-    
+
     let message = generate_commit_message(&issue, &config);
     assert!(message.contains("Add new feature"));
     assert!(message.contains("Closes #1"));
@@ -53,7 +53,7 @@ fn test_generate_pr_title() {
         "user".to_string(),
         "owner/repo".to_string(),
     );
-    
+
     let title = generate_pr_title(&issue);
     assert_eq!(title, "Test Issue (#1)");
 }
@@ -68,7 +68,7 @@ fn test_extract_labels() {
         "owner/repo".to_string(),
     );
     issue.labels.push("bug".to_string());
-    
+
     let config = AutomationConfig::default();
     let labels = extract_labels(&issue, &config);
     assert!(labels.contains(&"bug".to_string()));
@@ -85,7 +85,7 @@ fn test_determine_target_branch() {
         "owner/repo".to_string(),
     );
     issue.labels.push("develop".to_string());
-    
+
     let branch = determine_target_branch(&issue);
     assert_eq!(branch, "develop");
 }

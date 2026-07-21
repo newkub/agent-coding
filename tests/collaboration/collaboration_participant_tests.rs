@@ -1,6 +1,8 @@
 //! Collaboration Participant tests
 
-use agent_tui::modules::collaboration::domain::models::{Participant, ParticipantId, ParticipantRole};
+use agent_tui::modules::collaboration::domain::models::{
+    Participant, ParticipantId, ParticipantRole,
+};
 use chrono::Utc;
 
 #[test]
@@ -20,7 +22,7 @@ fn test_participant_serialization() {
         is_online: true,
         cursor_position: None,
     };
-    
+
     let json = serde_json::to_string(&participant).unwrap();
     let parsed: Participant = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.name, "Test User");

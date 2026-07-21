@@ -1,10 +1,7 @@
 use crate::modules::share::domain::models::share_link::{ShareLink, SharePermissions};
 
 /// Pure function to validate share link permissions
-pub const fn validate_permissions(
-    permissions: &SharePermissions,
-    action: ShareAction,
-) -> bool {
+pub const fn validate_permissions(permissions: &SharePermissions, action: ShareAction) -> bool {
     match action {
         ShareAction::Read => permissions.can_read,
         ShareAction::Write => permissions.can_write,
@@ -65,6 +62,7 @@ pub enum ShareAction {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use uuid::Uuid;
 
     #[test]
     fn test_validate_read_permissions() {

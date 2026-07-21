@@ -1,7 +1,10 @@
 use crate::modules::session::domain::models::Session;
 
 /// Service: Filter sessions by criteria
-pub(crate) fn filter_sessions(sessions: &[Session], predicate: impl Fn(&Session) -> bool) -> Vec<Session> {
+pub(crate) fn filter_sessions(
+    sessions: &[Session],
+    predicate: impl Fn(&Session) -> bool,
+) -> Vec<Session> {
     sessions.iter().filter(|s| predicate(s)).cloned().collect()
 }
 
@@ -12,7 +15,9 @@ pub(crate) fn sort_sessions(sessions: Vec<Session>, by: SortCriteria) -> Vec<Ses
         SortCriteria::Name => sorted.sort_by(|a, b| a.name.cmp(&b.name)),
         SortCriteria::CreatedAt => sorted.sort_by(|a, b| b.created_at.cmp(&a.created_at)),
         SortCriteria::UpdatedAt => sorted.sort_by(|a, b| b.updated_at.cmp(&a.updated_at)),
-        SortCriteria::MessageCount => sorted.sort_by(|a, b| b.messages.len().cmp(&a.messages.len())),
+        SortCriteria::MessageCount => {
+            sorted.sort_by(|a, b| b.messages.len().cmp(&a.messages.len()))
+        }
     }
     sorted
 }
@@ -36,10 +41,17 @@ pub(crate) fn search_sessions(sessions: &[Session], query: &str) -> Vec<Session>
 }
 
 /// Service: Group sessions by metadata
-pub(crate) fn group_sessions_by_model(sessions: &[Session]) -> std::collections::HashMap<String, Vec<Session>> {
-    let mut groups: std::collections::HashMap<String, Vec<Session>> = std::collections::HashMap::new();
+pub(crate) fn group_sessions_by_model(
+    sessions: &[Session],
+) -> std::collections::HashMap<String, Vec<Session>> {
+    let mut groups: std::collections::HashMap<String, Vec<Session>> =
+        std::collections::HashMap::new();
     for session in sessions {
-        let model = session.metadata.model.clone().unwrap_or_else(|| "unknown".to_string());
+        let model = session
+            .metadata
+            .model
+            .clone()
+            .unwrap_or_else(|| "unknown".to_string());
         groups.entry(model).or_default().push(session.clone());
     }
     groups

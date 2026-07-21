@@ -2,7 +2,12 @@
 
 use agent_tui::modules::snippet::domain::models::{Snippet, SnippetId};
 
-fn create_test_snippet(name: String, description: String, code: String, language: String) -> Snippet {
+fn create_test_snippet(
+    name: String,
+    description: String,
+    code: String,
+    language: String,
+) -> Snippet {
     let now = chrono::Utc::now();
     Snippet::create(
         SnippetId::from_string(uuid::Uuid::new_v4().to_string()),
@@ -35,7 +40,8 @@ fn test_snippet_with_tags() {
         "".to_string(),
         "code".to_string(),
         "rust".to_string(),
-    ).with_tags(vec!["tag1".to_string(), "tag2".to_string()]);
+    )
+    .with_tags(vec!["tag1".to_string(), "tag2".to_string()]);
     assert_eq!(snippet.tags.len(), 2);
 }
 
@@ -50,7 +56,10 @@ fn test_snippet_add_variable() {
     snippet.add_variable("name".to_string(), Some("default".to_string()));
     assert_eq!(snippet.variables.len(), 1);
     assert_eq!(snippet.variables[0].name, "name");
-    assert_eq!(snippet.variables[0].default_value.as_deref(), Some("default"));
+    assert_eq!(
+        snippet.variables[0].default_value.as_deref(),
+        Some("default")
+    );
 }
 
 #[test]
@@ -62,7 +71,7 @@ fn test_snippet_render() {
         "text".to_string(),
     );
     snippet.add_variable("name".to_string(), None);
-    
+
     let result = snippet.render(&[("name".to_string(), "World".to_string())]);
     assert_eq!(result, "Hello World!");
 }
@@ -77,7 +86,7 @@ fn test_snippet_render_multiple_variables() {
     );
     snippet.add_variable("greeting".to_string(), None);
     snippet.add_variable("name".to_string(), None);
-    
+
     let result = snippet.render(&[
         ("greeting".to_string(), "Hi".to_string()),
         ("name".to_string(), "Rust".to_string()),
@@ -113,7 +122,12 @@ fn test_snippet_extract_variables_no_vars() {
 
 #[test]
 fn test_snippet_clone() {
-    let s1 = create_test_snippet("Test".to_string(), "".to_string(), "code".to_string(), "rust".to_string());
+    let s1 = create_test_snippet(
+        "Test".to_string(),
+        "".to_string(),
+        "code".to_string(),
+        "rust".to_string(),
+    );
     let s2 = s1.clone();
     assert_eq!(s1.id, s2.id);
     assert_eq!(s1.name, s2.name);

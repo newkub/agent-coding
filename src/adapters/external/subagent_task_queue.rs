@@ -68,10 +68,10 @@ mod tests {
             "Review".to_string(),
             context,
         );
-        
+
         queue.enqueue(task).await.unwrap();
         assert_eq!(queue.queue_size().await.unwrap(), 1);
-        
+
         let dequeued = queue.dequeue().await.unwrap();
         assert_eq!(dequeued.subagent_id, "agent-1");
     }
@@ -86,7 +86,7 @@ mod tests {
             "Review".to_string(),
             context,
         );
-        
+
         queue.enqueue(task).await.unwrap();
         queue.clear_queue().await.unwrap();
         assert_eq!(queue.queue_size().await.unwrap(), 0);

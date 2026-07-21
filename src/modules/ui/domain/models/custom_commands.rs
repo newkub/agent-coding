@@ -44,8 +44,14 @@ impl CustomCommands {
         self.commands.values().collect()
     }
 
-    pub fn execute_command(&self, id: &str, variables: &HashMap<String, String>) -> Result<String, String> {
-        let command = self.commands.get(id)
+    pub fn execute_command(
+        &self,
+        id: &str,
+        variables: &HashMap<String, String>,
+    ) -> Result<String, String> {
+        let command = self
+            .commands
+            .get(id)
             .ok_or_else(|| format!("Command '{}' not found", id))?;
 
         let mut result = command.template.clone();
@@ -73,13 +79,11 @@ impl CustomCommands {
             name: "Deploy to Production".to_string(),
             description: "Deploy current branch to production".to_string(),
             template: "git push origin {branch} && kubectl apply -f k8s/".to_string(),
-            variables: vec![
-                CommandVariable {
-                    name: "branch".to_string(),
-                    default_value: "main".to_string(),
-                    description: "Branch to deploy".to_string(),
-                },
-            ],
+            variables: vec![CommandVariable {
+                name: "branch".to_string(),
+                default_value: "main".to_string(),
+                description: "Branch to deploy".to_string(),
+            }],
             shortcut: Some("Ctrl+D".to_string()),
         });
 

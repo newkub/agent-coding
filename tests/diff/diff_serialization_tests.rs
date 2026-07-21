@@ -1,6 +1,6 @@
 //! Diff serialization tests
 
-use agent_tui::modules::diff::domain::models::{FileChange, DiffReview, ChangeType};
+use agent_tui::modules::diff::domain::models::{ChangeType, DiffReview, FileChange};
 
 #[test]
 fn test_diff_review_serialization() {

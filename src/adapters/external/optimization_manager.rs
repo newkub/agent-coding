@@ -3,8 +3,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::modules::performance::domain::models::metrics::{OptimizationSuggestion, PerformanceMetrics};
-use crate::modules::performance::domain::operations::performance_operations::{analyze_performance, sort_suggestions_by_priority};
+use crate::modules::performance::domain::models::metrics::{
+    OptimizationSuggestion, PerformanceMetrics,
+};
+use crate::modules::performance::domain::operations::performance_operations::{
+    analyze_performance, sort_suggestions_by_priority,
+};
 use crate::modules::performance::ports::OptimizationManager;
 use crate::shared::kernel::result::AppError;
 
@@ -29,7 +33,10 @@ impl Default for InMemoryOptimizationManager {
 
 #[async_trait]
 impl OptimizationManager for InMemoryOptimizationManager {
-    async fn generate_suggestions(&self, metrics: &PerformanceMetrics) -> Result<Vec<OptimizationSuggestion>, AppError> {
+    async fn generate_suggestions(
+        &self,
+        metrics: &PerformanceMetrics,
+    ) -> Result<Vec<OptimizationSuggestion>, AppError> {
         let mut suggestions = analyze_performance(metrics);
         sort_suggestions_by_priority(&mut suggestions);
 
@@ -49,7 +56,10 @@ impl OptimizationManager for InMemoryOptimizationManager {
             // For now, we'll just mark it as applied
             Ok(())
         } else {
-            Err(AppError::NotFound(format!("Suggestion {} not found", suggestion_id)))
+            Err(AppError::NotFound(format!(
+                "Suggestion {} not found",
+                suggestion_id
+            )))
         }
     }
 
@@ -63,7 +73,10 @@ impl OptimizationManager for InMemoryOptimizationManager {
         if suggestions.remove(suggestion_id).is_some() {
             Ok(())
         } else {
-            Err(AppError::NotFound(format!("Suggestion {} not found", suggestion_id)))
+            Err(AppError::NotFound(format!(
+                "Suggestion {} not found",
+                suggestion_id
+            )))
         }
     }
 }
@@ -75,7 +88,8 @@ mod tests {
     #[tokio::test]
     async fn test_generate_suggestions() {
         let manager = InMemoryOptimizationManager::new();
-        let metrics = crate::modules::performance::domain::models::metrics::PerformanceMetrics::new();
+        let metrics =
+            crate::modules::performance::domain::models::metrics::PerformanceMetrics::new();
         let suggestions = manager.generate_suggestions(&metrics).await.unwrap();
         // Should generate suggestions based on metrics
     }
@@ -83,9 +97,10 @@ mod tests {
     #[tokio::test]
     async fn test_list_suggestions() {
         let manager = InMemoryOptimizationManager::new();
-        let metrics = crate::modules::performance::domain::models::metrics::PerformanceMetrics::new();
+        let metrics =
+            crate::modules::performance::domain::models::metrics::PerformanceMetrics::new();
         manager.generate_suggestions(&metrics).await.unwrap();
-        
+
         let suggestions = manager.list_suggestions().await.unwrap();
         assert!(!suggestions.is_empty());
     }

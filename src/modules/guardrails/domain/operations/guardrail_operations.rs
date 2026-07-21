@@ -1,4 +1,6 @@
-use crate::modules::guardrails::domain::models::guardrail::{Guardrail, GuardrailCheck, GuardrailRule, GuardrailAction, RuleType, Severity};
+use crate::modules::guardrails::domain::models::guardrail::{
+    Guardrail, GuardrailAction, GuardrailCheck, GuardrailRule, RuleType, Severity,
+};
 
 /// Pure function to check input against guardrail rules
 pub fn check_input_against_guardrail(input: &str, guardrail: &Guardrail) -> GuardrailCheck {
@@ -22,12 +24,18 @@ pub fn check_input_against_guardrail(input: &str, guardrail: &Guardrail) -> Guar
 }
 
 /// Pure function to check a single rule
-fn check_rule(input: &str, rule: &GuardrailRule) -> Option<crate::modules::guardrails::domain::models::guardrail::GuardrailViolation> {
+fn check_rule(
+    input: &str,
+    rule: &GuardrailRule,
+) -> Option<crate::modules::guardrails::domain::models::guardrail::GuardrailViolation> {
     match &rule.rule_type {
         RuleType::PatternMatch => {
             if let Some(pattern) = &rule.pattern {
                 if input.contains(pattern) {
-                    return Some(create_violation(rule, "Pattern matched in input".to_string()));
+                    return Some(create_violation(
+                        rule,
+                        "Pattern matched in input".to_string(),
+                    ));
                 }
             }
         }
@@ -36,7 +44,10 @@ fn check_rule(input: &str, rule: &GuardrailRule) -> Option<crate::modules::guard
                 let input_lower = input.to_lowercase();
                 let pattern_lower = pattern.to_lowercase();
                 if input_lower.contains(&pattern_lower) {
-                    return Some(create_violation(rule, format!("Keyword '{}' detected", pattern)));
+                    return Some(create_violation(
+                        rule,
+                        format!("Keyword '{}' detected", pattern),
+                    ));
                 }
             }
         }
@@ -54,8 +65,14 @@ fn check_rule(input: &str, rule: &GuardrailRule) -> Option<crate::modules::guard
         }
         RuleType::FormatValidation => {
             if let Some(pattern) = &rule.pattern {
-                if !regex::Regex::new(pattern).map(|re| re.is_match(input)).unwrap_or(false) {
-                    return Some(create_violation(rule, "Input format validation failed".to_string()));
+                if !regex::Regex::new(pattern)
+                    .map(|re| re.is_match(input))
+                    .unwrap_or(false)
+                {
+                    return Some(create_violation(
+                        rule,
+                        "Input format validation failed".to_string(),
+                    ));
                 }
             }
         }
@@ -72,7 +89,10 @@ fn check_rule(input: &str, rule: &GuardrailRule) -> Option<crate::modules::guard
 }
 
 /// Pure function to create violation from rule
-fn create_violation(rule: &GuardrailRule, message: String) -> crate::modules::guardrails::domain::models::guardrail::GuardrailViolation {
+fn create_violation(
+    rule: &GuardrailRule,
+    message: String,
+) -> crate::modules::guardrails::domain::models::guardrail::GuardrailViolation {
     let suggested_action = match rule.action {
         GuardrailAction::Block => "Block this input".to_string(),
         GuardrailAction::Warn => "Warn user about this input".to_string(),
@@ -144,14 +164,16 @@ mod tests {
             "Test Rule".to_string(),
             RuleType::PatternMatch,
             GuardrailAction::Block,
-        ).with_pattern("secret".to_string());
-        
+        )
+        .with_pattern("secret".to_string());
+
         let guardrail = Guardrail::new(
             "Test Guardrail".to_string(),
             crate::modules::guardrails::domain::models::guardrail::GuardrailType::InputValidation,
             "Test".to_string(),
-        ).with_rules(vec![rule]);
-        
+        )
+        .with_rules(vec![rule]);
+
         let check = check_input_against_guardrail("This is a secret key", &guardrail);
         assert!(!check.passed);
     }
@@ -162,14 +184,16 @@ mod tests {
             "Length Rule".to_string(),
             RuleType::LengthCheck,
             GuardrailAction::Block,
-        ).with_pattern("10".to_string());
-        
+        )
+        .with_pattern("10".to_string());
+
         let guardrail = Guardrail::new(
             "Length Guardrail".to_string(),
             crate::modules::guardrails::domain::models::guardrail::GuardrailType::InputValidation,
             "Test".to_string(),
-        ).with_rules(vec![rule]);
-        
+        )
+        .with_rules(vec![rule]);
+
         let check = check_input_against_guardrail("This is too long", &guardrail);
         assert!(!check.passed);
     }
@@ -180,14 +204,16 @@ mod tests {
             "Redact Rule".to_string(),
             RuleType::PatternMatch,
             GuardrailAction::Modify,
-        ).with_pattern("password".to_string());
-        
+        )
+        .with_pattern("password".to_string());
+
         let guardrail = Guardrail::new(
             "Output Filter".to_string(),
             crate::modules::guardrails::domain::models::guardrail::GuardrailType::OutputFiltering,
             "Test".to_string(),
-        ).with_rules(vec![rule]);
-        
+        )
+        .with_rules(vec![rule]);
+
         let filtered = filter_output("The password is secret", &guardrail);
         assert!(filtered.contains("[REDACTED]"));
     }

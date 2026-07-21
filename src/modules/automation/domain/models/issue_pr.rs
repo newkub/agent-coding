@@ -144,13 +144,14 @@ impl Issue {
     pub fn is_automatable(&self) -> bool {
         // Check if issue has required labels or keywords
         let automatable_labels = ["automated", "auto-pr", "bot"];
-        let has_automatable_label = self.labels.iter().any(|l| {
-            automatable_labels.contains(&l.to_lowercase().as_str())
-        });
+        let has_automatable_label = self
+            .labels
+            .iter()
+            .any(|l| automatable_labels.contains(&l.to_lowercase().as_str()));
 
         let body_lower = self.body.to_lowercase();
-        let has_automatable_keyword = body_lower.contains("/automate") 
-            || body_lower.contains("/auto-pr");
+        let has_automatable_keyword =
+            body_lower.contains("/automate") || body_lower.contains("/auto-pr");
 
         has_automatable_label || has_automatable_keyword
     }

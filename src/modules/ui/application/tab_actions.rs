@@ -1,7 +1,7 @@
-use crate::modules::ui::domain::models::AppState;
-use crate::shared::kernel::types::Tab;
-use crate::shared::kernel::result::AppResult;
 use super::handlers::TabAction;
+use crate::modules::ui::domain::models::AppState;
+use crate::shared::kernel::result::AppResult;
+use crate::shared::kernel::types::Tab;
 
 /// Handle tab-specific actions
 pub(crate) fn handle_tab_action(state: &mut AppState, action: TabAction) -> AppResult<()> {

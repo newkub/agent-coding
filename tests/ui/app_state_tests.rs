@@ -44,7 +44,7 @@ fn test_app_state_current_tab_content_mut() {
     let mut state = AppState::new();
     let content = state.current_tab_content_mut();
     content.center = "Modified".to_string();
-    
+
     let content2 = state.current_tab_content();
     assert_eq!(content2.center, "Modified");
 }
@@ -132,7 +132,10 @@ fn test_app_state_start_macro_recording() {
     let mut state = AppState::new();
     state.start_macro_recording("macro-123".to_string());
     assert!(state.macro_state.is_recording);
-    assert_eq!(state.macro_state.current_macro_id, Some("macro-123".to_string()));
+    assert_eq!(
+        state.macro_state.current_macro_id,
+        Some("macro-123".to_string())
+    );
 }
 
 #[test]
@@ -181,7 +184,10 @@ fn test_app_state_join_collaboration() {
     let mut state = AppState::new();
     state.join_collaboration("collab-123".to_string());
     assert!(state.collaboration_state.is_active);
-    assert_eq!(state.collaboration_state.session_id, Some("collab-123".to_string()));
+    assert_eq!(
+        state.collaboration_state.session_id,
+        Some("collab-123".to_string())
+    );
 }
 
 #[test]

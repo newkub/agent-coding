@@ -1,4 +1,6 @@
-use crate::modules::performance::domain::models::metrics::{PerformanceMetrics, OptimizationSuggestion, OptimizationCategory, ImpactLevel, EffortLevel};
+use crate::modules::performance::domain::models::metrics::{
+    EffortLevel, ImpactLevel, OptimizationCategory, OptimizationSuggestion, PerformanceMetrics,
+};
 
 /// Pure function to analyze performance metrics and generate suggestions
 pub fn analyze_performance(metrics: &PerformanceMetrics) -> Vec<OptimizationSuggestion> {
@@ -21,7 +23,8 @@ pub fn analyze_performance(metrics: &PerformanceMetrics) -> Vec<OptimizationSugg
         suggestions.push(OptimizationSuggestion::new(
             OptimizationCategory::MemoryOptimization,
             "Reduce memory usage".to_string(),
-            "Consider using more efficient data structures and releasing unused resources".to_string(),
+            "Consider using more efficient data structures and releasing unused resources"
+                .to_string(),
             ImpactLevel::High,
             EffortLevel::Medium,
             0.25,
@@ -121,7 +124,7 @@ mod tests {
     fn test_analyze_performance_high_cpu() {
         let mut metrics = PerformanceMetrics::new();
         metrics.cpu_usage = 90.0;
-        
+
         let suggestions = analyze_performance(&metrics);
         assert!(!suggestions.is_empty());
         assert!(suggestions.iter().any(|s| s.title.contains("CPU")));
@@ -135,7 +138,7 @@ mod tests {
         metrics.memory_total = 1000;
         metrics.response_time_ms = 300;
         metrics.error_rate = 0.01;
-        
+
         let score = calculate_performance_score(&metrics);
         assert!(score > 0.8);
     }
@@ -160,7 +163,7 @@ mod tests {
                 0.5,
             ),
         ];
-        
+
         sort_suggestions_by_priority(&mut suggestions);
         assert!(suggestions[0].title.contains("High"));
     }

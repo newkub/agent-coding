@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Audit log entry for tracking actions
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,9 +57,13 @@ impl AuditAction {
     pub const fn category(&self) -> &'static str {
         match self {
             Self::FileRead { .. } | Self::FileWrite { .. } | Self::FileDelete { .. } => "file",
-            Self::CommandExecute { .. } | Self::CommandApprove { .. } | Self::CommandReject { .. } => "command",
+            Self::CommandExecute { .. }
+            | Self::CommandApprove { .. }
+            | Self::CommandReject { .. } => "command",
             Self::GitCommit { .. } | Self::GitPush | Self::GitBranch { .. } => "git",
-            Self::SessionCreate { .. } | Self::SessionDelete { .. } | Self::MessageSend { .. } => "session",
+            Self::SessionCreate { .. } | Self::SessionDelete { .. } | Self::MessageSend { .. } => {
+                "session"
+            }
             Self::AiRequest { .. } => "ai",
             Self::ConfigChange { .. } | Self::PluginLoad { .. } => "system",
         }

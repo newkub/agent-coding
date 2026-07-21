@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Token usage record
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,7 +65,7 @@ impl PerformanceMetric {
     pub fn latency(timestamp: DateTime<Utc>, duration_ms: f64, operation: &str) -> Self {
         let mut tags = std::collections::HashMap::new();
         tags.insert("operation".to_string(), operation.to_string());
-        
+
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp,
@@ -115,7 +115,7 @@ impl TimelineEntry {
     pub fn session_start(session_id: &str) -> Self {
         let mut meta = std::collections::HashMap::new();
         meta.insert("session_id".to_string(), session_id.to_string());
-        
+
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
@@ -144,7 +144,7 @@ impl MetricsSummary {
         let total_tokens: u64 = usages.iter().map(|u| u.total_tokens as u64).sum();
         let total_cost: f64 = usages.iter().map(|u| u.cost_usd).sum();
         let total_requests = usages.len() as u64;
-        
+
         let latencies: Vec<f64> = metrics
             .iter()
             .filter(|m| matches!(m.metric_type, MetricType::LatencyMs))
@@ -155,7 +155,7 @@ impl MetricsSummary {
         } else {
             latencies.iter().sum::<f64>() / latencies.len() as f64
         };
-        
+
         let throughputs: Vec<f64> = metrics
             .iter()
             .filter(|m| matches!(m.metric_type, MetricType::TokensPerSecond))
@@ -166,7 +166,7 @@ impl MetricsSummary {
         } else {
             throughputs.iter().sum::<f64>() / throughputs.len() as f64
         };
-        
+
         let cache_rates: Vec<f64> = metrics
             .iter()
             .filter(|m| matches!(m.metric_type, MetricType::CacheHitRate))
@@ -177,7 +177,7 @@ impl MetricsSummary {
         } else {
             cache_rates.iter().sum::<f64>() / cache_rates.len() as f64
         };
-        
+
         let errors = metrics
             .iter()
             .filter(|m| matches!(m.metric_type, MetricType::ErrorRate))

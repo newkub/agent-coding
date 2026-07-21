@@ -59,10 +59,14 @@ impl InMemorySubagentManager {
         ];
 
         for (name, agent_type, description) in default_subagents {
-            let mut agent = Subagent::new(name.to_string(), agent_type.clone(), description.to_string());
+            let mut agent = Subagent::new(
+                name.to_string(),
+                agent_type.clone(),
+                description.to_string(),
+            );
             agent.capabilities = vec![description.to_string()];
             agent.config.system_prompt = crate::modules::subagents::domain::operations::subagent_operations::generate_system_prompt(&agent_type);
-            
+
             self.create_subagent(agent).await?;
         }
 
@@ -103,7 +107,10 @@ impl SubagentManager for InMemorySubagentManager {
             subagents.insert(subagent.id.clone(), subagent.clone());
             Ok(subagent)
         } else {
-            Err(AppError::NotFound(format!("Subagent {} not found", subagent.id)))
+            Err(AppError::NotFound(format!(
+                "Subagent {} not found",
+                subagent.id
+            )))
         }
     }
 

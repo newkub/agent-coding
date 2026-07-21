@@ -11,7 +11,7 @@ pub(crate) struct TabIdea {
     pub left_column: &'static str,
     pub center_column: &'static str,
     pub right_column: &'static str,
-    pub priority: u8, // 1-5, lower is higher priority
+    pub priority: u8,             // 1-5, lower is higher priority
     pub complexity: &'static str, // Low, Medium, High
 }
 

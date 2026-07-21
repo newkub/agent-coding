@@ -1,7 +1,11 @@
 use async_trait::async_trait;
 
-use crate::modules::headless::domain::models::command::{HeadlessCommand, HeadlessConfig, CommandType, CommandStatus};
-use crate::modules::headless::domain::operations::command_operations::{format_output, truncate_output};
+use crate::modules::headless::domain::models::command::{
+    CommandStatus, CommandType, HeadlessCommand, HeadlessConfig,
+};
+use crate::modules::headless::domain::operations::command_operations::{
+    format_output, truncate_output,
+};
 use crate::modules::headless::domain::validators::command_validators;
 use crate::modules::headless::ports::{HeadlessCommandExecutor, OutputFormatter};
 use crate::shared::kernel::result::AppError;
@@ -27,7 +31,11 @@ impl Default for DefaultHeadlessCommandExecutor {
 
 #[async_trait]
 impl HeadlessCommandExecutor for DefaultHeadlessCommandExecutor {
-    async fn execute(&self, command: &mut HeadlessCommand, config: &HeadlessConfig) -> Result<(), AppError> {
+    async fn execute(
+        &self,
+        command: &mut HeadlessCommand,
+        config: &HeadlessConfig,
+    ) -> Result<(), AppError> {
         // Validate command
         command_validators::validate_command_for_headless(command)?;
 
@@ -49,21 +57,15 @@ impl HeadlessCommandExecutor for DefaultHeadlessCommandExecutor {
             CommandType::CommandExecute => {
                 format!("Command executed: {}", command.input)
             }
-            CommandType::SessionList => {
-                "Available sessions: [session-1, session-2]".to_string()
-            }
+            CommandType::SessionList => "Available sessions: [session-1, session-2]".to_string(),
             CommandType::SessionCreate => {
                 format!("Created session: {}", uuid::Uuid::new_v4())
             }
             CommandType::SessionLoad => {
                 format!("Loaded session: {}", command.input)
             }
-            CommandType::Help => {
-                self.generate_help_text()
-            }
-            CommandType::Exit => {
-                "Exiting...".to_string()
-            }
+            CommandType::Help => self.generate_help_text(),
+            CommandType::Exit => "Exiting...".to_string(),
         };
 
         // Format output
@@ -80,7 +82,11 @@ impl HeadlessCommandExecutor for DefaultHeadlessCommandExecutor {
         Ok(())
     }
 
-    async fn execute_batch(&self, commands: &mut [HeadlessCommand], config: &HeadlessConfig) -> Result<(), AppError> {
+    async fn execute_batch(
+        &self,
+        commands: &mut [HeadlessCommand],
+        config: &HeadlessConfig,
+    ) -> Result<(), AppError> {
         for command in commands {
             self.execute(command, config).await?;
         }

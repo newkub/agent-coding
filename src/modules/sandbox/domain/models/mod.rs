@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Security level for command execution
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -48,11 +48,7 @@ impl std::fmt::Display for CommandId {
 
 impl Command {
     // Pure constructor - timestamp and ID moved to application layer
-    pub fn create(
-        id: CommandId,
-        command: String,
-        created_at: DateTime<Utc>,
-    ) -> Self {
+    pub fn create(id: CommandId, command: String, created_at: DateTime<Utc>) -> Self {
         Self {
             id,
             command,
@@ -155,11 +151,7 @@ impl Default for SandboxConfig {
             network_enabled: false,
             read_only_filesystem: true,
             allowed_paths: Vec::new(),
-            denied_paths: vec![
-                "/etc".to_string(),
-                "/root".to_string(),
-                "/home".to_string(),
-            ],
+            denied_paths: vec!["/etc".to_string(), "/root".to_string(), "/home".to_string()],
         }
     }
 }

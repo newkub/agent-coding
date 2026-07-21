@@ -3,7 +3,7 @@ use crate::modules::headless::domain::models::command::{CommandType, OutputForma
 /// Pure function to parse command from input string
 pub fn parse_command(input: &str) -> Result<CommandType, String> {
     let input_lower = input.trim().to_lowercase();
-    
+
     if input_lower.starts_with("/chat") || input.starts_with("chat") {
         return Ok(CommandType::Chat);
     }
@@ -28,10 +28,11 @@ pub fn parse_command(input: &str) -> Result<CommandType, String> {
     if input_lower.starts_with("/help") || input.starts_with("help") || input == "?" {
         return Ok(CommandType::Help);
     }
-    if input_lower.starts_with("/exit") || input_lower.starts_with("exit") || input_lower == "quit" {
+    if input_lower.starts_with("/exit") || input_lower.starts_with("exit") || input_lower == "quit"
+    {
         return Ok(CommandType::Exit);
     }
-    
+
     // Default to chat if no command prefix
     Ok(CommandType::Chat)
 }
@@ -56,7 +57,11 @@ pub fn format_output(output: &str, format: &OutputFormat, include_metadata: bool
         }
         OutputFormat::Markdown => {
             if include_metadata {
-                format!("{}\n\n---\n*Generated at {}*", output, chrono::Utc::now().to_rfc3339())
+                format!(
+                    "{}\n\n---\n*Generated at {}*",
+                    output,
+                    chrono::Utc::now().to_rfc3339()
+                )
             } else {
                 output.to_string()
             }
@@ -69,7 +74,7 @@ pub fn truncate_output(output: &str, max_length: usize) -> String {
     if max_length == 0 || output.len() <= max_length {
         return output.to_string();
     }
-    
+
     format!("{}... (truncated)", &output[..max_length])
 }
 
@@ -79,7 +84,7 @@ pub fn extract_arguments(input: &str) -> Vec<String> {
     if parts.is_empty() {
         return Vec::new();
     }
-    
+
     // Skip the command part
     parts[1..].iter().map(|s| s.to_string()).collect()
 }

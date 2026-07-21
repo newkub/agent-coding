@@ -1,9 +1,10 @@
 use std::path::PathBuf;
 
-use crate::modules::onboarding::domain::models::codebase_analysis::{CodebaseAnalysis, EntryPoint, EntryPointType};
+use crate::modules::onboarding::domain::models::codebase_analysis::{
+    CodebaseAnalysis, EntryPoint, EntryPointType,
+};
 use crate::modules::onboarding::domain::operations::analysis_operations::{
-    calculate_language_distribution, 
-    infer_tech_stack_from_deps
+    calculate_language_distribution, infer_tech_stack_from_deps,
 };
 use crate::modules::onboarding::domain::validators::analysis_validators;
 use crate::modules::onboarding::ports::{CodebaseAnalyzer, DependencyParser, FileScanner};
@@ -29,7 +30,10 @@ where
     }
 
     /// Execute the use case to analyze a codebase
-    pub(crate) async fn execute(&self, project_path: PathBuf) -> Result<CodebaseAnalysis, AppError> {
+    pub(crate) async fn execute(
+        &self,
+        project_path: PathBuf,
+    ) -> Result<CodebaseAnalysis, AppError> {
         // Validate project path
         analysis_validators::validate_project_path(&project_path)?;
 
@@ -78,13 +82,29 @@ where
         // Check for common entry point files
         let common_entries = vec![
             ("main.rs", EntryPointType::Main, "Rust main entry point"),
-            ("main.js", EntryPointType::Main, "JavaScript main entry point"),
-            ("index.js", EntryPointType::Main, "JavaScript index entry point"),
+            (
+                "main.js",
+                EntryPointType::Main,
+                "JavaScript main entry point",
+            ),
+            (
+                "index.js",
+                EntryPointType::Main,
+                "JavaScript index entry point",
+            ),
             ("app.py", EntryPointType::Main, "Python main entry point"),
             ("main.go", EntryPointType::Main, "Go main entry point"),
-            ("lib.rs", EntryPointType::Library, "Rust library entry point"),
+            (
+                "lib.rs",
+                EntryPointType::Library,
+                "Rust library entry point",
+            ),
             ("mod.rs", EntryPointType::Library, "Rust module entry point"),
-            ("server.js", EntryPointType::Server, "Node.js server entry point"),
+            (
+                "server.js",
+                EntryPointType::Server,
+                "Node.js server entry point",
+            ),
             ("cli.rs", EntryPointType::CLI, "Rust CLI entry point"),
         ];
 
@@ -123,7 +143,8 @@ where
         &self,
         structure: &crate::modules::onboarding::domain::models::codebase_analysis::ProjectStructure,
     ) -> crate::modules::onboarding::domain::models::codebase_analysis::TestSetup {
-        let mut test_setup = crate::modules::onboarding::domain::models::codebase_analysis::TestSetup::default();
+        let mut test_setup =
+            crate::modules::onboarding::domain::models::codebase_analysis::TestSetup::default();
 
         // Check for test directories
         let test_dirs = structure.directories.iter().filter(|d| {
@@ -170,7 +191,11 @@ where
         Ok(analysis.summary.clone())
     }
 
-    async fn save_analysis(&self, analysis: &CodebaseAnalysis, path: &PathBuf) -> Result<(), AppError> {
+    async fn save_analysis(
+        &self,
+        analysis: &CodebaseAnalysis,
+        path: &PathBuf,
+    ) -> Result<(), AppError> {
         let json = serde_json::to_string_pretty(analysis)
             .map_err(|e| AppError::State(format!("Failed to serialize analysis: {}", e)))?;
         tokio::fs::write(path, json).await?;
@@ -188,15 +213,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::adapters::external::file_scanner::DefaultFileScanner;
     use crate::adapters::external::dependency_parser::DefaultDependencyParser;
+    use crate::adapters::external::file_scanner::DefaultFileScanner;
 
     #[tokio::test]
     async fn test_analyze_codebase_use_case_creation() {
         let scanner = DefaultFileScanner::new();
         let parser = DefaultDependencyParser::new();
         let use_case = AnalyzeCodebaseUseCase::new(scanner, parser);
-        
+
         // Test with a non-existent path should fail
         let result = use_case.execute(PathBuf::from("/nonexistent")).await;
         assert!(result.is_err());

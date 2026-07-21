@@ -1,4 +1,4 @@
-use crate::modules::subagents::domain::models::subagent::{Subagent, TaskType, AgentType};
+use crate::modules::subagents::domain::models::subagent::{AgentType, Subagent, TaskType};
 
 /// Pure function to select appropriate subagent for task
 pub fn select_subagent_for_task<'a>(
@@ -12,7 +12,10 @@ pub fn select_subagent_for_task<'a>(
 }
 
 /// Pure function to estimate task complexity
-pub const fn estimate_task_complexity(task_type: &TaskType, input_length: usize) -> ComplexityLevel {
+pub const fn estimate_task_complexity(
+    task_type: &TaskType,
+    input_length: usize,
+) -> ComplexityLevel {
     let base_complexity = match task_type {
         TaskType::CodeReview => ComplexityLevel::Medium,
         TaskType::BugDetection => ComplexityLevel::High,
@@ -45,9 +48,13 @@ pub const fn calculate_task_priority(
 ) -> TaskPriority {
     match (task_type, complexity) {
         (TaskType::SecurityAudit, _) => TaskPriority::Critical,
-        (TaskType::BugDetection, ComplexityLevel::High | ComplexityLevel::Critical) => TaskPriority::High,
+        (TaskType::BugDetection, ComplexityLevel::High | ComplexityLevel::Critical) => {
+            TaskPriority::High
+        }
         (TaskType::BugDetection, _) => TaskPriority::Medium,
-        (TaskType::CodeReview, ComplexityLevel::High | ComplexityLevel::Critical) => TaskPriority::High,
+        (TaskType::CodeReview, ComplexityLevel::High | ComplexityLevel::Critical) => {
+            TaskPriority::High
+        }
         (TaskType::CodeReview, _) => TaskPriority::Medium,
         (TaskType::Refactoring, ComplexityLevel::Critical) => TaskPriority::High,
         (TaskType::Refactoring, _) => TaskPriority::Medium,
@@ -116,7 +123,7 @@ mod tests {
             "Reviews code".to_string(),
         );
         agent.status = crate::modules::subagents::domain::models::subagent::SubagentStatus::Idle;
-        
+
         let subagents = vec![agent];
         let selected = select_subagent_for_task(&subagents, &TaskType::CodeReview);
         assert!(selected.is_some());

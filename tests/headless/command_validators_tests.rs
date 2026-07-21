@@ -1,5 +1,7 @@
+use agent_tui::modules::headless::domain::models::command::{
+    CommandContext, CommandType, HeadlessCommand, HeadlessConfig,
+};
 use agent_tui::modules::headless::domain::validators::command_validators;
-use agent_tui::modules::headless::domain::models::command::{HeadlessCommand, HeadlessConfig, CommandContext, CommandType};
 
 #[test]
 fn test_validate_command_input_empty() {
@@ -51,8 +53,7 @@ fn test_validate_command_for_headless_success() {
     let path = "C:\\test";
     #[cfg(not(windows))]
     let path = "/test";
-    let context = CommandContext::new(path.to_string())
-        .with_session("session-123".to_string());
+    let context = CommandContext::new(path.to_string()).with_session("session-123".to_string());
     let command = HeadlessCommand::new(CommandType::Chat, "test".to_string(), context);
     assert!(command_validators::validate_command_for_headless(&command).is_ok());
 }

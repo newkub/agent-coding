@@ -1,12 +1,12 @@
-use crate::modules::ui::domain::models::AppState;
 use super::TabRenderResult;
+use crate::modules::ui::domain::models::AppState;
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 
 /// Render Logs tab content
 pub(crate) fn render_logs_tab(state: &AppState) -> TabRenderResult<'_> {
     let tab_state = &state.logs_tab_state;
-    
+
     let content = Paragraph::new(format!(
         "Logs\n\nSelected Log: {}",
         tab_state.selected_log_index

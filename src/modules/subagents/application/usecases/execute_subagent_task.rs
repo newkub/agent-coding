@@ -32,8 +32,10 @@ where
         let subagents = self.manager.get_available_subagents().await?;
 
         // Select appropriate subagent
-        let selected_agent = select_subagent_for_task(&subagents, &task.task_type)
-            .ok_or_else(|| AppError::NotFound("No available subagent for this task type".to_string()))?;
+        let selected_agent =
+            select_subagent_for_task(&subagents, &task.task_type).ok_or_else(|| {
+                AppError::NotFound("No available subagent for this task type".to_string())
+            })?;
 
         // Update subagent status
         let mut agent = selected_agent.clone();
@@ -62,8 +64,9 @@ where
         let subagents = self.manager.get_available_subagents().await?;
 
         // Select appropriate subagent
-        let selected_agent = select_subagent_for_task(&subagents, &task_type)
-            .ok_or_else(|| AppError::NotFound("No available subagent for this task type".to_string()))?;
+        let selected_agent = select_subagent_for_task(&subagents, &task_type).ok_or_else(|| {
+            AppError::NotFound("No available subagent for this task type".to_string())
+        })?;
 
         // Create task
         let mut task = SubagentTask::new(selected_agent.id.clone(), task_type, input, context);

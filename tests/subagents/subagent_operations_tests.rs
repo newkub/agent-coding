@@ -1,8 +1,10 @@
-use agent_tui::modules::subagents::domain::operations::subagent_operations::{
-    select_subagent_for_task, estimate_task_complexity, calculate_task_priority, generate_system_prompt,
-    ComplexityLevel, TaskPriority
+use agent_tui::modules::subagents::domain::models::subagent::{
+    AgentType, Subagent, SubagentStatus, TaskType,
 };
-use agent_tui::modules::subagents::domain::models::subagent::{Subagent, AgentType, SubagentStatus, TaskType};
+use agent_tui::modules::subagents::domain::operations::subagent_operations::{
+    calculate_task_priority, estimate_task_complexity, generate_system_prompt,
+    select_subagent_for_task, ComplexityLevel, TaskPriority,
+};
 
 #[test]
 fn test_select_subagent_for_task() {
@@ -12,7 +14,7 @@ fn test_select_subagent_for_task() {
         "Reviews code".to_string(),
     );
     agent.status = SubagentStatus::Idle;
-    
+
     let subagents = vec![agent];
     let selected = select_subagent_for_task(&subagents, &TaskType::CodeReview);
     assert!(selected.is_some());

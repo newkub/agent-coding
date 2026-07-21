@@ -20,7 +20,7 @@ pub fn validate_snippet_code(code: &str) -> Result<(), SnippetValidationError> {
         return Err(SnippetValidationError::EmptyCode);
     }
     if code.len() > 100_000 {
-        return Err(SnippetValidationError::CodeTooLong)
+        return Err(SnippetValidationError::CodeTooLong);
     }
     Ok(())
 }

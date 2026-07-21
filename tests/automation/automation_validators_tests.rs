@@ -1,5 +1,5 @@
+use agent_tui::modules::automation::domain::models::issue_pr::{AutomationConfig, Issue};
 use agent_tui::modules::automation::domain::validators::automation_validators;
-use agent_tui::modules::automation::domain::models::issue_pr::{Issue, AutomationConfig};
 
 #[test]
 fn test_validate_issue_for_automation_success() {

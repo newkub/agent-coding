@@ -1,7 +1,7 @@
-use async_trait::async_trait;
-use crate::modules::diff::domain::models::DiffReview;
 use crate::modules::diff::domain::events::DiffEvent;
+use crate::modules::diff::domain::models::DiffReview;
 use crate::shared::kernel::result::AppResult;
+use async_trait::async_trait;
 
 /// Port: Diff Parser
 #[async_trait]

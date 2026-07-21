@@ -114,9 +114,9 @@ impl Guardrail {
     }
 
     pub fn has_critical_rules(&self) -> bool {
-        self.rules.iter().any(|r| {
-            matches!(r.action, GuardrailAction::Block | GuardrailAction::Escalate)
-        })
+        self.rules
+            .iter()
+            .any(|r| matches!(r.action, GuardrailAction::Block | GuardrailAction::Escalate))
     }
 }
 
@@ -155,7 +155,9 @@ impl GuardrailCheck {
     }
 
     pub fn has_critical_violations(&self) -> bool {
-        self.violations.iter().any(|v| matches!(v.severity, Severity::Critical))
+        self.violations
+            .iter()
+            .any(|v| matches!(v.severity, Severity::Critical))
     }
 }
 

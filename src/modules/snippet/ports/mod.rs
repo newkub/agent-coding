@@ -1,7 +1,7 @@
-use async_trait::async_trait;
-use crate::modules::snippet::domain::models::{Snippet, SnippetId};
 use crate::modules::snippet::domain::events::SnippetEvent;
+use crate::modules::snippet::domain::models::{Snippet, SnippetId};
 use crate::shared::kernel::result::AppResult;
+use async_trait::async_trait;
 
 /// Port: Snippet Repository
 #[async_trait]

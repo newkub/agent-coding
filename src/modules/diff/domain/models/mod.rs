@@ -184,7 +184,7 @@ impl DiffReview {
                 return true;
             }
         }
-        
+
         // Move to next file
         if self.current_file_index < self.files.len() - 1 {
             self.current_file_index += 1;
@@ -199,7 +199,7 @@ impl DiffReview {
             self.current_hunk_index -= 1;
             return true;
         }
-        
+
         if self.current_file_index > 0 {
             self.current_file_index -= 1;
             self.current_hunk_index = self.files[self.current_file_index]

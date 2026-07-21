@@ -1,24 +1,72 @@
-use crate::shared::kernel::types::Tab;
 use super::command::Command;
+use crate::shared::kernel::types::Tab;
 
 /// Get available commands for command palette
 pub fn get_available_commands() -> Vec<Command> {
     vec![
-        Command::new("Switch to Agent Tab", Some("1"), "Switch to AI assistant tab"),
-        Command::new("Switch to Packages Tab", Some("2"), "Switch to package manager tab"),
-        Command::new("Switch to Files Tab", Some("3"), "Switch to file explorer tab"),
-        Command::new("Switch to Git Tab", Some("4"), "Switch to Git operations tab"),
-        Command::new("Switch to Terminal Tab", Some("5"), "Switch to terminal tab"),
-        Command::new("Switch to Snippets Tab", Some("6"), "Switch to code snippets tab"),
+        Command::new(
+            "Switch to Agent Tab",
+            Some("1"),
+            "Switch to AI assistant tab",
+        ),
+        Command::new(
+            "Switch to Packages Tab",
+            Some("2"),
+            "Switch to package manager tab",
+        ),
+        Command::new(
+            "Switch to Files Tab",
+            Some("3"),
+            "Switch to file explorer tab",
+        ),
+        Command::new(
+            "Switch to Git Tab",
+            Some("4"),
+            "Switch to Git operations tab",
+        ),
+        Command::new(
+            "Switch to Terminal Tab",
+            Some("5"),
+            "Switch to terminal tab",
+        ),
+        Command::new(
+            "Switch to Snippets Tab",
+            Some("6"),
+            "Switch to code snippets tab",
+        ),
         Command::new("Switch to API Tab", Some("7"), "Switch to API testing tab"),
-        Command::new("Switch to Database Tab", Some("8"), "Switch to database tab"),
-        Command::new("Switch to Tasks Tab", Some("9"), "Switch to task management tab"),
+        Command::new(
+            "Switch to Database Tab",
+            Some("8"),
+            "Switch to database tab",
+        ),
+        Command::new(
+            "Switch to Tasks Tab",
+            Some("9"),
+            "Switch to task management tab",
+        ),
         Command::new("Switch to Notes Tab", Some("0"), "Switch to notes tab"),
         Command::new("Switch to Logs Tab", Some("-"), "Switch to logs viewer tab"),
-        Command::new("Switch to System Tab", Some("="), "Switch to system monitoring tab"),
-        Command::new("Toggle Focus Mode", Some("f"), "Toggle focus mode for current column"),
-        Command::new("Save Current State", Some("Ctrl+S"), "Save current application state"),
-        Command::new("Refresh/Reload", Some("Ctrl+R"), "Refresh current view or reload data"),
+        Command::new(
+            "Switch to System Tab",
+            Some("="),
+            "Switch to system monitoring tab",
+        ),
+        Command::new(
+            "Toggle Focus Mode",
+            Some("f"),
+            "Toggle focus mode for current column",
+        ),
+        Command::new(
+            "Save Current State",
+            Some("Ctrl+S"),
+            "Save current application state",
+        ),
+        Command::new(
+            "Refresh/Reload",
+            Some("Ctrl+R"),
+            "Refresh current view or reload data",
+        ),
         Command::new("Quit Application", Some("q"), "Exit the application"),
     ]
 }
@@ -138,7 +186,11 @@ pub fn get_tab_specific_commands(tab: Tab) -> Vec<Command> {
     };
 
     // Add custom commands to all tabs
-    commands.push(Command::new("Custom Commands", None, "Manage custom commands"));
+    commands.push(Command::new(
+        "Custom Commands",
+        None,
+        "Manage custom commands",
+    ));
 
     commands
 }
@@ -156,7 +208,10 @@ pub fn search_commands(query: &str) -> Vec<Command> {
         .filter(|cmd| {
             cmd.name.to_lowercase().contains(&query_lower)
                 || cmd.description.to_lowercase().contains(&query_lower)
-                || cmd.shortcut.as_ref().is_some_and(|s| s.to_lowercase().contains(&query_lower))
+                || cmd
+                    .shortcut
+                    .as_ref()
+                    .is_some_and(|s| s.to_lowercase().contains(&query_lower))
         })
         .collect()
 }

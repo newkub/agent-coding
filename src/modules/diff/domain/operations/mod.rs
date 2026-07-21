@@ -28,7 +28,7 @@ pub fn parse_unified_diff(diff_text: &str) -> Vec<DiffHunk> {
                     std::mem::take(&mut current_lines),
                 ));
             }
-            
+
             // Parse hunk header: @@ -old_start,old_count +new_start,new_count @@
             if let Some(parsed) = parse_hunk_header(line) {
                 old_start = parsed.0;
@@ -36,7 +36,7 @@ pub fn parse_unified_diff(diff_text: &str) -> Vec<DiffHunk> {
                 new_start = parsed.2;
                 new_count = parsed.3;
             }
-            
+
             old_line = old_start;
             new_line = new_start;
             hunk_start = i;
@@ -55,19 +55,32 @@ pub fn parse_unified_diff(diff_text: &str) -> Vec<DiffHunk> {
                 _ => (DiffLineType::Context, false, false),
             };
 
-            let content = line.strip_prefix(|c: char| c == '+' || c == '-' || c == ' ')
+            let content = line
+                .strip_prefix(|c: char| c == '+' || c == '-' || c == ' ')
                 .unwrap_or(line)
                 .to_string();
 
             current_lines.push(DiffLine {
                 line_type,
                 content,
-                old_line_num: if is_old { Some(old_line) } else { old_line.checked_sub(1) },
-                new_line_num: if is_new { Some(new_line) } else { new_line.checked_sub(1) },
+                old_line_num: if is_old {
+                    Some(old_line)
+                } else {
+                    old_line.checked_sub(1)
+                },
+                new_line_num: if is_new {
+                    Some(new_line)
+                } else {
+                    new_line.checked_sub(1)
+                },
             });
 
-            if is_old { old_line += 1; }
-            if is_new { new_line += 1; }
+            if is_old {
+                old_line += 1;
+            }
+            if is_new {
+                new_line += 1;
+            }
         }
     }
 
@@ -91,17 +104,15 @@ pub fn parse_unified_diff(diff_text: &str) -> Vec<DiffHunk> {
 fn parse_hunk_header(header: &str) -> Option<(u32, u32, u32, u32)> {
     // Format: @@ -old_start[,old_count] +new_start[,new_count] @@
     let parts: Vec<&str> = header.split_whitespace().collect();
-    if parts.len() < 3 { return None; }
+    if parts.len() < 3 {
+        return None;
+    }
 
     let old_part = parts[1].trim_start_matches('-');
     let new_part = parts[2].trim_start_matches('+');
 
-    let old_nums: Vec<u32> = old_part.split(',')
-        .filter_map(|s| s.parse().ok())
-        .collect();
-    let new_nums: Vec<u32> = new_part.split(',')
-        .filter_map(|s| s.parse().ok())
-        .collect();
+    let old_nums: Vec<u32> = old_part.split(',').filter_map(|s| s.parse().ok()).collect();
+    let new_nums: Vec<u32> = new_part.split(',').filter_map(|s| s.parse().ok()).collect();
 
     Some((
         old_nums.first().copied().unwrap_or(1),
@@ -113,10 +124,15 @@ fn parse_hunk_header(header: &str) -> Option<(u32, u32, u32, u32)> {
 
 /// Pure domain operation: Check if all hunks are approved
 pub fn all_hunks_approved(hunks: &[DiffHunk]) -> bool {
-    !hunks.is_empty() && hunks.iter().all(|h| h.status == crate::modules::diff::domain::models::HunkStatus::Approved)
+    !hunks.is_empty()
+        && hunks
+            .iter()
+            .all(|h| h.status == crate::modules::diff::domain::models::HunkStatus::Approved)
 }
 
 /// Pure domain operation: Check if any hunk is rejected
 pub fn any_hunk_rejected(hunks: &[DiffHunk]) -> bool {
-    hunks.iter().any(|h| h.status == crate::modules::diff::domain::models::HunkStatus::Rejected)
+    hunks
+        .iter()
+        .any(|h| h.status == crate::modules::diff::domain::models::HunkStatus::Rejected)
 }

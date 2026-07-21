@@ -25,7 +25,13 @@ impl AuditLog {
         }
     }
 
-    pub fn log_operation(&mut self, operation: String, details: String, user: String, success: bool) {
+    pub fn log_operation(
+        &mut self,
+        operation: String,
+        details: String,
+        user: String,
+        success: bool,
+    ) {
         let entry = AuditEntry {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: chrono::Utc::now(),
@@ -34,9 +40,9 @@ impl AuditLog {
             user,
             success,
         };
-        
+
         self.entries.push_back(entry);
-        
+
         // Keep only max_entries
         while self.entries.len() > self.max_entries {
             self.entries.pop_front();
@@ -55,13 +61,14 @@ impl AuditLog {
     }
 
     pub fn filter_by_user(&self, user: &str) -> Vec<&AuditEntry> {
-        self.entries
-            .iter()
-            .filter(|e| e.user == user)
-            .collect()
+        self.entries.iter().filter(|e| e.user == user).collect()
     }
 
-    pub fn filter_by_date_range(&self, start: chrono::DateTime<chrono::Utc>, end: chrono::DateTime<chrono::Utc>) -> Vec<&AuditEntry> {
+    pub fn filter_by_date_range(
+        &self,
+        start: chrono::DateTime<chrono::Utc>,
+        end: chrono::DateTime<chrono::Utc>,
+    ) -> Vec<&AuditEntry> {
         self.entries
             .iter()
             .filter(|e| e.timestamp >= start && e.timestamp <= end)

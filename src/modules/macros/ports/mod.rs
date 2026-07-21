@@ -1,7 +1,10 @@
-use async_trait::async_trait;
-use crate::modules::macros::domain::{models::{Macro, MacroId, MacroStep}, events::MacroEvent};
-use crate::shared::kernel::result::AppResult;
 use crate::modules::macros::application::usecases::StepResult;
+use crate::modules::macros::domain::{
+    events::MacroEvent,
+    models::{Macro, MacroId, MacroStep},
+};
+use crate::shared::kernel::result::AppResult;
+use async_trait::async_trait;
 
 /// Port: Macro Repository
 #[async_trait]

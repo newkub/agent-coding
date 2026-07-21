@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use git2::{Repository, BranchType};
+use git2::{BranchType, Repository};
 
 use crate::modules::automation::ports::GitOperations;
 use crate::shared::kernel::result::AppError;
@@ -26,7 +26,7 @@ impl GitOperations for Git2Adapter {
         let repo = self.get_repo()?;
         let head = repo.head()?;
         let target = head.peel_to_commit()?;
-        
+
         repo.branch(branch_name, &target, false)?;
         Ok(())
     }
@@ -45,27 +45,20 @@ impl GitOperations for Git2Adapter {
         let mut index = repo.index()?;
         let tree_id = index.write_tree()?;
         let tree = repo.find_tree(tree_id)?;
-        
+
         let head = repo.head()?;
         let parent_commit = head.peel_to_commit()?;
-        
+
         let sig = repo.signature()?;
-        let _oid = repo.commit(
-            Some("HEAD"),
-            &sig,
-            &sig,
-            message,
-            &tree,
-            &[&parent_commit],
-        )?;
-        
+        let _oid = repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &[&parent_commit])?;
+
         Ok(())
     }
 
     async fn push(&self, branch_name: &str) -> Result<(), AppError> {
         let repo = self.get_repo()?;
         let mut remote = repo.find_remote("origin")?;
-        
+
         remote.push(&[format!("refs/heads/{}", branch_name)], None)?;
         Ok(())
     }
@@ -80,12 +73,10 @@ impl GitOperations for Git2Adapter {
     async fn branch_exists(&self, branch_name: &str) -> Result<bool, AppError> {
         let repo = self.get_repo();
         match repo {
-            Ok(r) => {
-                match r.find_branch(branch_name, BranchType::Local) {
-                    Ok(_) => Ok(true),
-                    Err(_) => Ok(false),
-                }
-            }
+            Ok(r) => match r.find_branch(branch_name, BranchType::Local) {
+                Ok(_) => Ok(true),
+                Err(_) => Ok(false),
+            },
             Err(_) => Ok(false),
         }
     }
@@ -93,12 +84,10 @@ impl GitOperations for Git2Adapter {
     async fn remote_branch_exists(&self, branch_name: &str) -> Result<bool, AppError> {
         let repo = self.get_repo();
         match repo {
-            Ok(r) => {
-                match r.find_branch(branch_name, BranchType::Remote) {
-                    Ok(_) => Ok(true),
-                    Err(_) => Ok(false),
-                }
-            }
+            Ok(r) => match r.find_branch(branch_name, BranchType::Remote) {
+                Ok(_) => Ok(true),
+                Err(_) => Ok(false),
+            },
             Err(_) => Ok(false),
         }
     }

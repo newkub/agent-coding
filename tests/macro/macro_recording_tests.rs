@@ -1,6 +1,6 @@
 //! Recording State tests
 
-use agent_tui::modules::macros::domain::models::{RecordingState, MacroId};
+use agent_tui::modules::macros::domain::models::{MacroId, RecordingState};
 
 #[test]
 fn test_recording_state_idle() {

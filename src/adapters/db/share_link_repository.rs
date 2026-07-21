@@ -102,36 +102,33 @@ impl ShareLinkRepository for SqliteShareLinkRepository {
     }
 
     async fn find_by_id(&self, id: Uuid) -> Result<Option<ShareLink>, AppError> {
-        let row = sqlx::query(
-            "SELECT * FROM share_links WHERE id = ?"
-        )
-        .bind(id.to_string())
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query("SELECT * FROM share_links WHERE id = ?")
+            .bind(id.to_string())
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| self.row_to_share_link(r)))
     }
 
     async fn find_by_token(&self, token: &str) -> Result<Option<ShareLink>, AppError> {
-        let row = sqlx::query(
-            "SELECT * FROM share_links WHERE token = ?"
-        )
-        .bind(token)
-        .fetch_optional(&self.pool)
-        .await?;
+        let row = sqlx::query("SELECT * FROM share_links WHERE token = ?")
+            .bind(token)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(row.map(|r| self.row_to_share_link(r)))
     }
 
     async fn find_by_session_id(&self, session_id: Uuid) -> Result<Vec<ShareLink>, AppError> {
-        let rows = sqlx::query(
-            "SELECT * FROM share_links WHERE session_id = ?"
-        )
-        .bind(session_id.to_string())
-        .fetch_all(&self.pool)
-        .await?;
+        let rows = sqlx::query("SELECT * FROM share_links WHERE session_id = ?")
+            .bind(session_id.to_string())
+            .fetch_all(&self.pool)
+            .await?;
 
-        Ok(rows.into_iter().map(|r| self.row_to_share_link(r)).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| self.row_to_share_link(r))
+            .collect())
     }
 
     async fn update(&self, link: &ShareLink) -> Result<(), AppError> {

@@ -1,5 +1,7 @@
+use agent_tui::modules::performance::domain::models::metrics::{
+    EffortLevel, ImpactLevel, OptimizationCategory, OptimizationSuggestion, PerformanceMetrics,
+};
 use agent_tui::modules::performance::domain::validators::performance_validators;
-use agent_tui::modules::performance::domain::models::metrics::{PerformanceMetrics, OptimizationSuggestion, OptimizationCategory, ImpactLevel, EffortLevel};
 
 #[test]
 fn test_validate_performance_metrics_empty() {

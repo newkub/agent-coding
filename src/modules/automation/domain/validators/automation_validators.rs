@@ -1,4 +1,4 @@
-use crate::modules::automation::domain::models::issue_pr::{Issue, AutomationConfig};
+use crate::modules::automation::domain::models::issue_pr::{AutomationConfig, Issue};
 use crate::shared::kernel::result::AppError;
 
 /// Pure function to validate issue for automation
@@ -17,7 +17,8 @@ pub fn validate_issue_for_automation(issue: &Issue) -> Result<(), AppError> {
 
     if !issue.is_automatable() {
         return Err(AppError::ValidationError(
-            "Issue is not marked for automation (missing 'automated' label or /automate keyword)".to_string(),
+            "Issue is not marked for automation (missing 'automated' label or /automate keyword)"
+                .to_string(),
         ));
     }
 

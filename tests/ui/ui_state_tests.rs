@@ -1,6 +1,6 @@
 //! UI State tests
 
-use agent_tui::shared::kernel::types::{UIState, Tab, Column};
+use agent_tui::shared::kernel::types::{Column, Tab, UIState};
 
 #[test]
 fn test_ui_state_new() {

@@ -55,7 +55,7 @@ fn test_command_result_serialization() {
         executed_at: chrono::Utc::now(),
         sandboxed: true,
     };
-    
+
     let json = serde_json::to_string(&result).unwrap();
     let parsed: CommandResult = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.exit_code, Some(0));

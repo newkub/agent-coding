@@ -1,7 +1,9 @@
+use super::super::domain::{
+    events::UIEvent,
+    models::AppState,
+    operations::{calculate_next_column, calculate_next_tab, calculate_prev_tab},
+};
 use crate::shared::types::Tab;
-use super::super::domain::{events::UIEvent, models::AppState, operations::{
-    calculate_next_column, calculate_next_tab, calculate_prev_tab,
-}};
 
 /// Use case: Switch to next tab
 pub(crate) fn switch_next_tab(state: &mut AppState) -> UIEvent {

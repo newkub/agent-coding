@@ -1,4 +1,6 @@
-use crate::modules::performance::domain::models::metrics::{PerformanceMetrics, OptimizationSuggestion};
+use crate::modules::performance::domain::models::metrics::{
+    OptimizationSuggestion, PerformanceMetrics,
+};
 use crate::shared::kernel::result::AppError;
 
 /// Pure function to validate performance metrics
@@ -25,7 +27,9 @@ pub fn validate_performance_metrics(metrics: &PerformanceMetrics) -> Result<(), 
 }
 
 /// Pure function to validate optimization suggestion
-pub fn validate_optimization_suggestion(suggestion: &OptimizationSuggestion) -> Result<(), AppError> {
+pub fn validate_optimization_suggestion(
+    suggestion: &OptimizationSuggestion,
+) -> Result<(), AppError> {
     if suggestion.title.is_empty() {
         return Err(AppError::ValidationError(
             "Suggestion title cannot be empty".to_string(),

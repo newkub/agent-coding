@@ -95,9 +95,7 @@ impl PerformanceMetrics {
     }
 
     pub fn is_healthy(&self) -> bool {
-        self.cpu_usage < 80.0
-            && self.memory_usage_percentage() < 80.0
-            && self.error_rate < 0.05
+        self.cpu_usage < 80.0 && self.memory_usage_percentage() < 80.0 && self.error_rate < 0.05
     }
 }
 
@@ -122,7 +120,8 @@ impl PerformanceSnapshot {
         Some(PerformanceComparison {
             cpu_diff: self.metrics.cpu_usage - baseline.cpu_usage,
             memory_diff: self.metrics.memory_usage as i64 - baseline.memory_usage as i64,
-            response_time_diff: self.metrics.response_time_ms as i64 - baseline.response_time_ms as i64,
+            response_time_diff: self.metrics.response_time_ms as i64
+                - baseline.response_time_ms as i64,
             throughput_diff: self.metrics.throughput - baseline.throughput,
             error_rate_diff: self.metrics.error_rate - baseline.error_rate,
         })

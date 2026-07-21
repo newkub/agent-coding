@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 
-use crate::modules::guardrails::domain::models::guardrail::{GuardrailCheck, GuardrailAction};
-use crate::modules::guardrails::domain::operations::guardrail_operations::{check_input_against_guardrail, should_take_action, filter_output};
+use crate::modules::guardrails::domain::models::guardrail::{GuardrailAction, GuardrailCheck};
+use crate::modules::guardrails::domain::operations::guardrail_operations::{
+    check_input_against_guardrail, filter_output, should_take_action,
+};
 use crate::modules::guardrails::domain::validators::guardrail_validators;
 use crate::modules::guardrails::ports::{GuardrailChecker, GuardrailManager};
 use crate::shared::kernel::result::AppError;
@@ -42,7 +44,11 @@ where
         Ok(checks)
     }
 
-    async fn check_input_against(&self, input: &str, guardrail_id: &str) -> Result<GuardrailCheck, AppError> {
+    async fn check_input_against(
+        &self,
+        input: &str,
+        guardrail_id: &str,
+    ) -> Result<GuardrailCheck, AppError> {
         guardrail_validators::validate_input_for_check(input)?;
 
         let guardrail = self.manager.get_guardrail(guardrail_id).await?;

@@ -14,7 +14,7 @@ fn test_token_usage_new() {
         200,
         0.01,
     );
-    
+
     assert_eq!(usage.session_id, "session-1");
     assert_eq!(usage.model, "gpt-4");
     assert_eq!(usage.input_tokens, 100);
@@ -26,7 +26,7 @@ fn test_token_usage_new() {
 fn test_performance_metric_latency() {
     let now = Utc::now();
     let metric = PerformanceMetric::latency(now, 150.0, "api_call");
-    
+
     assert!(matches!(metric.metric_type, MetricType::LatencyMs));
     assert_eq!(metric.value, 150.0);
     assert_eq!(metric.unit, "ms");
@@ -37,7 +37,7 @@ fn test_performance_metric_latency() {
 fn test_performance_metric_throughput() {
     let now = Utc::now();
     let metric = PerformanceMetric::throughput(now, 50.0);
-    
+
     assert!(matches!(metric.metric_type, MetricType::TokensPerSecond));
     assert_eq!(metric.value, 50.0);
     assert_eq!(metric.unit, "tokens/s");
@@ -46,9 +46,12 @@ fn test_performance_metric_throughput() {
 #[test]
 fn test_timeline_entry_session_start() {
     let entry = TimelineEntry::session_start("session-123");
-    
+
     assert!(matches!(entry.activity_type, ActivityType::SessionStart));
-    assert_eq!(entry.metadata.get("session_id"), Some(&"session-123".to_string()));
+    assert_eq!(
+        entry.metadata.get("session_id"),
+        Some(&"session-123".to_string())
+    );
 }
 
 #[test]
@@ -62,7 +65,7 @@ fn test_metrics_summary_default() {
 fn test_metrics_summary_calculate_empty() {
     let usages: Vec<TokenUsage> = vec![];
     let metrics: Vec<PerformanceMetric> = vec![];
-    
+
     let summary = MetricsSummary::calculate(&usages, &metrics);
     assert_eq!(summary.total_tokens, 0);
     assert_eq!(summary.avg_latency_ms, 0.0);
@@ -71,16 +74,30 @@ fn test_metrics_summary_calculate_empty() {
 #[test]
 fn test_metrics_summary_calculate() {
     let usages = vec![
-        TokenUsage::new("s1".to_string(), "gpt-4".to_string(), "openai".to_string(), 100, 200, 0.01),
-        TokenUsage::new("s1".to_string(), "gpt-4".to_string(), "openai".to_string(), 50, 100, 0.005),
+        TokenUsage::new(
+            "s1".to_string(),
+            "gpt-4".to_string(),
+            "openai".to_string(),
+            100,
+            200,
+            0.01,
+        ),
+        TokenUsage::new(
+            "s1".to_string(),
+            "gpt-4".to_string(),
+            "openai".to_string(),
+            50,
+            100,
+            0.005,
+        ),
     ];
-    
+
     let now = Utc::now();
     let metrics = vec![
         PerformanceMetric::latency(now, 100.0, "op1"),
         PerformanceMetric::latency(now, 200.0, "op2"),
     ];
-    
+
     let summary = MetricsSummary::calculate(&usages, &metrics);
     assert_eq!(summary.total_tokens, 450); // 300 + 150
     assert_eq!(summary.total_requests, 2);
@@ -150,24 +167,54 @@ fn test_calculate_error_rate_zero_total() {
 #[test]
 fn test_metric_type_variants() {
     assert!(matches!(MetricType::LatencyMs, MetricType::LatencyMs));
-    assert!(matches!(MetricType::TokensPerSecond, MetricType::TokensPerSecond));
+    assert!(matches!(
+        MetricType::TokensPerSecond,
+        MetricType::TokensPerSecond
+    ));
     assert!(matches!(MetricType::CacheHitRate, MetricType::CacheHitRate));
     assert!(matches!(MetricType::RequestCount, MetricType::RequestCount));
     assert!(matches!(MetricType::ErrorRate, MetricType::ErrorRate));
-    assert!(matches!(MetricType::MemoryUsageMb, MetricType::MemoryUsageMb));
-    assert!(matches!(MetricType::CpuUsagePercent, MetricType::CpuUsagePercent));
+    assert!(matches!(
+        MetricType::MemoryUsageMb,
+        MetricType::MemoryUsageMb
+    ));
+    assert!(matches!(
+        MetricType::CpuUsagePercent,
+        MetricType::CpuUsagePercent
+    ));
 }
 
 #[test]
 fn test_activity_type_variants() {
-    assert!(matches!(ActivityType::SessionStart, ActivityType::SessionStart));
+    assert!(matches!(
+        ActivityType::SessionStart,
+        ActivityType::SessionStart
+    ));
     assert!(matches!(ActivityType::SessionEnd, ActivityType::SessionEnd));
-    assert!(matches!(ActivityType::MessageSent, ActivityType::MessageSent));
-    assert!(matches!(ActivityType::MessageReceived, ActivityType::MessageReceived));
-    assert!(matches!(ActivityType::FileOperation, ActivityType::FileOperation));
-    assert!(matches!(ActivityType::GitOperation, ActivityType::GitOperation));
-    assert!(matches!(ActivityType::CommandExecuted, ActivityType::CommandExecuted));
-    assert!(matches!(ActivityType::ModelSwitched, ActivityType::ModelSwitched));
+    assert!(matches!(
+        ActivityType::MessageSent,
+        ActivityType::MessageSent
+    ));
+    assert!(matches!(
+        ActivityType::MessageReceived,
+        ActivityType::MessageReceived
+    ));
+    assert!(matches!(
+        ActivityType::FileOperation,
+        ActivityType::FileOperation
+    ));
+    assert!(matches!(
+        ActivityType::GitOperation,
+        ActivityType::GitOperation
+    ));
+    assert!(matches!(
+        ActivityType::CommandExecuted,
+        ActivityType::CommandExecuted
+    ));
+    assert!(matches!(
+        ActivityType::ModelSwitched,
+        ActivityType::ModelSwitched
+    ));
 }
 
 #[test]
@@ -180,7 +227,7 @@ fn test_token_usage_serialization() {
         200,
         0.01,
     );
-    
+
     let json = serde_json::to_string(&usage).unwrap();
     let parsed: TokenUsage = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.total_tokens, 300);
@@ -189,7 +236,7 @@ fn test_token_usage_serialization() {
 #[test]
 fn test_performance_metric_serialization() {
     let metric = PerformanceMetric::latency(Utc::now(), 100.0, "test");
-    
+
     let json = serde_json::to_string(&metric).unwrap();
     let parsed: PerformanceMetric = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.value, 100.0);
@@ -206,7 +253,7 @@ fn test_metrics_summary_serialization() {
         cache_hit_rate: 0.8,
         error_count: 1,
     };
-    
+
     let json = serde_json::to_string(&summary).unwrap();
     let parsed: MetricsSummary = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.total_tokens, 1000);
@@ -222,7 +269,7 @@ fn test_timeline_entry_serialization() {
         duration_ms: Some(100),
         metadata: std::collections::HashMap::new(),
     };
-    
+
     let json = serde_json::to_string(&entry).unwrap();
     let parsed: TimelineEntry = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.description, "Session started");
@@ -232,7 +279,7 @@ fn test_timeline_entry_serialization() {
 fn test_performance_metric_with_tags() {
     let mut tags = std::collections::HashMap::new();
     tags.insert("key1".to_string(), "value1".to_string());
-    
+
     let metric = PerformanceMetric {
         id: "test".to_string(),
         timestamp: Utc::now(),
@@ -241,6 +288,6 @@ fn test_performance_metric_with_tags() {
         unit: "ms".to_string(),
         tags,
     };
-    
+
     assert_eq!(metric.tags.get("key1"), Some(&"value1".to_string()));
 }

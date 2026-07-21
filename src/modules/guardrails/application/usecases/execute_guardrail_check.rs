@@ -1,6 +1,8 @@
-use crate::modules::guardrails::domain::models::guardrail::{Guardrail, GuardrailCheck, GuardrailAction};
+use crate::modules::guardrails::domain::models::guardrail::{
+    Guardrail, GuardrailAction, GuardrailCheck,
+};
 use crate::modules::guardrails::domain::validators::guardrail_validators;
-use crate::modules::guardrails::ports::{GuardrailManager, GuardrailChecker};
+use crate::modules::guardrails::ports::{GuardrailChecker, GuardrailManager};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for executing guardrail checks
@@ -28,7 +30,10 @@ where
     }
 
     /// Check input and determine if it should be blocked
-    pub(crate) async fn check_and_validate(&self, input: &str) -> Result<GuardrailResult, AppError> {
+    pub(crate) async fn check_and_validate(
+        &self,
+        input: &str,
+    ) -> Result<GuardrailResult, AppError> {
         let checks = self.check_input(input).await?;
         let should_block = self.checker.should_block(&checks).await?;
 
@@ -58,13 +63,20 @@ where
     }
 
     /// Create a new guardrail
-    pub(crate) async fn create_guardrail(&self, guardrail: Guardrail) -> Result<Guardrail, AppError> {
+    pub(crate) async fn create_guardrail(
+        &self,
+        guardrail: Guardrail,
+    ) -> Result<Guardrail, AppError> {
         guardrail_validators::validate_guardrail(&guardrail)?;
         self.manager.create_guardrail(guardrail).await
     }
 
     /// Enable/disable a guardrail
-    pub(crate) async fn toggle_guardrail(&self, id: &str, enabled: bool) -> Result<Guardrail, AppError> {
+    pub(crate) async fn toggle_guardrail(
+        &self,
+        id: &str,
+        enabled: bool,
+    ) -> Result<Guardrail, AppError> {
         let mut guardrail = self.manager.get_guardrail(id).await?;
         guardrail.enabled = enabled;
         self.manager.update_guardrail(guardrail).await

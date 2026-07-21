@@ -1,4 +1,4 @@
-use crate::modules::subagents::domain::models::subagent::{Subagent, SubagentTask, SubagentConfig};
+use crate::modules::subagents::domain::models::subagent::{Subagent, SubagentConfig, SubagentTask};
 use crate::shared::kernel::result::AppError;
 
 /// Pure function to validate subagent configuration
@@ -98,7 +98,7 @@ pub fn validate_task_context(
                 "Repository cannot be empty".to_string(),
             ));
         }
-        
+
         // Validate repository format (owner/repo)
         let parts: Vec<&str> = repo.split('/').collect();
         if parts.len() != 2 {

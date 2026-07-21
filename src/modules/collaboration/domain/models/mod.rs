@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// A participant in a collaboration session
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,7 +111,11 @@ impl CollaborationSession {
     }
 
     pub fn update_cursor(&mut self, participant_id: &ParticipantId, position: CursorPosition) {
-        if let Some(p) = self.participants.iter_mut().find(|p| p.id == *participant_id) {
+        if let Some(p) = self
+            .participants
+            .iter_mut()
+            .find(|p| p.id == *participant_id)
+        {
             p.cursor_position = Some(position);
         }
     }

@@ -58,11 +58,13 @@ pub fn navigate_terminal_tab(state: &mut AppState, direction: NavigationDirectio
     match direction {
         NavigationDirection::Up => {
             if state.terminal_tab_state.selected_history_index.unwrap_or(0) > 0 {
-                state.terminal_tab_state.selected_history_index = Some(state.terminal_tab_state.selected_history_index.unwrap() - 1);
+                state.terminal_tab_state.selected_history_index =
+                    Some(state.terminal_tab_state.selected_history_index.unwrap() - 1);
             }
         }
         NavigationDirection::Down => {
-            state.terminal_tab_state.selected_history_index = Some(state.terminal_tab_state.selected_history_index.unwrap_or(0) + 1);
+            state.terminal_tab_state.selected_history_index =
+                Some(state.terminal_tab_state.selected_history_index.unwrap_or(0) + 1);
         }
         NavigationDirection::Left => {
             state.ui_state.current_column = Column::Left;

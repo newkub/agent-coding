@@ -15,10 +15,8 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
         return;
     }
 
-    let [input_area, list_area] = Layout::vertical([
-        Constraint::Length(3),
-        Constraint::Fill(1),
-    ]).areas(area);
+    let [input_area, list_area] =
+        Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]).areas(area);
 
     // Search input
     let input_block = Block::default()
@@ -29,11 +27,16 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
         .title_style(Style::default().fg(TEXT_BRIGHT));
 
     let input_text = format!("> {}", state.command_input);
-    let input_para = Paragraph::new(input_text)
-        .style(Style::default().fg(TEXT));
+    let input_para = Paragraph::new(input_text).style(Style::default().fg(TEXT));
 
     frame.render_widget(input_block, input_area);
-    frame.render_widget(input_para, input_area.inner(ratatui::layout::Margin { horizontal: 2, vertical: 1 }));
+    frame.render_widget(
+        input_para,
+        input_area.inner(ratatui::layout::Margin {
+            horizontal: 2,
+            vertical: 1,
+        }),
+    );
 
     // Command list - use tab-specific commands
     let query = if state.command_input.len() > 1 {
@@ -44,7 +47,7 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
 
     // Get tab-specific commands
     let tab_commands = get_tab_specific_commands(state.ui_state.current_tab);
-    
+
     // Filter commands by query
     let filtered_commands = if query.is_empty() {
         tab_commands
@@ -59,34 +62,43 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
             .collect()
     };
 
-    let items: Vec<ListItem> = filtered_commands.iter().enumerate().map(|(idx, cmd)| {
-        let highlight = idx == state.command_palette_selected;
-        
-        let shortcut_text = cmd.shortcut.as_ref().map(|s| format!("[{}]", s)).unwrap_or_default();
-        ListItem::new(vec![
-            Line::from(vec![
-                Span::raw("  "),
-                Span::styled(&cmd.name, 
-                    Style::default()
-                        .fg(if highlight { BG } else { TEXT_BRIGHT })
-                        .add_modifier(Modifier::BOLD)
-                ),
-                Span::raw(" "),
-                Span::styled(shortcut_text, 
-                    Style::default()
-                        .fg(if highlight { TEXT_BRIGHT } else { TEXT_DIM })
-                ),
-            ]),
-            Line::from(vec![
-                Span::raw("    "),
-                Span::styled(&cmd.description,
-                    Style::default()
-                        .fg(if highlight { TEXT } else { TEXT_DIM })
-                ),
-            ]),
-        ])
-        .style(Style::default().bg(if highlight { ACCENT } else { BG_LIGHT }))
-    }).collect();
+    let items: Vec<ListItem> = filtered_commands
+        .iter()
+        .enumerate()
+        .map(|(idx, cmd)| {
+            let highlight = idx == state.command_palette_selected;
+
+            let shortcut_text = cmd
+                .shortcut
+                .as_ref()
+                .map(|s| format!("[{}]", s))
+                .unwrap_or_default();
+            ListItem::new(vec![
+                Line::from(vec![
+                    Span::raw("  "),
+                    Span::styled(
+                        &cmd.name,
+                        Style::default()
+                            .fg(if highlight { BG } else { TEXT_BRIGHT })
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    Span::raw(" "),
+                    Span::styled(
+                        shortcut_text,
+                        Style::default().fg(if highlight { TEXT_BRIGHT } else { TEXT_DIM }),
+                    ),
+                ]),
+                Line::from(vec![
+                    Span::raw("    "),
+                    Span::styled(
+                        &cmd.description,
+                        Style::default().fg(if highlight { TEXT } else { TEXT_DIM }),
+                    ),
+                ]),
+            ])
+            .style(Style::default().bg(if highlight { ACCENT } else { BG_LIGHT }))
+        })
+        .collect();
 
     let list = List::new(items)
         .block(Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM))
@@ -99,7 +111,7 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
     let hint_para = Paragraph::new(hint)
         .style(Style::default().fg(TEXT_DIM))
         .alignment(Alignment::Center);
-    
+
     let hint_area = Rect::new(area.x, area.y + area.height - 1, area.width, 1);
     frame.render_widget(hint_para, hint_area);
 }

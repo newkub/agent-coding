@@ -1,5 +1,5 @@
 use agent_tui::modules::headless::domain::models::command::{
-    HeadlessCommand, CommandType, CommandContext, CommandStatus, HeadlessConfig, OutputFormat
+    CommandContext, CommandStatus, CommandType, HeadlessCommand, HeadlessConfig, OutputFormat,
 };
 
 #[test]
@@ -28,8 +28,7 @@ fn test_headless_command_fail() {
 
 #[test]
 fn test_command_context_with_session() {
-    let context = CommandContext::new("/test".to_string())
-        .with_session("session-123".to_string());
+    let context = CommandContext::new("/test".to_string()).with_session("session-123".to_string());
     assert_eq!(context.session_id, Some("session-123".to_string()));
 }
 

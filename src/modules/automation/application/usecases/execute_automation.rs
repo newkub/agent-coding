@@ -1,10 +1,12 @@
-use crate::modules::automation::domain::models::issue_pr::{AutomationWorkflow, AutomationConfig, WorkflowStatus, StepStatus};
+use crate::modules::automation::domain::models::issue_pr::{
+    AutomationConfig, AutomationWorkflow, StepStatus, WorkflowStatus,
+};
 use crate::modules::automation::domain::operations::automation_operations::{
-    generate_branch_name, generate_commit_message, generate_pr_title, generate_pr_body, 
-    extract_labels, determine_target_branch
+    determine_target_branch, extract_labels, generate_branch_name, generate_commit_message,
+    generate_pr_body, generate_pr_title,
 };
 use crate::modules::automation::domain::validators::automation_validators;
-use crate::modules::automation::ports::{GitHubClient, GitOperations, AutomationWorkflowExecutor};
+use crate::modules::automation::ports::{AutomationWorkflowExecutor, GitHubClient, GitOperations};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for executing issue-to-PR automation
@@ -59,7 +61,7 @@ where
         // Step 1: Create branch
         workflow.update_step(&step_create_branch, StepStatus::Running, None);
         let branch_name = generate_branch_name(&workflow.issue, config);
-        
+
         if config.auto_create_branch {
             if self.git.branch_exists(&branch_name).await? {
                 self.git.checkout_branch(&branch_name).await?;
@@ -97,24 +99,35 @@ where
             let pr_title = generate_pr_title(&workflow.issue);
             let pr_body = generate_pr_body(&workflow.issue, config);
             let target_branch = determine_target_branch(&workflow.issue);
-            
-            let pr = self.github.create_pull_request(
-                &workflow.issue.repository,
-                &pr_title,
-                &pr_body,
-                &branch_name,
-                &target_branch,
-            ).await?;
+
+            let pr = self
+                .github
+                .create_pull_request(
+                    &workflow.issue.repository,
+                    &pr_title,
+                    &pr_body,
+                    &branch_name,
+                    &target_branch,
+                )
+                .await?;
 
             // Add labels
             let labels = extract_labels(&workflow.issue, config);
             if !labels.is_empty() {
-                self.github.add_labels(&workflow.issue.repository, workflow.issue.number, labels).await?;
+                self.github
+                    .add_labels(&workflow.issue.repository, workflow.issue.number, labels)
+                    .await?;
             }
 
             // Add reviewers
             if !config.default_reviewers.is_empty() {
-                self.github.add_reviewers(&workflow.issue.repository, pr.number, config.default_reviewers.clone()).await?;
+                self.github
+                    .add_reviewers(
+                        &workflow.issue.repository,
+                        pr.number,
+                        config.default_reviewers.clone(),
+                    )
+                    .await?;
             }
 
             workflow.pr = Some(pr);
@@ -134,7 +147,11 @@ where
     G: GitOperations,
     H: GitHubClient,
 {
-    async fn execute(&self, workflow: &mut AutomationWorkflow, config: &AutomationConfig) -> Result<(), AppError> {
+    async fn execute(
+        &self,
+        workflow: &mut AutomationWorkflow,
+        config: &AutomationConfig,
+    ) -> Result<(), AppError> {
         self.execute(workflow, config).await
     }
 
@@ -144,7 +161,9 @@ where
     }
 
     async fn cancel(&self, _workflow_id: &str) -> Result<(), AppError> {
-        Err(AppError::State("Workflow cancellation not implemented".to_string()))
+        Err(AppError::State(
+            "Workflow cancellation not implemented".to_string(),
+        ))
     }
 }
 

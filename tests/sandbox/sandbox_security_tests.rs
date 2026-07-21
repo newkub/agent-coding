@@ -1,11 +1,14 @@
 //! Security tests
 
-use agent_tui::modules::sandbox::domain::models::{SecurityLevel, RuleAction};
+use agent_tui::modules::sandbox::domain::models::{RuleAction, SecurityLevel};
 use agent_tui::modules::sandbox::domain::operations::*;
 
 #[test]
 fn test_security_level_variants() {
-    assert!(matches!(SecurityLevel::Unrestricted, SecurityLevel::Unrestricted));
+    assert!(matches!(
+        SecurityLevel::Unrestricted,
+        SecurityLevel::Unrestricted
+    ));
     assert!(matches!(SecurityLevel::Safe, SecurityLevel::Safe));
     assert!(matches!(SecurityLevel::Sandboxed, SecurityLevel::Sandboxed));
     assert!(matches!(SecurityLevel::Strict, SecurityLevel::Strict));
@@ -15,7 +18,10 @@ fn test_security_level_variants() {
 fn test_rule_action_variants() {
     assert!(matches!(RuleAction::AutoApprove, RuleAction::AutoApprove));
     assert!(matches!(RuleAction::AutoReject, RuleAction::AutoReject));
-    assert!(matches!(RuleAction::RequireApproval, RuleAction::RequireApproval));
+    assert!(matches!(
+        RuleAction::RequireApproval,
+        RuleAction::RequireApproval
+    ));
     assert!(matches!(RuleAction::RunInSandbox, RuleAction::RunInSandbox));
 }
 

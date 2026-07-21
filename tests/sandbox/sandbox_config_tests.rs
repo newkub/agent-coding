@@ -1,6 +1,6 @@
 //! Sandbox Config tests
 
-use agent_tui::modules::sandbox::domain::models::{SandboxConfig, RuleId};
+use agent_tui::modules::sandbox::domain::models::{RuleId, SandboxConfig};
 
 #[test]
 fn test_rule_id_new() {

@@ -1,3 +1,10 @@
+use crate::modules::ui::domain::models::AppState;
+use crate::modules::ui::ports::UIRenderer;
+use crate::presentation::tui::components::help::draw_help_modal;
+use crate::presentation::tui::components::styles::with_theme;
+use crate::shared::constants::{COLUMN_PERCENTAGES, DEFAULT_TAB_HEIGHT};
+use crate::shared::kernel::result::AppResult;
+use crate::shared::types::{Column, Tab};
 use async_trait::async_trait;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -13,13 +20,6 @@ use ratatui::{
     Frame, Terminal,
 };
 use std::io;
-use crate::shared::constants::{COLUMN_PERCENTAGES, DEFAULT_TAB_HEIGHT};
-use crate::shared::kernel::result::AppResult;
-use crate::shared::types::{Column, Tab};
-use crate::modules::ui::domain::models::AppState;
-use crate::modules::ui::ports::UIRenderer;
-use crate::presentation::tui::components::help::draw_help_modal;
-use crate::presentation::tui::components::styles::with_theme;
 
 pub(crate) type RATerminal = Terminal<CrosstermBackend<std::io::Stdout>>;
 
@@ -43,11 +43,7 @@ impl RatatuiAdapter {
 
     pub(crate) fn cleanup(&self) -> AppResult<()> {
         disable_raw_mode()?;
-        execute!(
-            io::stdout(),
-            LeaveAlternateScreen,
-            DisableMouseCapture
-        )?;
+        execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
         Ok(())
     }
 }
@@ -78,26 +74,28 @@ impl UIRenderer for RatatuiAdapter {
 pub(crate) fn render_app_state(terminal: &mut RATerminal, state: &AppState) -> AppResult<()> {
     terminal.draw(|f| {
         let size = f.area();
-        
+
         // Get current theme colors
         let theme = with_theme(|t| t.clone());
         let colors = &theme.colors;
-        
+
         // Render help modal if active
         if state.show_help {
-            draw_help_modal(f, size, state.ui_state.current_tab, state.ui_state.current_column);
+            draw_help_modal(
+                f,
+                size,
+                state.ui_state.current_tab,
+                state.ui_state.current_column,
+            );
             return;
         }
-        
+
         // Get current tab index
         let tab_index = state.ui_state.current_tab as usize;
-        
+
         // Build tab titles
-        let tab_titles: Vec<&str> = Tab::all()
-            .iter()
-            .map(|t| t.label())
-            .collect();
-        
+        let tab_titles: Vec<&str> = Tab::all().iter().map(|t| t.label()).collect();
+
         // Create tabs widget with theme colors
         let tabs = Tabs::new(tab_titles)
             .select(tab_index)
@@ -105,63 +103,92 @@ pub(crate) fn render_app_state(terminal: &mut RATerminal, state: &AppState) -> A
             .highlight_style(
                 Style::default()
                     .add_modifier(Modifier::BOLD)
-                    .fg(colors.tab_highlight)
+                    .fg(colors.tab_highlight),
             )
             .divider(symbols::DOT);
-        
+
         // Calculate layout
         let tab_height = DEFAULT_TAB_HEIGHT;
         let tabs_area = Rect::new(0, 0, size.width, tab_height);
         let status_height = 1u16;
-        let content_height = size.height.saturating_sub(tab_height).saturating_sub(status_height);
+        let content_height = size
+            .height
+            .saturating_sub(tab_height)
+            .saturating_sub(status_height);
         let content_area = Rect::new(0, tab_height, size.width, content_height);
-        
+
         // Render tabs at top
         f.render_widget(tabs, tabs_area);
-        
+
         // Render tab content using the renderer
         render_tab_content(f, state, content_area, colors);
-        
+
         // Render status bar at bottom
         render_status_bar(f, state, size, colors);
     })?;
-    
+
     Ok(())
 }
 
-fn render_tab_content(f: &mut Frame, state: &AppState, area: Rect, colors: &crate::presentation::tui::components::theme::ColorPalette) {
+fn render_tab_content(
+    f: &mut Frame,
+    state: &AppState,
+    area: Rect,
+    colors: &crate::presentation::tui::components::theme::ColorPalette,
+) {
     // Get tab content from app state
     let content = state.current_tab_content();
-    
+
     // 3-column layout
     let column_widths = [
         Constraint::Percentage(COLUMN_PERCENTAGES[0]),
         Constraint::Percentage(COLUMN_PERCENTAGES[1]),
         Constraint::Percentage(COLUMN_PERCENTAGES[2]),
     ];
-    
+
     let columns = Layout::default()
         .direction(Direction::Horizontal)
         .constraints(column_widths.as_ref())
         .split(area);
-    
+
     // Render each column
     render_column(f, columns[0], Column::Left, &content.left, state, colors);
-    render_column(f, columns[1], Column::Center, &content.center, state, colors);
+    render_column(
+        f,
+        columns[1],
+        Column::Center,
+        &content.center,
+        state,
+        colors,
+    );
     render_column(f, columns[2], Column::Right, &content.right, state, colors);
 }
 
-fn render_column(f: &mut Frame, area: Rect, column: Column, content: &str, state: &AppState, colors: &crate::presentation::tui::components::theme::ColorPalette) {
+fn render_column(
+    f: &mut Frame,
+    area: Rect,
+    column: Column,
+    content: &str,
+    state: &AppState,
+    colors: &crate::presentation::tui::components::theme::ColorPalette,
+) {
     let is_selected = state.ui_state.current_column == column;
-    let border_color = if is_selected { colors.border_active } else { colors.border_inactive };
-    
+    let border_color = if is_selected {
+        colors.border_active
+    } else {
+        colors.border_inactive
+    };
+
     let block = Block::default()
-        .title(format!(" {} ", get_column_title(state.ui_state.current_tab, column)))
+        .title(format!(
+            " {} ",
+            get_column_title(state.ui_state.current_tab, column)
+        ))
         .borders(Borders::ALL)
         .border_style(Style::default().fg(border_color));
-    
+
     f.render_widget(block, area);
-    
+
     // Content inside column (inset by 1 for border)
     let inner = area.inner(Margin::default());
     let paragraph = Paragraph::new(content)
@@ -170,32 +197,44 @@ fn render_column(f: &mut Frame, area: Rect, column: Column, content: &str, state
     f.render_widget(paragraph, inner);
 }
 
-fn render_status_bar(f: &mut Frame, state: &AppState, size: Rect, colors: &crate::presentation::tui::components::theme::ColorPalette) {
+fn render_status_bar(
+    f: &mut Frame,
+    state: &AppState,
+    size: Rect,
+    colors: &crate::presentation::tui::components::theme::ColorPalette,
+) {
     let status_height = 1u16;
     let status_area = Rect::new(
-        0, 
-        size.height.saturating_sub(status_height), 
-        size.width, 
-        status_height
+        0,
+        size.height.saturating_sub(status_height),
+        size.width,
+        status_height,
     );
-    
+
     let tab_name = state.ui_state.current_tab.label();
     let col_name = match state.ui_state.current_column {
         Column::Left => "Left",
         Column::Center => "Center",
         Column::Right => "Right",
     };
-    let focus_status = if state.ui_state.is_focused { "ON" } else { "OFF" };
+    let focus_status = if state.ui_state.is_focused {
+        "ON"
+    } else {
+        "OFF"
+    };
     let selected_idx = get_selected_index(state);
-    
+
     let status_text = format!(
         " [Tab] {} | [Col] {} | [Focus] {} | [{}] | [f] Toggle | [q] Quit ",
         tab_name, col_name, focus_status, selected_idx
     );
-    
-    let status_paragraph = Paragraph::new(status_text)
-        .style(Style::default().bg(colors.status_bar_bg).fg(colors.status_bar_fg));
-    
+
+    let status_paragraph = Paragraph::new(status_text).style(
+        Style::default()
+            .bg(colors.status_bar_bg)
+            .fg(colors.status_bar_fg),
+    );
+
     f.render_widget(status_paragraph, status_area);
 }
 
@@ -235,7 +274,10 @@ fn get_selected_index(state: &AppState) -> String {
     match state.ui_state.current_tab {
         Tab::Agent => format!("msg:{}", state.agent_tab_state.messages.len()),
         Tab::Git => format!("file:{}", state.git_tab_state.selected_file_index),
-        Tab::Cli => format!("cmd:{}", state.cli_tab_state.selected_history_index.unwrap_or(0)),
+        Tab::Cli => format!(
+            "cmd:{}",
+            state.cli_tab_state.selected_history_index.unwrap_or(0)
+        ),
         Tab::Snippet => format!("snip:{}", state.snippet_tab_state.selected_snippet_index),
         Tab::Skills => format!("skill:{}", state.skills_tab_state.selected_skill_index),
         Tab::Workflows => format!("wf:{}", state.workflows_tab_state.selected_workflow_index),

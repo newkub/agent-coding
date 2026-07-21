@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// A recorded macro consisting of a sequence of actions
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,8 +93,7 @@ impl MacroStep {
 }
 
 /// Macro recording state
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum RecordingState {
     #[default]
     Idle,
@@ -119,7 +118,6 @@ impl RecordingState {
         }
     }
 }
-
 
 /// Macro execution context
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

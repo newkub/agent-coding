@@ -1,5 +1,5 @@
 use agent_tui::modules::automation::domain::models::issue_pr::{
-    Issue, PullRequest, AutomationWorkflow, AutomationConfig, IssueState, PRState, WorkflowStatus
+    AutomationConfig, AutomationWorkflow, Issue, IssueState, PRState, PullRequest, WorkflowStatus,
 };
 
 #[test]

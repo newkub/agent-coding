@@ -3,7 +3,9 @@ use std::path::PathBuf;
 use tokio::fs;
 use walkdir::WalkDir;
 
-use crate::modules::onboarding::domain::models::codebase_analysis::{DirectoryInfo, ProjectStructure};
+use crate::modules::onboarding::domain::models::codebase_analysis::{
+    DirectoryInfo, ProjectStructure,
+};
 use crate::modules::onboarding::ports::FileScanner;
 use crate::shared::kernel::result::AppError;
 
@@ -27,7 +29,8 @@ impl FileScanner for DefaultFileScanner {
     async fn scan_directory(&self, path: &PathBuf) -> Result<ProjectStructure, AppError> {
         let mut structure = ProjectStructure::default();
         let mut total_lines = 0;
-        let mut language_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        let mut language_counts: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
         let mut total_files = 0;
 
         // Get root files
@@ -36,7 +39,9 @@ impl FileScanner for DefaultFileScanner {
             let entry_path = entry.path();
             if entry_path.is_file() {
                 if let Some(name) = entry_path.file_name() {
-                    structure.root_files.push(name.to_string_lossy().to_string());
+                    structure
+                        .root_files
+                        .push(name.to_string_lossy().to_string());
                 }
             }
         }
@@ -49,16 +54,16 @@ impl FileScanner for DefaultFileScanner {
             .filter_map(|e| e.ok())
         {
             let entry_path = entry.path();
-            
+
             if entry_path.is_file() {
                 total_files += 1;
-                
+
                 // Count lines
                 let path_buf = entry_path.to_path_buf();
                 if let Ok(lines) = self.count_lines(&path_buf).await {
                     total_lines += lines;
                 }
-                
+
                 // Detect language
                 if let Some(lang) = self.detect_language(&path_buf) {
                     *language_counts.entry(lang).or_insert(0) += 1;
@@ -69,13 +74,13 @@ impl FileScanner for DefaultFileScanner {
                     .and_then(|n| n.to_str())
                     .unwrap_or("unknown")
                     .to_string();
-                
+
                 let file_count = WalkDir::new(entry_path)
                     .into_iter()
                     .filter_map(|e| e.ok())
                     .filter(|e| e.path().is_file())
                     .count();
-                
+
                 if file_count > 0 {
                     structure.directories.push(DirectoryInfo {
                         path: entry_path.to_path_buf(),
@@ -89,11 +94,13 @@ impl FileScanner for DefaultFileScanner {
 
         structure.total_files = total_files;
         structure.total_lines = total_lines;
-        
+
         // Calculate language percentages
         if total_files > 0 {
             for (lang, count) in language_counts {
-                structure.languages.insert(lang, (count as f64 / total_files as f64) * 100.0);
+                structure
+                    .languages
+                    .insert(lang, (count as f64 / total_files as f64) * 100.0);
             }
         }
 
@@ -107,7 +114,7 @@ impl FileScanner for DefaultFileScanner {
 
     fn detect_language(&self, file_path: &PathBuf) -> Option<String> {
         let extension = file_path.extension()?.to_str()?;
-        
+
         match extension.to_lowercase().as_str() {
             "rs" => Some("Rust".to_string()),
             "js" | "jsx" | "mjs" => Some("JavaScript".to_string()),
@@ -140,7 +147,7 @@ impl FileScanner for DefaultFileScanner {
 impl DefaultFileScanner {
     fn infer_directory_purpose(&self, name: &str) -> String {
         let name_lower = name.to_lowercase();
-        
+
         match name_lower.as_str() {
             "src" => "Source code".to_string(),
             "lib" => "Library code".to_string(),
@@ -179,7 +186,10 @@ mod tests {
     fn test_detect_language_typescript() {
         let scanner = DefaultFileScanner::new();
         let path = PathBuf::from("/test/app.tsx");
-        assert_eq!(scanner.detect_language(&path), Some("TypeScript".to_string()));
+        assert_eq!(
+            scanner.detect_language(&path),
+            Some("TypeScript".to_string())
+        );
     }
 
     #[test]

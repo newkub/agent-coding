@@ -3,7 +3,7 @@ use uuid::Uuid;
 use crate::modules::share::domain::models::share_link::{ShareLink, SharePermissions};
 use crate::modules::share::domain::operations::share_link_operations;
 use crate::modules::share::domain::validators::share_link_validators;
-use crate::modules::share::ports::{ShareLinkRepository, ShareLinkUrlGenerator, ShareLinkNotifier};
+use crate::modules::share::ports::{ShareLinkNotifier, ShareLinkRepository, ShareLinkUrlGenerator};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for creating a share link
@@ -129,9 +129,7 @@ mod tests {
         let use_case = CreateShareLinkUseCase::new(repository, url_generator, notifier);
         let session_id = Uuid::new_v4();
 
-        let result = use_case
-            .execute(session_id, Some(24), Some(10), None)
-            .await;
+        let result = use_case.execute(session_id, Some(24), Some(10), None).await;
 
         assert!(result.is_ok());
         let (link, url) = result.unwrap();
@@ -148,9 +146,7 @@ mod tests {
         let use_case = CreateShareLinkUseCase::new(repository, url_generator, notifier);
         let session_id = Uuid::new_v4();
 
-        let result = use_case
-            .execute(session_id, Some(0), Some(10), None)
-            .await;
+        let result = use_case.execute(session_id, Some(0), Some(10), None).await;
 
         assert!(result.is_err());
     }

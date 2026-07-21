@@ -1,7 +1,9 @@
 use crate::modules::share::domain::models::share_link::ShareLink;
-use crate::modules::share::domain::operations::share_link_operations::{validate_permissions, ShareAction};
+use crate::modules::share::domain::operations::share_link_operations::{
+    validate_permissions, ShareAction,
+};
 use crate::modules::share::domain::validators::share_link_validators;
-use crate::modules::share::ports::{ShareLinkRepository, ShareLinkNotifier};
+use crate::modules::share::ports::{ShareLinkNotifier, ShareLinkRepository};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for accessing a shared session via share link
@@ -79,6 +81,7 @@ mod tests {
     use super::*;
     use crate::modules::share::domain::models::share_link::SharePermissions;
     use std::sync::Arc;
+    use uuid::Uuid;
 
     struct MockRepository;
     struct MockNotifier;

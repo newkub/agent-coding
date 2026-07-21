@@ -1,5 +1,5 @@
 use agent_tui::modules::onboarding::domain::models::codebase_analysis::{
-    CodebaseAnalysis, ProjectStructure, TechStack, EntryPoint, EntryPointType, TestSetup,
+    CodebaseAnalysis, EntryPoint, EntryPointType, ProjectStructure, TechStack, TestSetup,
 };
 
 #[test]

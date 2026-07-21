@@ -1,6 +1,8 @@
-use crate::modules::sandbox::ports::{CommandExecutor, ApprovalEngine};
 use crate::modules::sandbox::domain::models::{Command, CommandResult, SecurityLevel};
-use crate::modules::sandbox::domain::operations::{determine_security_level, validate_command, calculate_risk_score};
+use crate::modules::sandbox::domain::operations::{
+    calculate_risk_score, determine_security_level, validate_command,
+};
+use crate::modules::sandbox::ports::{ApprovalEngine, CommandExecutor};
 use crate::shared::kernel::result::AppResult;
 
 /// Use case: Execute command with security checks
@@ -14,9 +16,8 @@ where
     A: ApprovalEngine,
 {
     // Validate command
-    validate_command(&command.command).map_err(|e|
-        crate::shared::kernel::result::AppError::State(e.to_string())
-    )?;
+    validate_command(&command.command)
+        .map_err(|e| crate::shared::kernel::result::AppError::State(e.to_string()))?;
 
     // Determine security level
     let security_level = if command.security_level == SecurityLevel::Safe {
@@ -27,26 +28,20 @@ where
 
     // Check approval
     let approved = approval_engine.check_approval(&command).await?;
-    
+
     if !approved {
         return Err(crate::shared::kernel::result::AppError::State(
-            "Command requires approval".to_string()
+            "Command requires approval".to_string(),
         ));
     }
 
     // Execute based on security level
     match security_level {
-        SecurityLevel::Sandboxed => {
-            executor.execute_sandboxed(&command).await
-        }
-        SecurityLevel::Strict => {
-            Err(crate::shared::kernel::result::AppError::State(
-                "Command requires explicit approval".to_string()
-            ))
-        }
-        _ => {
-            executor.execute(&command).await
-        }
+        SecurityLevel::Sandboxed => executor.execute_sandboxed(&command).await,
+        SecurityLevel::Strict => Err(crate::shared::kernel::result::AppError::State(
+            "Command requires explicit approval".to_string(),
+        )),
+        _ => executor.execute(&command).await,
     }
 }
 
@@ -54,7 +49,7 @@ where
 pub(crate) fn preview_command(command: &str) -> CommandPreview {
     let risk_score = calculate_risk_score(command);
     let security_level = determine_security_level(command);
-    
+
     CommandPreview {
         command: command.to_string(),
         risk_score,
@@ -76,13 +71,13 @@ pub struct CommandPreview {
 fn generate_warnings(command: &str, risk_score: u32) -> Vec<String> {
     let mut warnings = Vec::new();
     let cmd_lower = command.to_lowercase();
-    
+
     if risk_score >= 50 {
         warnings.push("⚠️ High risk command detected".to_string());
     } else if risk_score >= 25 {
         warnings.push("⚡ Medium risk - proceed with caution".to_string());
     }
-    
+
     if cmd_lower.contains("rm -rf") || cmd_lower.contains("rm /") {
         warnings.push("🚫 Deletion command - cannot be undone".to_string());
     }
@@ -95,6 +90,6 @@ fn generate_warnings(command: &str, risk_score: u32) -> Vec<String> {
     if cmd_lower.contains("git push") {
         warnings.push("📤 Git push - changes will be uploaded".to_string());
     }
-    
+
     warnings
 }

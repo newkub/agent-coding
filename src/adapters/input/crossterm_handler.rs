@@ -1,8 +1,8 @@
-use async_trait::async_trait;
-use crossterm::event::{self, KeyEvent};
+use crate::modules::ui::ports::InputHandler;
 use crate::shared::constants::INPUT_POLL_TIMEOUT_MS;
 use crate::shared::kernel::result::AppResult;
-use crate::modules::ui::ports::InputHandler;
+use async_trait::async_trait;
+use crossterm::event::{self, KeyEvent};
 
 pub(crate) struct CrosstermInputHandler;
 

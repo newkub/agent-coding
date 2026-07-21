@@ -1,13 +1,14 @@
 use crate::adapters::input::crossterm_handler::CrosstermInputHandler;
 use crate::adapters::ui::ratatui_adapter::RatatuiAdapter;
-use crate::modules::ui::application::{services::initialize_app_state, usecases::{
-    switch_next_column, switch_next_tab, switch_prev_tab, toggle_focus,
-}};
+use crate::modules::ui::application::{
+    services::initialize_app_state,
+    usecases::{switch_next_column, switch_next_tab, switch_prev_tab, toggle_focus},
+};
 use crate::modules::ui::domain::models::AppState;
 use crate::modules::ui::ports::{InputHandler, UIRenderer};
-use crate::shared::kernel::result::AppResult;
-use crate::presentation::tui::components::theme::Theme;
 use crate::presentation::tui::components::styles::set_theme;
+use crate::presentation::tui::components::theme::Theme;
+use crate::shared::kernel::result::AppResult;
 use crossterm::event::KeyCode;
 
 pub(crate) struct TUIApp {
@@ -21,10 +22,10 @@ impl TUIApp {
         // Initialize theme with modern dark theme (default)
         let theme = Theme::modern_dark();
         set_theme(theme);
-        
+
         let mut renderer = RatatuiAdapter::new();
         renderer.initialize()?;
-        
+
         Ok(Self {
             state: initialize_app_state(),
             renderer,
@@ -44,7 +45,7 @@ impl TUIApp {
                 }
             }
         }
-        
+
         self.renderer.cleanup()?;
         Ok(())
     }
@@ -68,7 +69,11 @@ impl TUIApp {
             KeyCode::Char('?') => {
                 self.state.show_help = true;
             }
-            KeyCode::Char('h') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
+            KeyCode::Char('h')
+                if key
+                    .modifiers
+                    .contains(crossterm::event::KeyModifiers::CONTROL) =>
+            {
                 self.state.show_help = true;
             }
             KeyCode::Tab => {

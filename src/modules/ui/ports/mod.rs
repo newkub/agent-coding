@@ -1,6 +1,6 @@
-use async_trait::async_trait;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
+use async_trait::async_trait;
 
 /// Port: UI Renderer
 #[async_trait]

@@ -1,6 +1,6 @@
+use super::theme::Theme;
 use ratatui::style::Color;
 use std::sync::Mutex;
-use super::theme::Theme;
 
 // Legacy color constants for backward compatibility
 // These are deprecated - use Theme instead

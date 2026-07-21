@@ -1,9 +1,9 @@
-use crate::modules::diff::domain::models::{DiffReview, DiffFilter};
+use crate::modules::diff::domain::models::{DiffFilter, DiffReview};
 
 /// Service: Filter diff review
 pub(crate) fn filter_diff_review(review: &DiffReview, filter: DiffFilter) -> Vec<String> {
     let mut visible = Vec::new();
-    
+
     for (file_idx, file) in review.files.iter().enumerate() {
         let file_visible = match filter {
             DiffFilter::All => true,
@@ -11,12 +11,17 @@ pub(crate) fn filter_diff_review(review: &DiffReview, filter: DiffFilter) -> Vec
             DiffFilter::Approved => file.hunks.iter().any(|h| !h.is_pending()),
             DiffFilter::Rejected => file.hunks.iter().any(|h| !h.is_pending()),
         };
-        
+
         if file_visible {
-            visible.push(format!("{} ({}/{})", file.path, file_idx + 1, review.files.len()));
+            visible.push(format!(
+                "{} ({}/{})",
+                file.path,
+                file_idx + 1,
+                review.files.len()
+            ));
         }
     }
-    
+
     visible
 }
 
@@ -37,7 +42,7 @@ pub(crate) fn get_diff_stats(review: &DiffReview) -> DiffStats {
                 crate::modules::diff::domain::models::HunkStatus::Rejected => rejected += 1,
                 crate::modules::diff::domain::models::HunkStatus::Pending => pending += 1,
             }
-            
+
             for line in &hunk.lines {
                 match line.line_type {
                     crate::modules::diff::domain::models::DiffLineType::Addition => additions += 1,

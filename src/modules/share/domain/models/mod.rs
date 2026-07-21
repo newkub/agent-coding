@@ -2,8 +2,8 @@ pub mod share_link;
 
 pub use share_link::*;
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Exportable session format
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -125,7 +125,9 @@ pub struct KnowledgeBase {
 
 impl KnowledgeBase {
     pub const fn new() -> Self {
-        Self { entries: Vec::new() }
+        Self {
+            entries: Vec::new(),
+        }
     }
 
     pub fn search(&self, query: &str) -> Vec<&KnowledgeEntry> {
@@ -135,7 +137,9 @@ impl KnowledgeBase {
             .filter(|e| {
                 e.title.to_lowercase().contains(&query_lower)
                     || e.content.to_lowercase().contains(&query_lower)
-                    || e.tags.iter().any(|t| t.to_lowercase().contains(&query_lower))
+                    || e.tags
+                        .iter()
+                        .any(|t| t.to_lowercase().contains(&query_lower))
             })
             .collect()
     }

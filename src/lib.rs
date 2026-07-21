@@ -11,14 +11,18 @@ pub(crate) mod adapters;
 pub(crate) mod presentation;
 
 // Re-exports for common types from shared kernel
-pub use shared::kernel::types::{Tab, Column, UIState};
-pub use shared::kernel::result::{AppResult, AppError};
-pub use shared::kernel::encryption::{SessionEncryptor, EncryptionError};
+pub use shared::kernel::encryption::{EncryptionError, SessionEncryptor};
+pub use shared::kernel::result::{AppError, AppResult};
+pub use shared::kernel::types::{Column, Tab, UIState};
 
 // Re-exports for commonly used domain types
-pub use modules::session::domain::models::{Session, SessionId, Message, MessageRole};
-pub use modules::audit::domain::models::{AuditEntry, AuditAction, AuditResult};
-pub use modules::collaboration::domain::models::{CollaborationSession, Participant, SharedMessage};
+pub use modules::audit::domain::models::{AuditAction, AuditEntry, AuditResult};
+pub use modules::collaboration::domain::models::{
+    CollaborationSession, Participant, SharedMessage,
+};
+pub use modules::session::domain::models::{Message, MessageRole, Session, SessionId};
 
 // Re-exports for configuration types (for testing)
-pub use adapters::config::settings::{AppSettings, AISettings, UISettings, AccessibilitySettings, MemorySettings, SecuritySettings};
+pub use adapters::config::settings::{
+    AISettings, AccessibilitySettings, AppSettings, MemorySettings, SecuritySettings, UISettings,
+};

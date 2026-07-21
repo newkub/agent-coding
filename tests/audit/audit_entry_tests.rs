@@ -15,7 +15,9 @@ fn create_test_audit_entry(action: AuditAction, actor: Actor, resource: Resource
 
 #[test]
 fn test_audit_entry_new() {
-    let action = AuditAction::FileRead { path: "test.txt".to_string() };
+    let action = AuditAction::FileRead {
+        path: "test.txt".to_string(),
+    };
     let actor = Actor {
         type_: ActorType::User,
         id: "user-123".to_string(),
@@ -26,7 +28,7 @@ fn test_audit_entry_new() {
         id: "res-456".to_string(),
         path: Some("test.txt".to_string()),
     };
-    
+
     let entry = create_test_audit_entry(action.clone(), actor.clone(), resource.clone());
     assert!(!entry.id.0.is_empty());
     assert!(matches!(entry.result, AuditResult::Success));
@@ -35,21 +37,45 @@ fn test_audit_entry_new() {
 #[test]
 fn test_audit_entry_with_result() {
     let entry = create_test_audit_entry(
-        AuditAction::CommandExecute { command: "ls".to_string() },
-        Actor { type_: ActorType::User, id: "1".to_string(), name: "Test".to_string() },
-        Resource { type_: "command".to_string(), id: "1".to_string(), path: None },
-    ).with_result(AuditResult::Failure { error: "failed".to_string() });
-    
+        AuditAction::CommandExecute {
+            command: "ls".to_string(),
+        },
+        Actor {
+            type_: ActorType::User,
+            id: "1".to_string(),
+            name: "Test".to_string(),
+        },
+        Resource {
+            type_: "command".to_string(),
+            id: "1".to_string(),
+            path: None,
+        },
+    )
+    .with_result(AuditResult::Failure {
+        error: "failed".to_string(),
+    });
+
     assert!(matches!(entry.result, AuditResult::Failure { .. }));
 }
 
 #[test]
 fn test_audit_entry_with_metadata() {
     let entry = create_test_audit_entry(
-        AuditAction::FileRead { path: "test.txt".to_string() },
-        Actor { type_: ActorType::User, id: "1".to_string(), name: "User".to_string() },
-        Resource { type_: "file".to_string(), id: "1".to_string(), path: None },
-    ).with_metadata(AuditMetadata::new().with_session("session-1".to_string()));
-    
+        AuditAction::FileRead {
+            path: "test.txt".to_string(),
+        },
+        Actor {
+            type_: ActorType::User,
+            id: "1".to_string(),
+            name: "User".to_string(),
+        },
+        Resource {
+            type_: "file".to_string(),
+            id: "1".to_string(),
+            path: None,
+        },
+    )
+    .with_metadata(AuditMetadata::new().with_session("session-1".to_string()));
+
     assert_eq!(entry.metadata.session_id, Some("session-1".to_string()));
 }

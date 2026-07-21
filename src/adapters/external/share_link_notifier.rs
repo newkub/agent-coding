@@ -76,7 +76,9 @@ mod tests {
     async fn test_log_notifier_created() {
         let notifier = LogShareLinkNotifier::new();
         let link = ShareLink::new(uuid::Uuid::new_v4(), Some(24), Some(10));
-        let result = notifier.notify_created(&link, "https://example.com/test").await;
+        let result = notifier
+            .notify_created(&link, "https://example.com/test")
+            .await;
         assert!(result.is_ok());
     }
 

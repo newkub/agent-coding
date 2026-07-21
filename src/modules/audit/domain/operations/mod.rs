@@ -1,4 +1,4 @@
-use super::models::{AuditEntry, AuditAction};
+use super::models::{AuditAction, AuditEntry};
 
 /// Pure domain operation: Filter audit entries by action type
 pub fn filter_by_action<'a>(entries: &'a [AuditEntry], action_type: &str) -> Vec<&'a AuditEntry> {
@@ -10,10 +10,7 @@ pub fn filter_by_action<'a>(entries: &'a [AuditEntry], action_type: &str) -> Vec
 
 /// Pure domain operation: Filter audit entries by actor
 pub fn filter_by_actor<'a>(entries: &'a [AuditEntry], actor_id: &str) -> Vec<&'a AuditEntry> {
-    entries
-        .iter()
-        .filter(|e| e.actor.id == actor_id)
-        .collect()
+    entries.iter().filter(|e| e.actor.id == actor_id).collect()
 }
 
 /// Pure domain operation: Filter audit entries by time range
@@ -71,7 +68,7 @@ impl AuditRule {
         actor: &crate::modules::audit::domain::models::Actor,
     ) -> bool {
         let action_str = format!("{:?}", action);
-        
+
         // Check action pattern
         let action_matches = if let Ok(re) = regex::Regex::new(&self.action_pattern) {
             re.is_match(&action_str)
@@ -98,20 +95,23 @@ impl AuditRule {
 /// Pure domain operation: Generate audit summary
 pub fn generate_audit_summary(entries: &[AuditEntry]) -> AuditSummary {
     let mut summary = AuditSummary::default();
-    
+
     for entry in entries {
         match &entry.result {
             crate::modules::audit::domain::models::AuditResult::Success => summary.success += 1,
-            crate::modules::audit::domain::models::AuditResult::Failure { .. } => summary.failure += 1,
+            crate::modules::audit::domain::models::AuditResult::Failure { .. } => {
+                summary.failure += 1
+            }
             crate::modules::audit::domain::models::AuditResult::Pending => summary.pending += 1,
         }
-        
-        summary.by_category
+
+        summary
+            .by_category
             .entry(entry.action.category().to_string())
             .and_modify(|c| *c += 1)
             .or_insert(1);
     }
-    
+
     summary.total = entries.len();
     summary
 }

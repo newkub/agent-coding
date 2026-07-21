@@ -28,12 +28,13 @@ pub fn can_participant_join(session: &CollaborationSession, participant: &Partic
     if session.participants.iter().any(|p| p.id == participant.id) {
         return false;
     }
-    
+
     // Check if session is active
-    if session.status != crate::modules::collaboration::domain::models::CollaborationStatus::Active {
+    if session.status != crate::modules::collaboration::domain::models::CollaborationStatus::Active
+    {
         return false;
     }
-    
+
     true
 }
 
@@ -57,14 +58,19 @@ pub fn format_message(message: &SharedMessage) -> String {
     let timestamp = message.timestamp.format("%H:%M:%S").to_string();
     let type_prefix = match message.message_type {
         crate::modules::collaboration::domain::models::SharedMessageType::Chat => "",
-        crate::modules::collaboration::domain::models::SharedMessageType::Suggestion => "[Suggestion] ",
+        crate::modules::collaboration::domain::models::SharedMessageType::Suggestion => {
+            "[Suggestion] "
+        }
         crate::modules::collaboration::domain::models::SharedMessageType::Action => "[Action] ",
     };
     format!("[{}] {}{}", timestamp, type_prefix, message.content)
 }
 
 /// Pure domain operation: Check if cursor positions conflict
-pub fn cursor_positions_conflict(pos1: &Option<crate::modules::collaboration::domain::models::CursorPosition>, pos2: &Option<crate::modules::collaboration::domain::models::CursorPosition>) -> bool {
+pub fn cursor_positions_conflict(
+    pos1: &Option<crate::modules::collaboration::domain::models::CursorPosition>,
+    pos2: &Option<crate::modules::collaboration::domain::models::CursorPosition>,
+) -> bool {
     match (pos1, pos2) {
         (Some(p1), Some(p2)) => {
             p1.file_path == p2.file_path && p1.line == p2.line && p1.column == p2.column

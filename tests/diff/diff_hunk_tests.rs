@@ -7,7 +7,10 @@ fn test_diff_hunk_new() {
     let hunk = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -1,3 +1,4 @@".to_string(),
-        1, 3, 1, 4,
+        1,
+        3,
+        1,
+        4,
         vec![DiffLine::addition("+ new line".to_string(), 5)],
     );
     assert!(!hunk.id.is_empty());
@@ -19,7 +22,10 @@ fn test_diff_hunk_approve() {
     let mut hunk = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -1,3 +1,4 @@".to_string(),
-        1, 3, 1, 4,
+        1,
+        3,
+        1,
+        4,
         vec![],
     );
     hunk.approve();
@@ -31,7 +37,10 @@ fn test_diff_hunk_reject() {
     let mut hunk = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -1,3 +1,4 @@".to_string(),
-        1, 3, 1, 4,
+        1,
+        3,
+        1,
+        4,
         vec![],
     );
     hunk.reject();
@@ -40,7 +49,15 @@ fn test_diff_hunk_reject() {
 
 #[test]
 fn test_diff_hunk_is_pending() {
-    let mut hunk = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@".to_string(), 1, 1, 1, 1, vec![]);
+    let mut hunk = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
     assert!(hunk.is_pending());
     hunk.approve();
     assert!(!hunk.is_pending());

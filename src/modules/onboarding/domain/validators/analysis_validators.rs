@@ -98,7 +98,7 @@ mod tests {
             description: "Main entry point".to_string(),
         });
         analysis.tech_stack.languages.push("Rust".to_string());
-        
+
         assert!(validate_analysis_completeness(&analysis).is_ok());
     }
 }

@@ -134,7 +134,7 @@ impl DependencyParser for DefaultDependencyParser {
 
     async fn parse_requirements_txt(&self, path: &PathBuf) -> Result<Dependencies, AppError> {
         let content = fs::read_to_string(path).await?;
-        
+
         let mut dependencies = Dependencies {
             package_manager: "pip".to_string(),
             dependencies: HashMap::new(),
@@ -210,14 +210,14 @@ mod tests {
     async fn test_parse_requirements_txt() {
         let parser = DefaultDependencyParser::new();
         let content = "requests==2.28.0\nnumpy>=1.20.0\n# comment\nflask";
-        
+
         let temp_dir = tempfile::tempdir().unwrap();
         let req_file = temp_dir.path().join("requirements.txt");
         tokio::fs::write(&req_file, content).await.unwrap();
-        
+
         let result = parser.parse_requirements_txt(&req_file).await;
         assert!(result.is_ok());
-        
+
         let deps = result.unwrap();
         assert!(deps.dependencies.contains_key("requests"));
         assert!(deps.dependencies.contains_key("numpy"));

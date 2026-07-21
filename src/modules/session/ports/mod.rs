@@ -1,6 +1,9 @@
-use async_trait::async_trait;
-use crate::modules::session::domain::{models::{Session, SessionId}, events::SessionEvent};
+use crate::modules::session::domain::{
+    events::SessionEvent,
+    models::{Session, SessionId},
+};
 use crate::shared::kernel::result::AppResult;
+use async_trait::async_trait;
 
 /// Port: Session Repository
 #[async_trait]

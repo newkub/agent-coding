@@ -16,29 +16,31 @@ pub(crate) fn draw_toasts(frame: &mut Frame, area: Rect, state: &AppState) {
         return;
     }
 
-    let [toast_area, _] = Layout::vertical([
-        Constraint::Length(3),
-        Constraint::Fill(1),
-    ]).areas(area);
+    let [toast_area, _] =
+        Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]).areas(area);
 
-    let toasts: Vec<Line> = state.toasts.iter().map(|toast| {
-        let icon = match toast.kind {
-            ToastKind::Info => "ℹ️",
-            ToastKind::Success => "✅",
-            ToastKind::Warning => "⚠️",
-            ToastKind::Error => "❌",
-        };
-        let time = toast.timestamp.format("%H:%M").to_string();
-        
-        Line::from(vec![
-            Span::raw(" "),
-            Span::raw(icon),
-            Span::raw(" "),
-            Span::raw(&toast.message),
-            Span::raw("  "),
-            Span::styled(time, Style::default().fg(TEXT_DIM)),
-        ])
-    }).collect();
+    let toasts: Vec<Line> = state
+        .toasts
+        .iter()
+        .map(|toast| {
+            let icon = match toast.kind {
+                ToastKind::Info => "ℹ️",
+                ToastKind::Success => "✅",
+                ToastKind::Warning => "⚠️",
+                ToastKind::Error => "❌",
+            };
+            let time = toast.timestamp.format("%H:%M").to_string();
+
+            Line::from(vec![
+                Span::raw(" "),
+                Span::raw(icon),
+                Span::raw(" "),
+                Span::raw(&toast.message),
+                Span::raw("  "),
+                Span::styled(time, Style::default().fg(TEXT_DIM)),
+            ])
+        })
+        .collect();
 
     let paragraph = Paragraph::new(toasts)
         .alignment(Alignment::Left)
@@ -47,7 +49,11 @@ pub(crate) fn draw_toasts(frame: &mut Frame, area: Rect, state: &AppState) {
     frame.render_widget(paragraph, toast_area);
 }
 
-pub(crate) fn draw_toast_overlay(frame: &mut Frame, area: Rect, toasts: &VecDeque<ToastNotification>) {
+pub(crate) fn draw_toast_overlay(
+    frame: &mut Frame,
+    area: Rect,
+    toasts: &VecDeque<ToastNotification>,
+) {
     // Draw a toast notification in the bottom-left corner
     if toasts.is_empty() {
         return;
@@ -75,17 +81,22 @@ pub(crate) fn draw_toast_overlay(frame: &mut Frame, area: Rect, toasts: &VecDequ
         };
 
         let content = format!("{} {} ", icon, toast.message);
-        
+
         let block = Block::default()
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(border_color))
             .style(Style::default().bg(BG_LIGHT));
 
-        let paragraph = Paragraph::new(content)
-            .style(Style::default().fg(TEXT));
+        let paragraph = Paragraph::new(content).style(Style::default().fg(TEXT));
 
         frame.render_widget(block, toast_area);
-        frame.render_widget(paragraph, toast_area.inner(ratatui::layout::Margin { horizontal: 1, vertical: 0 }));
+        frame.render_widget(
+            paragraph,
+            toast_area.inner(ratatui::layout::Margin {
+                horizontal: 1,
+                vertical: 0,
+            }),
+        );
     }
 }

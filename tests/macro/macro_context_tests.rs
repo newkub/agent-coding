@@ -25,7 +25,7 @@ fn test_macro_context_get_nonexistent() {
 fn test_macro_context_resolve() {
     let mut ctx = MacroContext::new();
     ctx.set("name".to_string(), "World".to_string());
-    
+
     let result = ctx.resolve("Hello ${name}!");
     assert_eq!(result, "Hello World!");
 }
@@ -35,7 +35,7 @@ fn test_macro_context_resolve_multiple() {
     let mut ctx = MacroContext::new();
     ctx.set("first".to_string(), "Hello".to_string());
     ctx.set("second".to_string(), "World".to_string());
-    
+
     let result = ctx.resolve("${first} ${second}!");
     assert_eq!(result, "Hello World!");
 }

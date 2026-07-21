@@ -1,10 +1,9 @@
-
 /// Pure domain operation: Calculate cost for token usage
 pub fn calculate_cost(input_tokens: u32, output_tokens: u32, model: &str) -> f64 {
     // Pricing per 1M tokens (approximate)
     let pricing = match model {
-        m if m.contains("gpt-4") => (15.0, 60.0),      // GPT-4
-        m if m.contains("gpt-3.5") => (0.5, 1.5),      // GPT-3.5
+        m if m.contains("gpt-4") => (15.0, 60.0), // GPT-4
+        m if m.contains("gpt-3.5") => (0.5, 1.5), // GPT-3.5
         m if m.contains("claude-3-opus") => (15.0, 75.0),
         m if m.contains("claude-3-sonnet") => (3.0, 15.0),
         m if m.contains("claude-3-haiku") => (0.25, 1.25),
@@ -12,11 +11,11 @@ pub fn calculate_cost(input_tokens: u32, output_tokens: u32, model: &str) -> f64
         m if m.contains("gemini-ultra") => (7.0, 15.0),
         _ => (1.0, 5.0), // Default pricing
     };
-    
+
     let (input_per_m, output_per_m) = pricing;
     let input_cost = (input_tokens as f64 / 1_000_000.0) * input_per_m;
     let output_cost = (output_tokens as f64 / 1_000_000.0) * output_per_m;
-    
+
     input_cost + output_cost
 }
 

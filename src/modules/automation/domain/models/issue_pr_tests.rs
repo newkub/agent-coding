@@ -1,7 +1,8 @@
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::modules::automation::domain::models::issue_pr::{
+        AutomationWorkflow, Issue, IssueState, StepStatus, WorkflowStatus,
+    };
 
     #[test]
     fn test_issue_creation() {

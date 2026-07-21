@@ -14,7 +14,11 @@ fn create_test_owner() -> Participant {
     }
 }
 
-fn create_test_session(name: String, owner: Participant, session_id: String) -> CollaborationSession {
+fn create_test_session(
+    name: String,
+    owner: Participant,
+    session_id: String,
+) -> CollaborationSession {
     CollaborationSession::create(
         CollaborationId::from_string(uuid::Uuid::new_v4().to_string()),
         name,
@@ -27,12 +31,8 @@ fn create_test_session(name: String, owner: Participant, session_id: String) -> 
 #[test]
 fn test_collaboration_session_serialization() {
     let owner = create_test_owner();
-    let session = create_test_session(
-        "Test Session".to_string(),
-        owner,
-        "session-1".to_string(),
-    );
-    
+    let session = create_test_session("Test Session".to_string(), owner, "session-1".to_string());
+
     let json = serde_json::to_string(&session).unwrap();
     let parsed: CollaborationSession = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.name, "Test Session");
@@ -48,7 +48,7 @@ fn test_shared_message_serialization() {
         timestamp: Utc::now(),
         message_type: SharedMessageType::Chat,
     };
-    
+
     let json = serde_json::to_string(&msg).unwrap();
     let parsed: SharedMessage = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.content, "Hello");
@@ -61,7 +61,7 @@ fn test_cursor_position_serialization() {
         line: 10,
         column: 5,
     };
-    
+
     let json = serde_json::to_string(&pos).unwrap();
     let parsed: CursorPosition = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.line, 10);

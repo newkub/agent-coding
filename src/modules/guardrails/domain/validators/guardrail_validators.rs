@@ -1,4 +1,6 @@
-use crate::modules::guardrails::domain::models::guardrail::{Guardrail, GuardrailRule, GuardrailType};
+use crate::modules::guardrails::domain::models::guardrail::{
+    Guardrail, GuardrailRule, GuardrailType,
+};
 use crate::shared::kernel::result::AppError;
 
 /// Pure function to validate guardrail
@@ -41,23 +43,26 @@ pub fn validate_guardrail_rule(rule: &GuardrailRule) -> Result<(), AppError> {
         match &rule.rule_type {
             crate::modules::guardrails::domain::models::guardrail::RuleType::PatternMatch
             | crate::modules::guardrails::domain::models::guardrail::RuleType::KeywordDetection
-                if pattern.is_empty() => {
-                    return Err(AppError::ValidationError(
-                        "Pattern cannot be empty for this rule type".to_string(),
-                    ));
-                }
+                if pattern.is_empty() =>
+            {
+                return Err(AppError::ValidationError(
+                    "Pattern cannot be empty for this rule type".to_string(),
+                ));
+            }
             crate::modules::guardrails::domain::models::guardrail::RuleType::LengthCheck
-                if pattern.parse::<usize>().is_err() => {
-                    return Err(AppError::ValidationError(
-                        "Pattern must be a valid number for length check".to_string(),
-                    ));
-                }
+                if pattern.parse::<usize>().is_err() =>
+            {
+                return Err(AppError::ValidationError(
+                    "Pattern must be a valid number for length check".to_string(),
+                ));
+            }
             crate::modules::guardrails::domain::models::guardrail::RuleType::FormatValidation
-                if regex::Regex::new(pattern).is_err() => {
-                    return Err(AppError::ValidationError(
-                        "Pattern must be a valid regex for format validation".to_string(),
-                    ));
-                }
+                if regex::Regex::new(pattern).is_err() =>
+            {
+                return Err(AppError::ValidationError(
+                    "Pattern must be a valid regex for format validation".to_string(),
+                ));
+            }
             _ => {}
         }
     }
@@ -130,8 +135,9 @@ mod tests {
             "Test Rule".to_string(),
             RuleType::FormatValidation,
             GuardrailAction::Block,
-        ).with_pattern("[invalid".to_string());
-        
+        )
+        .with_pattern("[invalid".to_string());
+
         assert!(validate_guardrail_rule(&rule).is_err());
     }
 

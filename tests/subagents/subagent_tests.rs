@@ -1,5 +1,5 @@
 use agent_tui::modules::subagents::domain::models::subagent::{
-    Subagent, SubagentTask, AgentType, SubagentStatus, TaskType, TaskStatus, TaskContext
+    AgentType, Subagent, SubagentStatus, SubagentTask, TaskContext, TaskStatus, TaskType,
 };
 
 #[test]
@@ -52,7 +52,6 @@ fn test_subagent_task_complete() {
 
 #[test]
 fn test_task_context_with_session() {
-    let context = TaskContext::new()
-        .with_session("session-123".to_string());
+    let context = TaskContext::new().with_session("session-123".to_string());
     assert_eq!(context.session_id, Some("session-123".to_string()));
 }

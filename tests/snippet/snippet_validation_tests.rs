@@ -1,7 +1,9 @@
 //! Snippet validation tests
 
 use agent_tui::modules::snippet::domain::models::Snippet;
-use agent_tui::modules::snippet::domain::operations::{validate_snippet_name, validate_snippet_code, SnippetValidationError};
+use agent_tui::modules::snippet::domain::operations::{
+    validate_snippet_code, validate_snippet_name, SnippetValidationError,
+};
 
 #[test]
 fn test_validate_snippet_name_valid() {

@@ -1,8 +1,8 @@
-use crate::modules::collaboration::ports::CollaborationRepository;
 use crate::modules::collaboration::domain::models::{
-    CollaborationSession, Participant, ParticipantId, ParticipantRole,
-    SharedMessage, CollaborationId, CursorPosition,
+    CollaborationId, CollaborationSession, CursorPosition, Participant, ParticipantId,
+    ParticipantRole, SharedMessage,
 };
+use crate::modules::collaboration::ports::CollaborationRepository;
 use crate::shared::kernel::result::AppResult;
 use chrono::Utc;
 
@@ -20,7 +20,7 @@ where
     let owner_id = ParticipantId::from_string(uuid::Uuid::new_v4().to_string());
     let collaboration_id = CollaborationId::from_string(uuid::Uuid::new_v4().to_string());
     let now = Utc::now();
-    
+
     let owner = Participant {
         id: owner_id,
         name: owner_name,
@@ -29,10 +29,11 @@ where
         is_online: true,
         cursor_position: None,
     };
-    
-    let collaboration = CollaborationSession::create(collaboration_id, name, owner, session_id, now);
+
+    let collaboration =
+        CollaborationSession::create(collaboration_id, name, owner, session_id, now);
     repo.save(&collaboration).await?;
-    
+
     Ok(collaboration)
 }
 
@@ -45,14 +46,15 @@ pub(crate) async fn join_session<R>(
 where
     R: CollaborationRepository,
 {
-    let mut session = repo.find_by_id(collaboration_id).await?
-        .ok_or_else(|| crate::shared::kernel::result::AppError::State(
-            "Collaboration session not found".to_string()
-        ))?;
-    
+    let mut session = repo.find_by_id(collaboration_id).await?.ok_or_else(|| {
+        crate::shared::kernel::result::AppError::State(
+            "Collaboration session not found".to_string(),
+        )
+    })?;
+
     session.add_participant(participant);
     repo.save(&session).await?;
-    
+
     Ok(session)
 }
 
@@ -66,14 +68,15 @@ pub(crate) async fn update_cursor<R>(
 where
     R: CollaborationRepository,
 {
-    let mut session = repo.find_by_id(collaboration_id).await?
-        .ok_or_else(|| crate::shared::kernel::result::AppError::State(
-            "Collaboration session not found".to_string()
-        ))?;
-    
+    let mut session = repo.find_by_id(collaboration_id).await?.ok_or_else(|| {
+        crate::shared::kernel::result::AppError::State(
+            "Collaboration session not found".to_string(),
+        )
+    })?;
+
     session.update_cursor(participant_id, position);
     repo.save(&session).await?;
-    
+
     Ok(())
 }
 
@@ -86,14 +89,15 @@ pub(crate) async fn leave_session<R>(
 where
     R: CollaborationRepository,
 {
-    let mut session = repo.find_by_id(collaboration_id).await?
-        .ok_or_else(|| crate::shared::kernel::result::AppError::State(
-            "Collaboration session not found".to_string()
-        ))?;
-    
+    let mut session = repo.find_by_id(collaboration_id).await?.ok_or_else(|| {
+        crate::shared::kernel::result::AppError::State(
+            "Collaboration session not found".to_string(),
+        )
+    })?;
+
     session.remove_participant(participant_id);
     repo.save(&session).await?;
-    
+
     Ok(session)
 }
 
@@ -116,7 +120,7 @@ where
         timestamp: chrono::Utc::now(),
         message_type,
     };
-    
+
     repo.save_message(&message).await?;
     Ok(message)
 }

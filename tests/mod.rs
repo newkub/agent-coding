@@ -1,18 +1,18 @@
 //! Integration tests
 
 mod audit;
+mod automation;
 mod collaboration;
-mod snippet;
-mod ui;
+mod config;
 mod diff;
-mod sandbox;
+mod guardrails;
+mod headless;
 mod r#macro;
 mod onboarding;
-mod automation;
-mod headless;
-mod subagents;
-mod guardrails;
 mod performance;
-mod config;
+mod sandbox;
+mod snippet;
+mod subagents;
+mod ui;
 // Temporarily disabled due to share module being disabled
 // mod share;

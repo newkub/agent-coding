@@ -1,7 +1,9 @@
-use agent_tui::modules::guardrails::domain::operations::guardrail_operations::{
-    check_input_against_guardrail, should_take_action, filter_output
+use agent_tui::modules::guardrails::domain::models::guardrail::{
+    Guardrail, GuardrailAction, GuardrailRule, RuleType,
 };
-use agent_tui::modules::guardrails::domain::models::guardrail::{Guardrail, GuardrailRule, GuardrailAction, RuleType};
+use agent_tui::modules::guardrails::domain::operations::guardrail_operations::{
+    check_input_against_guardrail, filter_output, should_take_action,
+};
 
 #[test]
 fn test_check_guardrail_pass() {
@@ -32,14 +34,16 @@ fn test_filter_output() {
         "Redact Rule".to_string(),
         RuleType::PatternMatch,
         GuardrailAction::Modify,
-    ).with_pattern("password".to_string());
-    
+    )
+    .with_pattern("password".to_string());
+
     let guardrail = Guardrail::new(
         "Output Filter".to_string(),
         agent_tui::modules::guardrails::domain::models::guardrail::GuardrailType::OutputFiltering,
         "Test".to_string(),
-    ).with_rules(vec![rule]);
-    
+    )
+    .with_rules(vec![rule]);
+
     let filtered = filter_output("The password is secret", &guardrail);
     assert!(filtered.contains("[REDACTED]"));
 }

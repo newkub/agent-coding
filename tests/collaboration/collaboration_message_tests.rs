@@ -10,7 +10,7 @@ fn test_cursor_position_new() {
         line: 10,
         column: 5,
     };
-    
+
     assert_eq!(pos.line, 10);
     assert_eq!(pos.column, 5);
 }
@@ -25,7 +25,7 @@ fn test_shared_message_new() {
         timestamp: Utc::now(),
         message_type: SharedMessageType::Chat,
     };
-    
+
     assert_eq!(msg.content, "Hello");
     assert!(matches!(msg.message_type, SharedMessageType::Chat));
 }
@@ -33,6 +33,12 @@ fn test_shared_message_new() {
 #[test]
 fn test_shared_message_type_variants() {
     assert!(matches!(SharedMessageType::Chat, SharedMessageType::Chat));
-    assert!(matches!(SharedMessageType::Suggestion, SharedMessageType::Suggestion));
-    assert!(matches!(SharedMessageType::Action, SharedMessageType::Action));
+    assert!(matches!(
+        SharedMessageType::Suggestion,
+        SharedMessageType::Suggestion
+    ));
+    assert!(matches!(
+        SharedMessageType::Action,
+        SharedMessageType::Action
+    ));
 }

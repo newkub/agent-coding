@@ -52,23 +52,29 @@ impl HeadlessSessionManager for InMemorySessionManager {
 
     async fn load_session(&self, session_id: &str) -> Result<(), AppError> {
         let mut sessions = self.sessions.write().await;
-        
+
         if let Some(session) = sessions.get_mut(session_id) {
             session.last_accessed = chrono::Utc::now();
             Ok(())
         } else {
-            Err(AppError::NotFound(format!("Session {} not found", session_id)))
+            Err(AppError::NotFound(format!(
+                "Session {} not found",
+                session_id
+            )))
         }
     }
 
     async fn save_session(&self, session_id: &str) -> Result<(), AppError> {
         let mut sessions = self.sessions.write().await;
-        
+
         if let Some(session) = sessions.get_mut(session_id) {
             session.last_accessed = chrono::Utc::now();
             Ok(())
         } else {
-            Err(AppError::NotFound(format!("Session {} not found", session_id)))
+            Err(AppError::NotFound(format!(
+                "Session {} not found",
+                session_id
+            )))
         }
     }
 
@@ -79,11 +85,14 @@ impl HeadlessSessionManager for InMemorySessionManager {
 
     async fn delete_session(&self, session_id: &str) -> Result<(), AppError> {
         let mut sessions = self.sessions.write().await;
-        
+
         if sessions.remove(session_id).is_some() {
             Ok(())
         } else {
-            Err(AppError::NotFound(format!("Session {} not found", session_id)))
+            Err(AppError::NotFound(format!(
+                "Session {} not found",
+                session_id
+            )))
         }
     }
 }
@@ -104,7 +113,7 @@ mod tests {
         let manager = InMemorySessionManager::new();
         manager.create_session().await.unwrap();
         manager.create_session().await.unwrap();
-        
+
         let sessions = manager.list_sessions().await.unwrap();
         assert_eq!(sessions.len(), 2);
     }
@@ -113,7 +122,7 @@ mod tests {
     async fn test_delete_session() {
         let manager = InMemorySessionManager::new();
         let session_id = manager.create_session().await.unwrap();
-        
+
         manager.delete_session(&session_id).await.unwrap();
         let sessions = manager.list_sessions().await.unwrap();
         assert_eq!(sessions.len(), 0);

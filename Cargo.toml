@@ -63,6 +63,9 @@ ratatui = "0.30.0"
 crossterm = "0.29.0"
 tokio-stream = "0.1.18"
 
+# System metrics
+sysinfo = "0.32"
+
 # CLI dependencies
 clap = { version = "4.6.1", features = ["derive"] }
 
@@ -93,7 +96,7 @@ git2 = "0.21.0"
 
 # AI providers
 openai = "1.1.1"
-async-openai = "0.40.2"
+async-openai = { version = "0.40.2", features = ["chat-completion"] }
 
 # LSP
 lsp-types = "0.97.0"

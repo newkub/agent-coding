@@ -1,5 +1,5 @@
-use crate::modules::macros::ports::{MacroRepository, MacroExecutor};
-use crate::modules::macros::domain::models::{Macro, MacroId, MacroContext, MacroStep};
+use crate::modules::macros::domain::models::{Macro, MacroContext, MacroId, MacroStep};
+use crate::modules::macros::ports::{MacroExecutor, MacroRepository};
 use crate::shared::kernel::result::AppResult;
 
 /// Use case: Start recording a macro
@@ -11,7 +11,9 @@ pub(crate) async fn start_recording<R>(
 where
     R: MacroRepository,
 {
-    let id = crate::modules::macros::domain::models::MacroId::from_string(uuid::Uuid::new_v4().to_string());
+    let id = crate::modules::macros::domain::models::MacroId::from_string(
+        uuid::Uuid::new_v4().to_string(),
+    );
     let now = chrono::Utc::now();
     let macro_def = Macro::create(id, name, description, now);
     repo.save_recording(&macro_def).await?;
@@ -19,10 +21,7 @@ where
 }
 
 /// Use case: Stop recording and save macro
-pub(crate) async fn stop_recording<R>(
-    repo: &R,
-    id: &MacroId,
-) -> AppResult<Option<Macro>>
+pub(crate) async fn stop_recording<R>(repo: &R, id: &MacroId) -> AppResult<Option<Macro>>
 where
     R: MacroRepository,
 {
@@ -40,15 +39,15 @@ where
 {
     let ctx = context.unwrap_or_default();
     let mut results = Vec::new();
-    
+
     for step in &macro_def.steps {
         let resolved_step = resolve_step(step, &ctx);
         let result = executor.execute_step(&resolved_step).await?;
         results.push(result);
     }
-    
+
     let success = results.iter().all(|r| r.success);
-    
+
     Ok(PlaybackResult {
         macro_id: macro_def.id.clone(),
         step_results: results,
@@ -57,10 +56,7 @@ where
 }
 
 /// Use case: Delete a macro
-pub(crate) async fn delete_macro<R>(
-    repo: &R,
-    id: &MacroId,
-) -> AppResult<()>
+pub(crate) async fn delete_macro<R>(repo: &R, id: &MacroId) -> AppResult<()>
 where
     R: MacroRepository,
 {
@@ -68,9 +64,7 @@ where
 }
 
 /// Use case: List all macros
-pub(crate) async fn list_macros<R>(
-    repo: &R,
-) -> AppResult<Vec<Macro>>
+pub(crate) async fn list_macros<R>(repo: &R) -> AppResult<Vec<Macro>>
 where
     R: MacroRepository,
 {

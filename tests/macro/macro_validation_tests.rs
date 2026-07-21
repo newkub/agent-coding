@@ -1,7 +1,10 @@
 //! Macro validation tests
 
-use agent_tui::modules::macros::domain::models::{Macro, MacroStep, MacroId};
-use agent_tui::modules::macros::domain::operations::{validate_macro_name, validate_macro_completeness, calculate_macro_complexity, MacroValidationError};
+use agent_tui::modules::macros::domain::models::{Macro, MacroId, MacroStep};
+use agent_tui::modules::macros::domain::operations::{
+    calculate_macro_complexity, validate_macro_completeness, validate_macro_name,
+    MacroValidationError,
+};
 
 #[test]
 fn test_validate_macro_name_valid() {
@@ -36,15 +39,27 @@ fn test_validate_macro_name_invalid_vars() {
 
 #[test]
 fn test_validate_macro_completeness_valid() {
-    let mut macro_def = Macro::create(MacroId::from_string(uuid::Uuid::new_v4().to_string()), "Test".to_string(), "".to_string(), chrono::Utc::now());
-    macro_def.add_step(MacroStep::Input { text: "test".to_string() });
-    
+    let mut macro_def = Macro::create(
+        MacroId::from_string(uuid::Uuid::new_v4().to_string()),
+        "Test".to_string(),
+        "".to_string(),
+        chrono::Utc::now(),
+    );
+    macro_def.add_step(MacroStep::Input {
+        text: "test".to_string(),
+    });
+
     assert!(validate_macro_completeness(&macro_def).is_ok());
 }
 
 #[test]
 fn test_validate_macro_completeness_empty_steps() {
-    let macro_def = Macro::create(MacroId::from_string(uuid::Uuid::new_v4().to_string()), "Test".to_string(), "".to_string(), chrono::Utc::now());
+    let macro_def = Macro::create(
+        MacroId::from_string(uuid::Uuid::new_v4().to_string()),
+        "Test".to_string(),
+        "".to_string(),
+        chrono::Utc::now(),
+    );
     assert!(matches!(
         validate_macro_completeness(&macro_def),
         Err(MacroValidationError::EmptySteps)
@@ -53,10 +68,20 @@ fn test_validate_macro_completeness_empty_steps() {
 
 #[test]
 fn test_calculate_macro_complexity() {
-    let mut macro_def = Macro::create(MacroId::from_string(uuid::Uuid::new_v4().to_string()), "Test".to_string(), "".to_string(), chrono::Utc::now());
-    macro_def.add_step(MacroStep::Input { text: "test".to_string() });
-    macro_def.add_step(MacroStep::Command { cmd: "ls".to_string(), cwd: None });
-    
+    let mut macro_def = Macro::create(
+        MacroId::from_string(uuid::Uuid::new_v4().to_string()),
+        "Test".to_string(),
+        "".to_string(),
+        chrono::Utc::now(),
+    );
+    macro_def.add_step(MacroStep::Input {
+        text: "test".to_string(),
+    });
+    macro_def.add_step(MacroStep::Command {
+        cmd: "ls".to_string(),
+        cwd: None,
+    });
+
     let complexity = calculate_macro_complexity(&macro_def);
     assert_eq!(complexity.step_count, 2);
     assert!(complexity.has_variables);

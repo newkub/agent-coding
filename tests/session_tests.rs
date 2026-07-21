@@ -6,12 +6,7 @@ use agent_tui::modules::session::types::*;
 use chrono::Utc;
 
 fn create_test_message(role: MessageRole, content: String) -> Message {
-    Message::create(
-        uuid::Uuid::new_v4().to_string(),
-        role,
-        content,
-        Utc::now(),
-    )
+    Message::create(uuid::Uuid::new_v4().to_string(), role, content, Utc::now())
 }
 
 fn create_test_session(name: String) -> Session {
@@ -93,7 +88,10 @@ fn test_message_with_metadata() {
         tool_calls: None,
     });
     assert!(msg.metadata.is_some());
-    assert_eq!(msg.metadata.as_ref().unwrap().model.as_deref(), Some("gpt-4"));
+    assert_eq!(
+        msg.metadata.as_ref().unwrap().model.as_deref(),
+        Some("gpt-4")
+    );
 }
 
 #[test]
@@ -202,7 +200,7 @@ fn test_calculate_session_stats() {
         ..Default::default()
     });
     session.add_message(msg);
-    
+
     let stats = calculate_session_stats(&session);
     assert_eq!(stats.message_count, 1);
     assert_eq!(stats.total_tokens, 50);

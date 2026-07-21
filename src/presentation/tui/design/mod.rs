@@ -1,14 +1,12 @@
 // Design system module for TUI
 // Provides design tokens, themes, and accessibility features
 
-
 pub mod tokens;
 
 pub use tokens::DesignTokens;
 
 /// Theme variants
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Theme {
     #[default]
     Default,
@@ -25,7 +23,7 @@ impl Theme {
             Self::Dark => DesignTokens::dark_theme(),
         }
     }
-    
+
     /// Get theme name
     pub(crate) const fn name(&self) -> &'static str {
         match self {
@@ -34,7 +32,7 @@ impl Theme {
             Self::Dark => "dark",
         }
     }
-    
+
     /// Parse theme from string
     pub(crate) fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
@@ -46,11 +44,11 @@ impl Theme {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+    use ratatui::style::Color;
+
     #[test]
     fn test_theme_parsing() {
         assert_eq!(Theme::from_str("default"), Some(Theme::Default));
@@ -58,7 +56,7 @@ mod tests {
         assert_eq!(Theme::from_str("dark"), Some(Theme::Dark));
         assert_eq!(Theme::from_str("invalid"), None);
     }
-    
+
     #[test]
     fn test_theme_tokens() {
         let theme = Theme::HighContrast;

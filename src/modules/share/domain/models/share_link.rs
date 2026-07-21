@@ -1,7 +1,7 @@
+use base64::Engine;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use base64::Engine;
 
 /// Share link entity for session collaboration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -42,7 +42,7 @@ impl ShareLink {
     pub fn new(session_id: Uuid, expires_in_hours: Option<u64>, max_access: Option<u32>) -> Self {
         let now = Utc::now();
         let expires_at = expires_in_hours.map(|hours| now + chrono::Duration::hours(hours as i64));
-        
+
         Self {
             id: Uuid::new_v4(),
             session_id,
@@ -108,7 +108,7 @@ mod tests {
     fn test_share_link_creation() {
         let session_id = Uuid::new_v4();
         let link = ShareLink::new(session_id, Some(24), Some(10));
-        
+
         assert_eq!(link.session_id, session_id);
         assert!(link.is_active);
         assert_eq!(link.access_count, 0);

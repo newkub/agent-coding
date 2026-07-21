@@ -1,5 +1,5 @@
 use agent_tui::modules::guardrails::domain::models::guardrail::{
-    Guardrail, GuardrailType, Severity, GuardrailRule, GuardrailCheck, RuleType, GuardrailAction
+    Guardrail, GuardrailAction, GuardrailCheck, GuardrailRule, GuardrailType, RuleType, Severity,
 };
 
 #[test]
@@ -25,9 +25,6 @@ fn test_guardrail_rule_creation() {
 
 #[test]
 fn test_guardrail_check_creation() {
-    let check = GuardrailCheck::new(
-        "check-1".to_string(),
-        "Test Guardrail".to_string(),
-    );
+    let check = GuardrailCheck::new("check-1".to_string(), "Test Guardrail".to_string());
     assert!(check.passed);
 }

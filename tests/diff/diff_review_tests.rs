@@ -1,6 +1,6 @@
 //! Diff Review tests
 
-use agent_tui::modules::diff::domain::models::{FileChange, DiffHunk, ChangeType, HunkStatus};
+use agent_tui::modules::diff::domain::models::{ChangeType, DiffHunk, FileChange, HunkStatus};
 
 #[test]
 fn test_diff_review_new() {
@@ -27,13 +27,29 @@ fn test_diff_review_empty() {
 
 #[test]
 fn test_diff_review_next_hunk() {
-    let mut hunk1 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ -1 @@".to_string(), 1, 1, 1, 1, vec![]);
-    let mut hunk2 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ -5 @@".to_string(), 5, 1, 5, 1, vec![]);
-    
+    let mut hunk1 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ -1 @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
+    let mut hunk2 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ -5 @@".to_string(),
+        5,
+        1,
+        5,
+        1,
+        vec![],
+    );
+
     let mut fc = FileChange::new("test.rs".to_string(), ChangeType::Modified);
     fc.hunks.push(hunk1);
     fc.hunks.push(hunk2);
-    
+
     let mut review = agent_tui::modules::diff::domain::models::DiffReview::new(vec![fc]);
     assert!(review.next_hunk());
     assert_eq!(review.current_hunk_index, 1);
@@ -41,13 +57,29 @@ fn test_diff_review_next_hunk() {
 
 #[test]
 fn test_diff_review_prev_hunk() {
-    let mut hunk1 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ -1 @@".to_string(), 1, 1, 1, 1, vec![]);
-    let mut hunk2 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ -5 @@".to_string(), 5, 1, 5, 1, vec![]);
-    
+    let mut hunk1 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ -1 @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
+    let mut hunk2 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ -5 @@".to_string(),
+        5,
+        1,
+        5,
+        1,
+        vec![],
+    );
+
     let mut fc = FileChange::new("test.rs".to_string(), ChangeType::Modified);
     fc.hunks.push(hunk1);
     fc.hunks.push(hunk2);
-    
+
     let mut review = agent_tui::modules::diff::domain::models::DiffReview::new(vec![fc]);
     review.current_hunk_index = 1;
     assert!(review.prev_hunk());
@@ -56,10 +88,18 @@ fn test_diff_review_prev_hunk() {
 
 #[test]
 fn test_diff_review_approve_current_hunk() {
-    let mut hunk = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ -1 @@".to_string(), 1, 1, 1, 1, vec![]);
+    let mut hunk = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ -1 @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
     let mut fc = FileChange::new("test.rs".to_string(), ChangeType::Modified);
     fc.hunks.push(hunk);
-    
+
     let mut review = agent_tui::modules::diff::domain::models::DiffReview::new(vec![fc]);
     review.approve_current_hunk();
     assert_eq!(review.files[0].hunks[0].status, HunkStatus::Approved);
@@ -67,10 +107,18 @@ fn test_diff_review_approve_current_hunk() {
 
 #[test]
 fn test_diff_review_reject_current_hunk() {
-    let mut hunk = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ -1 @@".to_string(), 1, 1, 1, 1, vec![]);
+    let mut hunk = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ -1 @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
     let mut fc = FileChange::new("test.rs".to_string(), ChangeType::Modified);
     fc.hunks.push(hunk);
-    
+
     let mut review = agent_tui::modules::diff::domain::models::DiffReview::new(vec![fc]);
     review.reject_current_hunk();
     assert_eq!(review.files[0].hunks[0].status, HunkStatus::Rejected);
@@ -78,27 +126,59 @@ fn test_diff_review_reject_current_hunk() {
 
 #[test]
 fn test_diff_review_approved_count() {
-    let mut hunk1 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ @@".to_string(), 1, 1, 1, 1, vec![]);
+    let mut hunk1 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
     hunk1.approve();
-    let mut hunk2 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ @@".to_string(), 1, 1, 1, 1, vec![]);
-    
+    let mut hunk2 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
+
     let mut fc = FileChange::new("test.rs".to_string(), ChangeType::Modified);
     fc.hunks.push(hunk1);
     fc.hunks.push(hunk2);
-    
+
     let review = agent_tui::modules::diff::domain::models::DiffReview::new(vec![fc]);
     assert_eq!(review.approved_count(), 1);
 }
 
 #[test]
 fn test_diff_review_pending_count() {
-    let mut hunk1 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ @@".to_string(), 1, 1, 1, 1, vec![]);
-    let mut hunk2 = DiffHunk::create(uuid::Uuid::new_v4().to_string(), "@@ @@".to_string(), 1, 1, 1, 1, vec![]);
-    
+    let mut hunk1 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
+    let mut hunk2 = DiffHunk::create(
+        uuid::Uuid::new_v4().to_string(),
+        "@@ @@".to_string(),
+        1,
+        1,
+        1,
+        1,
+        vec![],
+    );
+
     let mut fc = FileChange::new("test.rs".to_string(), ChangeType::Modified);
     fc.hunks.push(hunk1);
     fc.hunks.push(hunk2);
-    
+
     let review = agent_tui::modules::diff::domain::models::DiffReview::new(vec![fc]);
     assert_eq!(review.pending_count(), 2);
 }
