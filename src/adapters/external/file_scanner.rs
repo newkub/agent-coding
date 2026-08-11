@@ -10,7 +10,7 @@ use crate::modules::onboarding::ports::FileScanner;
 use crate::shared::kernel::result::AppError;
 
 /// Default implementation for file system scanning
-pub struct DefaultFileScanner;
+pub(crate) struct DefaultFileScanner;
 
 impl DefaultFileScanner {
     pub(crate) const fn new() -> Self {

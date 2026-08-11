@@ -21,13 +21,13 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
     // Search input
     let input_block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT))
+        .border_style(Style::default().fg(accent()))
         .border_type(BorderType::Rounded)
         .title("🔍 Command Palette")
-        .title_style(Style::default().fg(TEXT_BRIGHT));
+        .title_style(Style::default().fg(text_bright()));
 
     let input_text = format!("> {}", state.command_input);
-    let input_para = Paragraph::new(input_text).style(Style::default().fg(TEXT));
+    let input_para = Paragraph::new(input_text).style(Style::default().fg(text()));
 
     frame.render_widget(input_block, input_area);
     frame.render_widget(
@@ -79,37 +79,37 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
                     Span::styled(
                         &cmd.name,
                         Style::default()
-                            .fg(if highlight { BG } else { TEXT_BRIGHT })
+                            .fg(if highlight { bg() } else { text_bright() })
                             .add_modifier(Modifier::BOLD),
                     ),
                     Span::raw(" "),
                     Span::styled(
                         shortcut_text,
-                        Style::default().fg(if highlight { TEXT_BRIGHT } else { TEXT_DIM }),
+                        Style::default().fg(if highlight { text_bright() } else { text_dim() }),
                     ),
                 ]),
                 Line::from(vec![
                     Span::raw("    "),
                     Span::styled(
                         &cmd.description,
-                        Style::default().fg(if highlight { TEXT } else { TEXT_DIM }),
+                        Style::default().fg(if highlight { text() } else { text_dim() }),
                     ),
                 ]),
             ])
-            .style(Style::default().bg(if highlight { ACCENT } else { BG_LIGHT }))
+            .style(Style::default().bg(if highlight { accent() } else { bg_light() }))
         })
         .collect();
 
     let list = List::new(items)
         .block(Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM))
-        .style(Style::default().fg(ACCENT));
+        .style(Style::default().fg(accent()));
 
     frame.render_widget(list, list_area);
 
     // Instructions
     let hint = "↑↓ Navigate | Enter Select | Esc Close";
     let hint_para = Paragraph::new(hint)
-        .style(Style::default().fg(TEXT_DIM))
+        .style(Style::default().fg(text_dim()))
         .alignment(Alignment::Center);
 
     let hint_area = Rect::new(area.x, area.y + area.height - 1, area.width, 1);

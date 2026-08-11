@@ -1,6 +1,6 @@
-pub mod access_share_link;
-pub mod create_share_link;
-pub mod deactivate_share_link;
+pub(crate) mod access_share_link;
+pub(crate) mod create_share_link;
+pub(crate) mod deactivate_share_link;
 
 use crate::modules::share::domain::models::{ExportMetadata, ExportedSession, ImportResult};
 use crate::modules::share::ports::ShareRepository;

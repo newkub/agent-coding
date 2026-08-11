@@ -1,1 +1,1 @@
-pub mod analyze_performance;
+pub(crate) mod analyze_performance;

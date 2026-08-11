@@ -6,7 +6,7 @@ use ratatui::style::{Color, Style};
 /// Color palette for TUI (16 terminal colors)
 /// Using ANSI color codes for maximum compatibility
 #[derive(Debug, Clone, Copy)]
-pub struct ColorPalette {
+pub(crate) struct ColorPalette {
     // Primary colors
     pub primary: Color,
     pub primary_light: Color,
@@ -111,7 +111,7 @@ impl ColorPalette {
 /// Typography tokens for TUI
 /// TUI only supports monospace fonts
 #[derive(Debug, Clone, Copy)]
-pub struct Typography {
+pub(crate) struct Typography {
     pub font_family: &'static str,
     pub font_size: u8,
     pub line_height: u8,
@@ -159,7 +159,7 @@ impl Typography {
 /// Spacing tokens for TUI
 /// Using character-based spacing
 #[derive(Debug, Clone, Copy)]
-pub struct Spacing {
+pub(crate) struct Spacing {
     pub xs: u16, // 1 character
     pub sm: u16, // 2 characters
     pub md: u16, // 4 characters
@@ -216,7 +216,7 @@ impl Spacing {
 
 /// Design tokens container
 #[derive(Debug, Clone)]
-pub struct DesignTokens {
+pub(crate) struct DesignTokens {
     pub colors: ColorPalette,
     pub typography: Typography,
     pub spacing: Spacing,

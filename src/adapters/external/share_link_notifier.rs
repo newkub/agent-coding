@@ -6,7 +6,7 @@ use crate::modules::share::ports::ShareLinkNotifier;
 use crate::shared::kernel::result::AppError;
 
 /// Default implementation for share link notifications (logs to console)
-pub struct LogShareLinkNotifier;
+pub(crate) struct LogShareLinkNotifier;
 
 impl LogShareLinkNotifier {
     pub(crate) const fn new() -> Self {
@@ -51,7 +51,7 @@ impl ShareLinkNotifier for LogShareLinkNotifier {
 }
 
 /// No-op implementation for testing or when notifications are disabled
-pub struct NoopShareLinkNotifier;
+pub(crate) struct NoopShareLinkNotifier;
 
 #[async_trait]
 impl ShareLinkNotifier for NoopShareLinkNotifier {

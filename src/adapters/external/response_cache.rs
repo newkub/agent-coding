@@ -6,7 +6,7 @@ use std::time::Duration;
 
 /// Cache key for AI responses
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub struct CacheKey {
+pub(crate) struct CacheKey {
     pub model: String,
     pub prompt_hash: u64,
     pub temperature: u32, // Convert f32 to u32 for Hash/Eq
@@ -14,13 +14,13 @@ pub struct CacheKey {
 
 /// Cached AI response
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CachedResponse {
+pub(crate) struct CachedResponse {
     pub content: String,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
 /// Response cache for AI requests
-pub struct ResponseCache {
+pub(crate) struct ResponseCache {
     cache: Arc<Cache<CacheKey, CachedResponse>>,
 }
 

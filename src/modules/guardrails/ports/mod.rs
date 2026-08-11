@@ -5,7 +5,7 @@ use crate::shared::kernel::result::AppError;
 
 /// Port for guardrail management
 #[async_trait]
-pub trait GuardrailManager: Send + Sync {
+pub(crate) trait GuardrailManager: Send + Sync {
     /// Create a new guardrail
     async fn create_guardrail(&self, guardrail: Guardrail) -> Result<Guardrail, AppError>;
 
@@ -27,7 +27,7 @@ pub trait GuardrailManager: Send + Sync {
 
 /// Port for guardrail checking
 #[async_trait]
-pub trait GuardrailChecker: Send + Sync {
+pub(crate) trait GuardrailChecker: Send + Sync {
     /// Check input against all enabled guardrails
     async fn check_input(&self, input: &str) -> Result<Vec<GuardrailCheck>, AppError>;
 

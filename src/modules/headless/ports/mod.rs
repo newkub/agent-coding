@@ -5,7 +5,7 @@ use crate::shared::kernel::result::AppError;
 
 /// Port for command execution in headless mode
 #[async_trait]
-pub trait HeadlessCommandExecutor: Send + Sync {
+pub(crate) trait HeadlessCommandExecutor: Send + Sync {
     /// Execute a headless command
     async fn execute(
         &self,
@@ -26,7 +26,7 @@ pub trait HeadlessCommandExecutor: Send + Sync {
 
 /// Port for output formatting and streaming
 #[async_trait]
-pub trait OutputFormatter: Send + Sync {
+pub(crate) trait OutputFormatter: Send + Sync {
     /// Format command output
     fn format(&self, output: &str, config: &HeadlessConfig) -> String;
 
@@ -36,7 +36,7 @@ pub trait OutputFormatter: Send + Sync {
 
 /// Port for session management in headless mode
 #[async_trait]
-pub trait HeadlessSessionManager: Send + Sync {
+pub(crate) trait HeadlessSessionManager: Send + Sync {
     /// Create new session
     async fn create_session(&self) -> Result<String, AppError>;
 

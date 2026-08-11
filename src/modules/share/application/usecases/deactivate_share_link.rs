@@ -5,7 +5,7 @@ use crate::modules::share::ports::{ShareLinkNotifier, ShareLinkRepository};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for deactivating a share link
-pub struct DeactivateShareLinkUseCase<R, N>
+pub(crate) struct DeactivateShareLinkUseCase<R, N>
 where
     R: ShareLinkRepository,
     N: ShareLinkNotifier,

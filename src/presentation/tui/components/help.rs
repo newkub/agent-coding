@@ -26,12 +26,12 @@ pub(crate) fn draw_help_modal(
 
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT))
+        .border_style(Style::default().fg(accent()))
         .border_type(BorderType::Rounded)
         .title(format!("📖 Help - {} Tab", current_tab.label()))
         .title_style(
             Style::default()
-                .fg(TEXT_BRIGHT)
+                .fg(text_bright())
                 .add_modifier(ratatui::style::Modifier::BOLD),
         );
 
@@ -52,24 +52,24 @@ pub(crate) fn draw_help_modal(
 
     // Global shortcuts (left column)
     let global_content = get_global_shortcuts();
-    let left_para = Paragraph::new(global_content).style(Style::default().fg(TEXT));
+    let left_para = Paragraph::new(global_content).style(Style::default().fg(text()));
     frame.render_widget(left_para, left);
 
     // Tab-specific shortcuts (center column)
     let tab_content = get_tab_shortcuts(current_tab);
-    let center_para = Paragraph::new(tab_content).style(Style::default().fg(TEXT));
+    let center_para = Paragraph::new(tab_content).style(Style::default().fg(text()));
     frame.render_widget(center_para, center);
 
     // Column-specific shortcuts (right column)
     let column_content = get_column_shortcuts(current_tab, current_column);
-    let right_para = Paragraph::new(column_content).style(Style::default().fg(TEXT));
+    let right_para = Paragraph::new(column_content).style(Style::default().fg(text()));
     frame.render_widget(right_para, right);
 
     // Footer hint
     let footer_text = "Press Esc or ? to close | Shortcuts change based on context";
     let footer_para = Paragraph::new(footer_text)
         .alignment(Alignment::Center)
-        .style(Style::default().fg(TEXT_DIM));
+        .style(Style::default().fg(text_dim()));
 
     let footer_area = Rect::new(x, y + height - 1, width, 1);
     frame.render_widget(footer_para, footer_area);
@@ -80,37 +80,37 @@ fn get_global_shortcuts() -> Text<'static> {
         Line::from(vec![Span::styled(
             "🌍 GLOBAL",
             Style::default()
-                .fg(ACCENT)
+                .fg(accent())
                 .add_modifier(ratatui::style::Modifier::BOLD),
         )]),
         Line::from(""),
         Line::from(vec![
             Span::raw("  Tab         "),
-            Span::styled("Next tab", Style::default().fg(TEXT_DIM)),
+            Span::styled("Next tab", Style::default().fg(text_dim())),
         ]),
         Line::from(vec![
             Span::raw("  Shift+Tab   "),
-            Span::styled("Prev tab", Style::default().fg(TEXT_DIM)),
+            Span::styled("Prev tab", Style::default().fg(text_dim())),
         ]),
         Line::from(vec![
             Span::raw("  → ←         "),
-            Span::styled("Next/Prev column", Style::default().fg(TEXT_DIM)),
+            Span::styled("Next/Prev column", Style::default().fg(text_dim())),
         ]),
         Line::from(vec![
             Span::raw("  f           "),
-            Span::styled("Toggle focus", Style::default().fg(TEXT_DIM)),
+            Span::styled("Toggle focus", Style::default().fg(text_dim())),
         ]),
         Line::from(vec![
             Span::raw("  ? / Ctrl+H   "),
-            Span::styled("Toggle help", Style::default().fg(TEXT_DIM)),
+            Span::styled("Toggle help", Style::default().fg(text_dim())),
         ]),
         Line::from(vec![
             Span::raw("  q / Esc      "),
-            Span::styled("Quit", Style::default().fg(TEXT_DIM)),
+            Span::styled("Quit", Style::default().fg(text_dim())),
         ]),
         Line::from(vec![
             Span::raw("  Ctrl+K       "),
-            Span::styled("Command palette", Style::default().fg(TEXT_DIM)),
+            Span::styled("Command palette", Style::default().fg(text_dim())),
         ]),
     ])
 }
@@ -121,137 +121,137 @@ fn get_tab_shortcuts(tab: Tab) -> Text<'static> {
             Line::from(vec![Span::styled(
                 "🤖 AGENT",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  Enter       "),
-                Span::styled("Send message", Style::default().fg(TEXT_DIM)),
+                Span::styled("Send message", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Ctrl+N      "),
-                Span::styled("New session", Style::default().fg(TEXT_DIM)),
+                Span::styled("New session", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Ctrl+S      "),
-                Span::styled("Save session", Style::default().fg(TEXT_DIM)),
+                Span::styled("Save session", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Ctrl+L      "),
-                Span::styled("List sessions", Style::default().fg(TEXT_DIM)),
+                Span::styled("List sessions", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  ↑↓          "),
-                Span::styled("Navigate history", Style::default().fg(TEXT_DIM)),
+                Span::styled("Navigate history", Style::default().fg(text_dim())),
             ]),
         ]),
         Tab::Git => Text::from(vec![
             Line::from(vec![Span::styled(
                 "📚 GIT",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  s           "),
-                Span::styled("Stage file", Style::default().fg(TEXT_DIM)),
+                Span::styled("Stage file", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  u           "),
-                Span::styled("Unstage file", Style::default().fg(TEXT_DIM)),
+                Span::styled("Unstage file", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  c           "),
-                Span::styled("Commit", Style::default().fg(TEXT_DIM)),
+                Span::styled("Commit", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  p           "),
-                Span::styled("Push", Style::default().fg(TEXT_DIM)),
+                Span::styled("Push", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  f           "),
-                Span::styled("Fetch", Style::default().fg(TEXT_DIM)),
+                Span::styled("Fetch", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  b           "),
-                Span::styled("Create branch", Style::default().fg(TEXT_DIM)),
+                Span::styled("Create branch", Style::default().fg(text_dim())),
             ]),
         ]),
         Tab::Files => Text::from(vec![
             Line::from(vec![Span::styled(
                 "📁 FILES",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  Enter       "),
-                Span::styled("Open file", Style::default().fg(TEXT_DIM)),
+                Span::styled("Open file", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  e           "),
-                Span::styled("Edit file", Style::default().fg(TEXT_DIM)),
+                Span::styled("Edit file", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  d           "),
-                Span::styled("Delete file", Style::default().fg(TEXT_DIM)),
+                Span::styled("Delete file", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  r           "),
-                Span::styled("Rename file", Style::default().fg(TEXT_DIM)),
+                Span::styled("Rename file", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  /           "),
-                Span::styled("Search files", Style::default().fg(TEXT_DIM)),
+                Span::styled("Search files", Style::default().fg(text_dim())),
             ]),
         ]),
         Tab::Terminal => Text::from(vec![
             Line::from(vec![Span::styled(
                 "� TERMINAL",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  Enter       "),
-                Span::styled("Execute command", Style::default().fg(TEXT_DIM)),
+                Span::styled("Execute command", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Ctrl+C      "),
-                Span::styled("Cancel command", Style::default().fg(TEXT_DIM)),
+                Span::styled("Cancel command", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  ↑↓          "),
-                Span::styled("Command history", Style::default().fg(TEXT_DIM)),
+                Span::styled("Command history", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Ctrl+L      "),
-                Span::styled("Clear output", Style::default().fg(TEXT_DIM)),
+                Span::styled("Clear output", Style::default().fg(text_dim())),
             ]),
         ]),
         _ => Text::from(vec![
             Line::from(vec![Span::styled(
                 "📋 TAB",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  ↑↓          "),
-                Span::styled("Navigate items", Style::default().fg(TEXT_DIM)),
+                Span::styled("Navigate items", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Enter       "),
-                Span::styled("Select item", Style::default().fg(TEXT_DIM)),
+                Span::styled("Select item", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Esc         "),
-                Span::styled("Go back", Style::default().fg(TEXT_DIM)),
+                Span::styled("Go back", Style::default().fg(text_dim())),
             ]),
         ]),
     }
@@ -263,113 +263,113 @@ fn get_column_shortcuts(tab: Tab, column: Column) -> Text<'static> {
             Line::from(vec![Span::styled(
                 "📄 STATUS",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  s           "),
-                Span::styled("Stage selected", Style::default().fg(TEXT_DIM)),
+                Span::styled("Stage selected", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  u           "),
-                Span::styled("Unstage selected", Style::default().fg(TEXT_DIM)),
+                Span::styled("Unstage selected", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  d           "),
-                Span::styled("Discard changes", Style::default().fg(TEXT_DIM)),
+                Span::styled("Discard changes", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  i           "),
-                Span::styled("Stage hunk", Style::default().fg(TEXT_DIM)),
+                Span::styled("Stage hunk", Style::default().fg(text_dim())),
             ]),
         ]),
         (Tab::Git, Column::Center) => Text::from(vec![
             Line::from(vec![Span::styled(
                 "📝 DIFF",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  ↑↓          "),
-                Span::styled("Scroll diff", Style::default().fg(TEXT_DIM)),
+                Span::styled("Scroll diff", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  PageUp/Down "),
-                Span::styled("Page scroll", Style::default().fg(TEXT_DIM)),
+                Span::styled("Page scroll", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Home/End    "),
-                Span::styled("Jump to start/end", Style::default().fg(TEXT_DIM)),
+                Span::styled("Jump to start/end", Style::default().fg(text_dim())),
             ]),
         ]),
         (Tab::Git, Column::Right) => Text::from(vec![
             Line::from(vec![Span::styled(
                 "📜 HISTORY",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  Enter       "),
-                Span::styled("View commit", Style::default().fg(TEXT_DIM)),
+                Span::styled("View commit", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  b           "),
-                Span::styled("Checkout commit", Style::default().fg(TEXT_DIM)),
+                Span::styled("Checkout commit", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  /           "),
-                Span::styled("Search commits", Style::default().fg(TEXT_DIM)),
+                Span::styled("Search commits", Style::default().fg(text_dim())),
             ]),
         ]),
         (Tab::Agent, Column::Center) => Text::from(vec![
             Line::from(vec![Span::styled(
                 "💬 CHAT",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  Enter       "),
-                Span::styled("Send message", Style::default().fg(TEXT_DIM)),
+                Span::styled("Send message", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Ctrl+G      "),
-                Span::styled("Send (alt)", Style::default().fg(TEXT_DIM)),
+                Span::styled("Send (alt)", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Tab         "),
-                Span::styled("Auto-complete", Style::default().fg(TEXT_DIM)),
+                Span::styled("Auto-complete", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Esc         "),
-                Span::styled("Clear input", Style::default().fg(TEXT_DIM)),
+                Span::styled("Clear input", Style::default().fg(text_dim())),
             ]),
         ]),
         _ => Text::from(vec![
             Line::from(vec![Span::styled(
                 "📍 COLUMN",
                 Style::default()
-                    .fg(ACCENT)
+                    .fg(accent())
                     .add_modifier(ratatui::style::Modifier::BOLD),
             )]),
             Line::from(""),
             Line::from(vec![
                 Span::raw("  ↑↓          "),
-                Span::styled("Navigate", Style::default().fg(TEXT_DIM)),
+                Span::styled("Navigate", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Enter       "),
-                Span::styled("Select", Style::default().fg(TEXT_DIM)),
+                Span::styled("Select", Style::default().fg(text_dim())),
             ]),
             Line::from(vec![
                 Span::raw("  Esc         "),
-                Span::styled("Back", Style::default().fg(TEXT_DIM)),
+                Span::styled("Back", Style::default().fg(text_dim())),
             ]),
         ]),
     }

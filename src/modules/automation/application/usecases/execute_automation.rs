@@ -10,7 +10,7 @@ use crate::modules::automation::ports::{AutomationWorkflowExecutor, GitHubClient
 use crate::shared::kernel::result::AppError;
 
 /// Use case for executing issue-to-PR automation
-pub struct ExecuteAutomationUseCase<G, H>
+pub(crate) struct ExecuteAutomationUseCase<G, H>
 where
     G: GitOperations,
     H: GitHubClient,

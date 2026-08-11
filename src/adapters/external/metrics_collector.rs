@@ -20,7 +20,7 @@ struct SystemSnapshot {
 /// The collector owns a `sysinfo::System` handle wrapped in an [`Arc`] so the
 /// blocking refresh can run on `spawn_blocking` without borrowing from the
 /// async caller.
-pub struct SystemMetricsCollector {
+pub(crate) struct SystemMetricsCollector {
     system: Arc<Mutex<System>>,
 }
 

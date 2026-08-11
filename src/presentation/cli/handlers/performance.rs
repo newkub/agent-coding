@@ -6,7 +6,6 @@ use crate::adapters::external::metrics_collector::SystemMetricsCollector;
 use crate::adapters::external::optimization_manager::InMemoryOptimizationManager;
 use crate::adapters::external::snapshot_manager::InMemorySnapshotManager;
 use crate::modules::performance::application::usecases::analyze_performance::AnalyzePerformanceUseCase;
-use crate::modules::performance::ports::MetricsCollector;
 use crate::presentation::cli::output;
 use crate::shared::kernel::result::AppResult;
 

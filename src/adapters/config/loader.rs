@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use super::settings::AppSettings;
 
 /// Configuration loader for application settings
-pub struct ConfigLoader {
+pub(crate) struct ConfigLoader {
     config_path: PathBuf,
 }
 
@@ -69,7 +69,7 @@ impl Default for ConfigLoader {
 
 /// Configuration errors
 #[derive(Debug, thiserror::Error)]
-pub enum ConfigError {
+pub(crate) enum ConfigError {
     #[error("Failed to read config file: {0}")]
     ReadError(String),
 

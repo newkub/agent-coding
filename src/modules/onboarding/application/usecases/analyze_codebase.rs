@@ -11,7 +11,7 @@ use crate::modules::onboarding::ports::{CodebaseAnalyzer, DependencyParser, File
 use crate::shared::kernel::result::AppError;
 
 /// Use case for analyzing a codebase
-pub struct AnalyzeCodebaseUseCase<S, P>
+pub(crate) struct AnalyzeCodebaseUseCase<S, P>
 where
     S: FileScanner,
     P: DependencyParser,

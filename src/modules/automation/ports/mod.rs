@@ -7,7 +7,7 @@ use crate::shared::kernel::result::AppError;
 
 /// Port for GitHub API operations
 #[async_trait]
-pub trait GitHubClient: Send + Sync {
+pub(crate) trait GitHubClient: Send + Sync {
     /// Get issue by number
     async fn get_issue(&self, repository: &str, number: u32) -> Result<Issue, AppError>;
 
@@ -51,7 +51,7 @@ pub trait GitHubClient: Send + Sync {
 
 /// Port for Git operations
 #[async_trait]
-pub trait GitOperations: Send + Sync {
+pub(crate) trait GitOperations: Send + Sync {
     /// Create new branch
     async fn create_branch(&self, branch_name: &str) -> Result<(), AppError>;
 
@@ -76,7 +76,7 @@ pub trait GitOperations: Send + Sync {
 
 /// Port for automation workflow execution
 #[async_trait]
-pub trait AutomationWorkflowExecutor: Send + Sync {
+pub(crate) trait AutomationWorkflowExecutor: Send + Sync {
     /// Execute automation workflow
     async fn execute(
         &self,

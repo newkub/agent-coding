@@ -11,7 +11,7 @@ use crate::shared::kernel::result::{AppError, AppResult};
 /// Sessions are stored as JSON blobs in the `shared_sessions` table so that
 /// the full nested structure (messages, metadata, ...) round-trips losslessly
 /// through export/import without requiring a relational schema for every field.
-pub struct SqliteShareRepository {
+pub(crate) struct SqliteShareRepository {
     pool: SqlitePool,
 }
 

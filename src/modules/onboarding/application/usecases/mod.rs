@@ -1,1 +1,1 @@
-pub mod analyze_codebase;
+pub(crate) mod analyze_codebase;

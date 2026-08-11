@@ -8,7 +8,7 @@ use crate::modules::subagents::ports::SubagentManager;
 use crate::shared::kernel::result::AppError;
 
 /// In-memory subagent manager
-pub struct InMemorySubagentManager {
+pub(crate) struct InMemorySubagentManager {
     subagents: Arc<RwLock<HashMap<String, Subagent>>>,
 }
 

@@ -7,7 +7,7 @@ use crate::modules::share::ports::{ShareLinkNotifier, ShareLinkRepository};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for accessing a shared session via share link
-pub struct AccessShareLinkUseCase<R, N>
+pub(crate) struct AccessShareLinkUseCase<R, N>
 where
     R: ShareLinkRepository,
     N: ShareLinkNotifier,

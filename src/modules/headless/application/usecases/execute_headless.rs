@@ -7,7 +7,7 @@ use crate::modules::headless::ports::{HeadlessCommandExecutor, HeadlessSessionMa
 use crate::shared::kernel::result::AppError;
 
 /// Use case for executing headless commands
-pub struct ExecuteHeadlessUseCase<E, S>
+pub(crate) struct ExecuteHeadlessUseCase<E, S>
 where
     E: HeadlessCommandExecutor,
     S: HeadlessSessionManager,

@@ -2,7 +2,7 @@ use crate::modules::ui::application::tab_navigation::NavigationDirection;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::types::Column;
 
-pub fn navigate_files_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_files_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {
             if state.files_tab_state.selected_file_index > 0 {
@@ -21,7 +21,7 @@ pub fn navigate_files_tab(state: &mut AppState, direction: NavigationDirection) 
     }
 }
 
-pub fn navigate_packages_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_packages_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {
             if state.packages_tab_state.selected_package_index > 0 {
@@ -40,7 +40,7 @@ pub fn navigate_packages_tab(state: &mut AppState, direction: NavigationDirectio
     }
 }
 
-pub fn navigate_snippets_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_snippets_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {
             if state.snippet_tab_state.selected_snippet_index > 0 {

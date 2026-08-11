@@ -5,7 +5,7 @@ use ratatui::{
 };
 
 /// Render markdown content to ratatui Spans with syntax highlighting
-pub fn render_markdown(text: &str) -> Vec<Line<'static>> {
+pub(crate) fn render_markdown(text: &str) -> Vec<Line<'static>> {
     let parser = Parser::new(text);
     let mut lines = Vec::new();
     let mut current_line: Vec<Span<'static>> = Vec::new();

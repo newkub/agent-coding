@@ -7,7 +7,7 @@ use crate::shared::kernel::result::AppError;
 
 /// Port for performance metrics collection
 #[async_trait]
-pub trait MetricsCollector: Send + Sync {
+pub(crate) trait MetricsCollector: Send + Sync {
     /// Collect current performance metrics
     async fn collect_metrics(&self) -> Result<PerformanceMetrics, AppError>;
 
@@ -20,7 +20,7 @@ pub trait MetricsCollector: Send + Sync {
 
 /// Port for performance snapshot management
 #[async_trait]
-pub trait SnapshotManager: Send + Sync {
+pub(crate) trait SnapshotManager: Send + Sync {
     /// Create a performance snapshot
     async fn create_snapshot(
         &self,
@@ -47,7 +47,7 @@ pub trait SnapshotManager: Send + Sync {
 
 /// Port for optimization suggestion management
 #[async_trait]
-pub trait OptimizationManager: Send + Sync {
+pub(crate) trait OptimizationManager: Send + Sync {
     /// Generate optimization suggestions from metrics
     async fn generate_suggestions(
         &self,

@@ -6,7 +6,7 @@ use crate::modules::guardrails::ports::{GuardrailChecker, GuardrailManager};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for executing guardrail checks
-pub struct ExecuteGuardrailCheckUseCase<M, C>
+pub(crate) struct ExecuteGuardrailCheckUseCase<M, C>
 where
     M: GuardrailManager,
     C: GuardrailChecker,
@@ -89,7 +89,7 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct GuardrailResult {
+pub(crate) struct GuardrailResult {
     pub action: GuardrailAction,
     pub checks: Vec<GuardrailCheck>,
     pub passed: bool,

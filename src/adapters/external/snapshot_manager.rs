@@ -10,7 +10,7 @@ use crate::modules::performance::ports::SnapshotManager;
 use crate::shared::kernel::result::AppError;
 
 /// In-memory snapshot manager
-pub struct InMemorySnapshotManager {
+pub(crate) struct InMemorySnapshotManager {
     snapshots: Arc<RwLock<HashMap<String, PerformanceSnapshot>>>,
 }
 

@@ -16,7 +16,7 @@ pub(crate) trait ShareRepository: Send + Sync {
 
 /// Port for share link repository operations
 #[async_trait]
-pub trait ShareLinkRepository: Send + Sync {
+pub(crate) trait ShareLinkRepository: Send + Sync {
     /// Save a new share link
     async fn save(&self, link: &ShareLink) -> Result<(), AppError>;
 
@@ -41,7 +41,7 @@ pub trait ShareLinkRepository: Send + Sync {
 
 /// Port for share link URL generation
 #[async_trait]
-pub trait ShareLinkUrlGenerator: Send + Sync {
+pub(crate) trait ShareLinkUrlGenerator: Send + Sync {
     /// Generate a shareable URL for a share link
     async fn generate_url(&self, token: &str) -> Result<String, AppError>;
 
@@ -51,7 +51,7 @@ pub trait ShareLinkUrlGenerator: Send + Sync {
 
 /// Port for share link notification
 #[async_trait]
-pub trait ShareLinkNotifier: Send + Sync {
+pub(crate) trait ShareLinkNotifier: Send + Sync {
     /// Notify when a share link is created
     async fn notify_created(&self, link: &ShareLink, url: &str) -> Result<(), AppError>;
 

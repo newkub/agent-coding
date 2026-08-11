@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, Copy)]
-pub enum NavigationDirection {
+pub(crate) enum NavigationDirection {
     Up,
     Down,
     Left,

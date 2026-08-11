@@ -7,7 +7,7 @@ use crate::modules::share::ports::{ShareLinkNotifier, ShareLinkRepository, Share
 use crate::shared::kernel::result::AppError;
 
 /// Use case for creating a share link
-pub struct CreateShareLinkUseCase<R, U, N>
+pub(crate) struct CreateShareLinkUseCase<R, U, N>
 where
     R: ShareLinkRepository,
     U: ShareLinkUrlGenerator,

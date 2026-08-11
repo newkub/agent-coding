@@ -1,13 +1,13 @@
 // Design system module for TUI
 // Provides design tokens, themes, and accessibility features
 
-pub mod tokens;
+pub(crate) mod tokens;
 
-pub use tokens::DesignTokens;
+pub(crate) use tokens::DesignTokens;
 
 /// Theme variants
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum Theme {
+pub(crate) enum Theme {
     #[default]
     Default,
     HighContrast,

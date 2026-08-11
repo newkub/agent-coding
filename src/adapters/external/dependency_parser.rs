@@ -8,7 +8,7 @@ use crate::modules::onboarding::ports::DependencyParser;
 use crate::shared::kernel::result::AppError;
 
 /// Default implementation for dependency parsing
-pub struct DefaultDependencyParser;
+pub(crate) struct DefaultDependencyParser;
 
 impl DefaultDependencyParser {
     pub(crate) const fn new() -> Self {

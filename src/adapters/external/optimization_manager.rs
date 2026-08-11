@@ -13,7 +13,7 @@ use crate::modules::performance::ports::OptimizationManager;
 use crate::shared::kernel::result::AppError;
 
 /// In-memory optimization manager
-pub struct InMemoryOptimizationManager {
+pub(crate) struct InMemoryOptimizationManager {
     suggestions: Arc<RwLock<HashMap<String, OptimizationSuggestion>>>,
 }
 

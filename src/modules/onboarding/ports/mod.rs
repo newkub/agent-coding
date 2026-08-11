@@ -8,7 +8,7 @@ use crate::shared::kernel::result::AppError;
 
 /// Port for file system scanning operations
 #[async_trait]
-pub trait FileScanner: Send + Sync {
+pub(crate) trait FileScanner: Send + Sync {
     /// Scan project directory and return structure
     async fn scan_directory(&self, path: &PathBuf) -> Result<ProjectStructure, AppError>;
 
@@ -21,7 +21,7 @@ pub trait FileScanner: Send + Sync {
 
 /// Port for dependency parsing operations
 #[async_trait]
-pub trait DependencyParser: Send + Sync {
+pub(crate) trait DependencyParser: Send + Sync {
     /// Parse package.json and return dependencies
     async fn parse_package_json(&self, path: &PathBuf) -> Result<Dependencies, AppError>;
 
@@ -37,7 +37,7 @@ pub trait DependencyParser: Send + Sync {
 
 /// Port for codebase analysis operations
 #[async_trait]
-pub trait CodebaseAnalyzer: Send + Sync {
+pub(crate) trait CodebaseAnalyzer: Send + Sync {
     /// Analyze entire codebase
     async fn analyze(&self, project_path: PathBuf) -> Result<CodebaseAnalysis, AppError>;
 

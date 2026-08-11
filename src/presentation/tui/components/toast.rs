@@ -37,14 +37,14 @@ pub(crate) fn draw_toasts(frame: &mut Frame, area: Rect, state: &AppState) {
                 Span::raw(" "),
                 Span::raw(&toast.message),
                 Span::raw("  "),
-                Span::styled(time, Style::default().fg(TEXT_DIM)),
+                Span::styled(time, Style::default().fg(text_dim())),
             ])
         })
         .collect();
 
     let paragraph = Paragraph::new(toasts)
         .alignment(Alignment::Left)
-        .style(Style::default().bg(BG_LIGHT));
+        .style(Style::default().bg(bg_light()));
 
     frame.render_widget(paragraph, toast_area);
 }
@@ -74,10 +74,10 @@ pub(crate) fn draw_toast_overlay(
             ToastKind::Error => "❌",
         };
         let border_color = match toast.kind {
-            ToastKind::Info => ACCENT,
-            ToastKind::Success => ACCENT_GREEN,
-            ToastKind::Warning => ACCENT_YELLOW,
-            ToastKind::Error => ACCENT_RED,
+            ToastKind::Info => accent(),
+            ToastKind::Success => accent_green(),
+            ToastKind::Warning => accent_yellow(),
+            ToastKind::Error => accent_red(),
         };
 
         let content = format!("{} {} ", icon, toast.message);
@@ -86,9 +86,9 @@ pub(crate) fn draw_toast_overlay(
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .border_style(Style::default().fg(border_color))
-            .style(Style::default().bg(BG_LIGHT));
+            .style(Style::default().bg(bg_light()));
 
-        let paragraph = Paragraph::new(content).style(Style::default().fg(TEXT));
+        let paragraph = Paragraph::new(content).style(Style::default().fg(text()));
 
         frame.render_widget(block, toast_area);
         frame.render_widget(

@@ -1,7 +1,7 @@
 use crate::adapters::config::settings::AccessibilitySettings;
 
 /// Screen reader announcer for accessibility
-pub struct ScreenReaderAnnouncer {
+pub(crate) struct ScreenReaderAnnouncer {
     enabled: bool,
     announce_focus: bool,
     announce_content: bool,

@@ -5,7 +5,7 @@ use crate::adapters::config::settings::AccessibilitySettings;
 use std::sync::{Arc, Mutex};
 
 /// Screen reader announcer
-pub struct ScreenReaderAnnouncer {
+pub(crate) struct ScreenReaderAnnouncer {
     enabled: bool,
     buffer: Arc<Mutex<Vec<String>>>,
     announce_focus: bool,
@@ -84,7 +84,7 @@ impl ScreenReaderAnnouncer {
 }
 
 /// Accessibility context for TUI
-pub struct AccessibilityContext {
+pub(crate) struct AccessibilityContext {
     announcer: ScreenReaderAnnouncer,
     high_contrast: bool,
     reduced_motion: bool,

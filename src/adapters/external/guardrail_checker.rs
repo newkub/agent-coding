@@ -9,7 +9,7 @@ use crate::modules::guardrails::ports::{GuardrailChecker, GuardrailManager};
 use crate::shared::kernel::result::AppError;
 
 /// Default guardrail checker
-pub struct DefaultGuardrailChecker<M>
+pub(crate) struct DefaultGuardrailChecker<M>
 where
     M: GuardrailManager,
 {

@@ -8,7 +8,7 @@ use crate::shared::kernel::result::AppError;
 
 /// GitHub API client using reqwest
 #[derive(Clone)]
-pub struct ReqwestGitHubClient {
+pub(crate) struct ReqwestGitHubClient {
     client: Client,
     token: String,
     base_url: String,

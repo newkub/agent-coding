@@ -3,7 +3,7 @@ use crate::shared::kernel::result::AppError;
 use async_trait::async_trait;
 
 /// Default implementation for generating share link URLs
-pub struct DefaultShareLinkUrlGenerator {
+pub(crate) struct DefaultShareLinkUrlGenerator {
     base_url: String,
 }
 

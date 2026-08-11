@@ -2,7 +2,7 @@ use crate::modules::ui::application::tab_navigation::NavigationDirection;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::types::Column;
 
-pub fn navigate_agent_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_agent_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up | NavigationDirection::Down => {
             // Navigate through messages
@@ -16,7 +16,7 @@ pub fn navigate_agent_tab(state: &mut AppState, direction: NavigationDirection) 
     }
 }
 
-pub fn navigate_files_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_files_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {
             if state.files_tab_state.selected_file_index > 0 {
@@ -35,7 +35,7 @@ pub fn navigate_files_tab(state: &mut AppState, direction: NavigationDirection) 
     }
 }
 
-pub fn navigate_git_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_git_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {
             if state.git_tab_state.selected_file_index > 0 {
@@ -54,7 +54,7 @@ pub fn navigate_git_tab(state: &mut AppState, direction: NavigationDirection) {
     }
 }
 
-pub fn navigate_terminal_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_terminal_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {
             if state.terminal_tab_state.selected_history_index.unwrap_or(0) > 0 {

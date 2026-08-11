@@ -2,14 +2,14 @@ use crate::modules::ui::domain::models::AppState;
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
 
-pub mod core_tabs;
-pub mod data_tabs;
-pub mod development_tabs;
-pub mod system_tabs;
+pub(crate) mod core_tabs;
+pub(crate) mod data_tabs;
+pub(crate) mod development_tabs;
+pub(crate) mod system_tabs;
 
 /// Result of rendering a tab
 #[derive(Debug, Clone)]
-pub struct TabRenderResult<'a> {
+pub(crate) struct TabRenderResult<'a> {
     pub content: Paragraph<'a>,
     pub area: Rect,
 }
@@ -21,7 +21,7 @@ impl<'a> TabRenderResult<'a> {
 }
 
 /// Render current tab based on app state
-pub fn render_current_tab(state: &AppState, area: Rect) -> TabRenderResult<'_> {
+pub(crate) fn render_current_tab(state: &AppState, area: Rect) -> TabRenderResult<'_> {
     use crate::shared::types::Tab;
 
     match state.ui_state.current_tab {

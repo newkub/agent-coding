@@ -7,7 +7,7 @@ use crate::modules::performance::ports::{MetricsCollector, OptimizationManager, 
 use crate::shared::kernel::result::AppError;
 
 /// Use case for performance analysis
-pub struct AnalyzePerformanceUseCase<C, S, O>
+pub(crate) struct AnalyzePerformanceUseCase<C, S, O>
 where
     C: MetricsCollector,
     S: SnapshotManager,
@@ -112,7 +112,7 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct PerformanceAnalysisResult {
+pub(crate) struct PerformanceAnalysisResult {
     pub metrics: PerformanceMetrics,
     pub score: f64,
     pub suggestions: Vec<OptimizationSuggestion>,
@@ -120,7 +120,7 @@ pub struct PerformanceAnalysisResult {
 }
 
 #[derive(Debug, Clone)]
-pub struct PerformanceComparisonResult {
+pub(crate) struct PerformanceComparisonResult {
     pub current_metrics: PerformanceMetrics,
     pub snapshot_metrics: PerformanceMetrics,
     pub comparison: crate::modules::performance::domain::models::metrics::PerformanceComparison,

@@ -2,7 +2,7 @@ use crate::modules::ui::application::tab_navigation::NavigationDirection;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::types::Column;
 
-pub fn navigate_logs_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_logs_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {
             if state.logs_tab_state.selected_log_index > 0 {
@@ -21,7 +21,7 @@ pub fn navigate_logs_tab(state: &mut AppState, direction: NavigationDirection) {
     }
 }
 
-pub fn navigate_system_tab(state: &mut AppState, direction: NavigationDirection) {
+pub(crate) fn navigate_system_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up | NavigationDirection::Down => {
             // Navigate through processes

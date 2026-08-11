@@ -8,7 +8,7 @@ use crate::modules::guardrails::ports::GuardrailManager;
 use crate::shared::kernel::result::AppError;
 
 /// In-memory guardrail manager
-pub struct InMemoryGuardrailManager {
+pub(crate) struct InMemoryGuardrailManager {
     guardrails: Arc<RwLock<HashMap<String, Guardrail>>>,
 }
 

@@ -5,7 +5,7 @@ use crate::modules::subagents::ports::{SubagentManager, SubagentTaskExecutor};
 use crate::shared::kernel::result::AppError;
 
 /// Use case for executing subagent tasks
-pub struct ExecuteSubagentTaskUseCase<M, E>
+pub(crate) struct ExecuteSubagentTaskUseCase<M, E>
 where
     M: SubagentManager,
     E: SubagentTaskExecutor,

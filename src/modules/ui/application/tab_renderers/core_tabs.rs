@@ -48,37 +48,48 @@ pub(crate) fn render_agent_tab(state: &AppState) -> TabRenderResult<'_> {
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
 }
 
-/// Render Git tab content
+/// Render Git tab content — uses git-app for data
 pub(crate) fn render_git_tab(state: &AppState) -> TabRenderResult<'_> {
     let tab_state = &state.git_tab_state;
+    let git_uc = git_tui::GitUseCase::new();
 
     let content = Paragraph::new(format!(
-        "Git Status\n\nStaged: {}\nUnstaged: {}\n\nSelected: {}",
+        "Git Status\n\nStaged: {}\nUnstaged: {}\n\nSelected: {}\n\n(git-app: {} staged, {} unstaged)",
         tab_state.staged_files.len(),
         tab_state.unstaged_files.len(),
-        tab_state.selected_file_index
+        tab_state.selected_file_index,
+        git_uc.staged_files().len(),
+        git_uc.unstaged_files().len(),
     ));
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
 }
 
-/// Render Files tab content
+/// Render Files tab content — uses files-app for data
 pub(crate) fn render_files_tab(state: &AppState) -> TabRenderResult<'_> {
     let tab_state = &state.files_tab_state;
+    let files_uc = files_tui::FilesUseCase::new();
 
     let content = Paragraph::new(format!(
-        "Files\n\nPath: {}\nSelected: {}\nShow Hidden: {}",
-        tab_state.current_path, tab_state.selected_file_index, tab_state.show_hidden
+        "Files\n\nPath: {}\nSelected: {}\nShow Hidden: {}\n\n(files-app: {} entries at {})",
+        tab_state.current_path,
+        tab_state.selected_file_index,
+        tab_state.show_hidden,
+        files_uc.entries().len(),
+        files_uc.filter().current_path,
     ));
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
 }
 
-/// Render Terminal tab content
+/// Render Terminal tab content — uses terminal-app for data
 pub(crate) fn render_terminal_tab(state: &AppState) -> TabRenderResult<'_> {
     let tab_state = &state.terminal_tab_state;
+    let term_uc = terminal_tui::TerminalUseCase::new();
 
     let content = Paragraph::new(format!(
-        "Terminal\n\nInput: {}\nHistory Index: {:?}",
-        tab_state.terminal_input, tab_state.selected_history_index
+        "Terminal\n\nInput: {}\nHistory Index: {:?}\n\n(terminal-app: {} commands in history)",
+        tab_state.terminal_input,
+        tab_state.selected_history_index,
+        term_uc.history().commands.len(),
     ));
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
 }

@@ -1,1 +1,1 @@
-pub mod execute_subagent_task;
+pub(crate) mod execute_subagent_task;

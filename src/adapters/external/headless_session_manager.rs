@@ -7,7 +7,7 @@ use crate::modules::headless::ports::HeadlessSessionManager;
 use crate::shared::kernel::result::AppError;
 
 /// In-memory session manager for headless mode
-pub struct InMemorySessionManager {
+pub(crate) struct InMemorySessionManager {
     sessions: Arc<RwLock<HashMap<String, SessionData>>>,
 }
 

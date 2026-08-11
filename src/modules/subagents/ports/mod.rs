@@ -5,7 +5,7 @@ use crate::shared::kernel::result::AppError;
 
 /// Port for subagent management
 #[async_trait]
-pub trait SubagentManager: Send + Sync {
+pub(crate) trait SubagentManager: Send + Sync {
     /// Create a new subagent
     async fn create_subagent(&self, subagent: Subagent) -> Result<Subagent, AppError>;
 
@@ -27,7 +27,7 @@ pub trait SubagentManager: Send + Sync {
 
 /// Port for subagent task execution
 #[async_trait]
-pub trait SubagentTaskExecutor: Send + Sync {
+pub(crate) trait SubagentTaskExecutor: Send + Sync {
     /// Execute a subagent task
     async fn execute_task(&self, task: &mut SubagentTask) -> Result<(), AppError>;
 
@@ -46,7 +46,7 @@ pub trait SubagentTaskExecutor: Send + Sync {
 
 /// Port for subagent task queue management
 #[async_trait]
-pub trait TaskQueue: Send + Sync {
+pub(crate) trait TaskQueue: Send + Sync {
     /// Add task to queue
     async fn enqueue(&self, task: SubagentTask) -> Result<(), AppError>;
 

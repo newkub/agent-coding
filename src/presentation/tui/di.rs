@@ -30,7 +30,7 @@ type ExecuteHeadlessUseCaseConcrete =
     ExecuteHeadlessUseCase<DefaultHeadlessCommandExecutor, InMemorySessionManager>;
 
 /// DI Container for managing dependencies
-pub struct DIContainer {
+pub(crate) struct DIContainer {
     // Repositories
     session_repo: Option<Box<dyn SessionRepository>>,
     audit_repo: Option<Box<dyn AuditRepository>>,

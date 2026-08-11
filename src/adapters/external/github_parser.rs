@@ -4,7 +4,7 @@ use crate::modules::automation::domain::models::issue_pr::{
 use crate::shared::kernel::result::AppError;
 
 /// Parse GitHub Issue from JSON response
-pub fn parse_issue_from_json(
+pub(crate) fn parse_issue_from_json(
     json: &serde_json::Value,
     repository: &str,
 ) -> Result<Issue, AppError> {
@@ -91,7 +91,7 @@ pub fn parse_issue_from_json(
 }
 
 /// Parse GitHub Pull Request from JSON response
-pub fn parse_pr_from_json(
+pub(crate) fn parse_pr_from_json(
     json: &serde_json::Value,
     repository: &str,
 ) -> Result<PullRequest, AppError> {

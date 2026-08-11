@@ -6,7 +6,7 @@ use crate::shared::kernel::result::AppError;
 
 /// Git adapter using git2 library
 #[derive(Clone)]
-pub struct Git2Adapter {
+pub(crate) struct Git2Adapter {
     repo_path: String,
 }
 

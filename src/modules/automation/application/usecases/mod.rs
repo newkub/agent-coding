@@ -1,1 +1,1 @@
-pub mod execute_automation;
+pub(crate) mod execute_automation;

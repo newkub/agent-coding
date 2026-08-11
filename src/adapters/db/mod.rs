@@ -1,3 +1,3 @@
-pub mod encrypted_sqlite_repository;
-pub mod share_link_repository;
-pub mod share_repository;
+pub(crate) mod encrypted_sqlite_repository;
+pub(crate) mod share_link_repository;
+pub(crate) mod share_repository;

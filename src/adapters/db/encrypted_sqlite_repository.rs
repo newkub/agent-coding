@@ -7,7 +7,7 @@ use thiserror::Error;
 
 /// Errors for encrypted repository operations
 #[derive(Debug, Error)]
-pub enum EncryptedRepoError {
+pub(crate) enum EncryptedRepoError {
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
     #[error("Encryption error: {0}")]
@@ -17,7 +17,7 @@ pub enum EncryptedRepoError {
 }
 
 /// Encrypted SQLite repository that transparently encrypts/decrypts data
-pub struct EncryptedSqliteRepository {
+pub(crate) struct EncryptedSqliteRepository {
     pool: SqlitePool,
     encryptor: SessionEncryptor,
     encryption_enabled: bool,

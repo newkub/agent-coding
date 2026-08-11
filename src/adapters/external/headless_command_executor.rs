@@ -11,7 +11,7 @@ use crate::modules::headless::ports::{HeadlessCommandExecutor, OutputFormatter};
 use crate::shared::kernel::result::AppError;
 
 /// Default implementation for headless command execution
-pub struct DefaultHeadlessCommandExecutor {
+pub(crate) struct DefaultHeadlessCommandExecutor {
     formatter: DefaultOutputFormatter,
 }
 
@@ -129,7 +129,7 @@ Options:
 }
 
 /// Default output formatter
-pub struct DefaultOutputFormatter;
+pub(crate) struct DefaultOutputFormatter;
 
 impl DefaultOutputFormatter {
     pub(crate) const fn new() -> Self {

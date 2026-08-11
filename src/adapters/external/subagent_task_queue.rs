@@ -8,7 +8,7 @@ use crate::modules::subagents::ports::TaskQueue;
 use crate::shared::kernel::result::AppError;
 
 /// In-memory task queue
-pub struct InMemoryTaskQueue {
+pub(crate) struct InMemoryTaskQueue {
     queue: Arc<RwLock<VecDeque<SubagentTask>>>,
 }
 

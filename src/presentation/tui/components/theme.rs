@@ -2,7 +2,7 @@ use ratatui::style::Color;
 
 /// Theme configuration for TUI
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Theme {
+pub(crate) struct Theme {
     pub name: String,
     pub colors: ColorPalette,
     pub spacing: Spacing,
@@ -10,7 +10,7 @@ pub struct Theme {
 
 /// Color palette for the theme
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ColorPalette {
+pub(crate) struct ColorPalette {
     // Primary colors
     pub primary: Color,
     pub secondary: Color,
@@ -49,7 +49,7 @@ pub struct ColorPalette {
 
 /// Spacing configuration
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Spacing {
+pub(crate) struct Spacing {
     pub margin: u16,
     pub padding: u16,
     pub gap: u16,

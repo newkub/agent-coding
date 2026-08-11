@@ -1,18 +1,24 @@
 use super::TabAction;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
+use database_tui::DatabaseUseCase;
 
+/// Database tab action handler — delegates to database-app
 pub(crate) fn handle_database_action(state: &mut AppState, action: TabAction) -> AppResult<()> {
+    let mut uc = DatabaseUseCase::new();
     match action {
         TabAction::Execute => {
-            // Execute query - placeholder for future implementation
+            uc.set_query_input(state.database_tab_state.query_input.clone());
+            let _ = uc.execute_query();
             state.database_tab_state.query_input.clear();
         }
         TabAction::Clear => {
             state.database_tab_state.query_input.clear();
+            uc.clear_query();
         }
         TabAction::Refresh => {
             state.database_tab_state.selected_table_index = 0;
+            uc.select_prev_table();
         }
         _ => {}
     }

@@ -74,7 +74,7 @@ fn model_for(_task_type: &TaskType) -> String {
 /// `Failed` with the underlying message stored on the task, so callers can
 /// surface the failure to the user instead of silently falling back to mock
 /// data.
-pub struct DefaultSubagentTaskExecutor {
+pub(crate) struct DefaultSubagentTaskExecutor {
     tasks: Arc<RwLock<HashMap<String, SubagentTask>>>,
     client: Arc<RwLock<Option<Client<OpenAIConfig>>>>,
 }
