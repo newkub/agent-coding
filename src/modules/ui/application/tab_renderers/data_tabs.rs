@@ -35,7 +35,7 @@ pub(crate) fn render_database_tab(state: &AppState) -> TabRenderResult<'_> {
 /// Render Tasks tab content — uses tasks-app for data
 pub(crate) fn render_tasks_tab(state: &AppState) -> TabRenderResult<'_> {
     let tab_state = &state.tasks_tab_state;
-    let tasks_uc = tasks_tui::TaskUseCase::new();
+    let tasks_uc = task_tui::TaskUseCase::new();
 
     let content = Paragraph::new(format!(
         "Tasks\n\nSelected Task: {}\nShow Completed: {}\n\n(tasks-app: {} total, {} filtered)",

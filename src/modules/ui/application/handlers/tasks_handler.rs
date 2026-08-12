@@ -1,7 +1,7 @@
 use super::TabAction;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
-use tasks_tui::TaskUseCase;
+use task_tui::TaskUseCase;
 
 /// Tasks tab action handler — delegates to tasks-app
 pub(crate) fn handle_tasks_action(state: &mut AppState, action: TabAction) -> AppResult<()> {
