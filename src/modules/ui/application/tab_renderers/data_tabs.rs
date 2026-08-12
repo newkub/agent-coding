@@ -32,17 +32,45 @@ pub(crate) fn render_database_tab(state: &AppState) -> TabRenderResult<'_> {
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
 }
 
-/// Render Tasks tab content — uses tasks-app for data
+/// Render Tasks tab content — uses the task-tui task manager.
 pub(crate) fn render_tasks_tab(state: &AppState) -> TabRenderResult<'_> {
-    let tab_state = &state.tasks_tab_state;
-    let tasks_uc = task_tui::TaskUseCase::new();
+    let tab = &state.tasks_tab_state;
+    let tm = &tab.task_manager;
+
+    let path = tm.tree.selected.workspace.and_then(|ws_id| {
+        tm.tree.find_workspace(ws_id).map(|ws| {
+            let sp_name = tm
+                .tree
+                .selected
+                .space
+                .and_then(|sp_id| ws.find_space(sp_id))
+                .map(|sp| sp.name.as_str())
+                .unwrap_or("-");
+            let list_name = tm
+                .tree
+                .selected
+                .list
+                .and_then(|list_id| ws.find_list(list_id))
+                .map(|list| list.name.as_str())
+                .unwrap_or("-");
+            format!("{} / {} / {}", ws.name, sp_name, list_name)
+        })
+    });
+
+    let total = tm.tasks().len();
+    let filtered = tm.filtered_tasks().len();
+    let selected = tm
+        .selected_task()
+        .map(|t| t.title.as_str())
+        .unwrap_or("-");
+    let path_str = path.as_deref().unwrap_or("No workspace");
 
     let content = Paragraph::new(format!(
-        "Tasks\n\nSelected Task: {}\nShow Completed: {}\n\n(tasks-app: {} total, {} filtered)",
-        tab_state.selected_task_index,
-        tab_state.show_completed,
-        tasks_uc.tasks().len(),
-        tasks_uc.filtered_tasks().len(),
+        "Tasks\n\n{path_str}\n\nSelected Task: {selected} ({})\nShow Completed: {}\n\n(task-tui: {} total, {} filtered)",
+        tab.selected_task_index,
+        tab.show_completed,
+        total,
+        filtered,
     ));
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
 }

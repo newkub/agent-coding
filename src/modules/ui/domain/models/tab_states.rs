@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use task_tui::TaskManagerUseCase;
 
 /// Snippet tab state
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -135,6 +136,7 @@ pub enum TabState {
 pub struct TasksTabState {
     pub selected_task_index: usize,
     pub show_completed: bool,
+    pub task_manager: TaskManagerUseCase,
 }
 
 /// Terminal tab state

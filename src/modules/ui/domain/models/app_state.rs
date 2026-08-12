@@ -121,7 +121,10 @@ impl AppState {
             snippet_tab_state: SnippetTabState::default(),
             api_tab_state: ApiTabState::default(),
             database_tab_state: DatabaseTabState::default(),
-            tasks_tab_state: TasksTabState::default(),
+            tasks_tab_state: TasksTabState {
+                task_manager: task_tui::TaskManagerUseCase::new(),
+                ..TasksTabState::default()
+            },
             notes_tab_state: NotesTabState::default(),
             logs_tab_state: LogsTabState::default(),
             system_tab_state: SystemTabState::default(),

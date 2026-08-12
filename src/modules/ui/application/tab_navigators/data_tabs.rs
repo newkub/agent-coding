@@ -57,6 +57,8 @@ pub(crate) fn navigate_tasks_tab(state: &mut AppState, direction: NavigationDire
             state.ui_state.current_column = Column::Right;
         }
     }
+    let idx = state.tasks_tab_state.selected_task_index;
+    state.tasks_tab_state.task_manager.navigate(idx);
 }
 
 pub(crate) fn navigate_notes_tab(state: &mut AppState, direction: NavigationDirection) {
