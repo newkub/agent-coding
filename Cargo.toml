@@ -62,6 +62,7 @@ tracing-subscriber = { workspace = true }
 ratatui = "0.30.0"
 crossterm = "0.29.0"
 tokio-stream = "0.1.18"
+ratatui-ui = { workspace = true }
 
 # System metrics
 sysinfo = "0.32"

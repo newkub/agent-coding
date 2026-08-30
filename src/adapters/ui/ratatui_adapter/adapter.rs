@@ -12,9 +12,10 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Margin, Rect},
     style::{Modifier, Style},
     symbols,
-    widgets::{Block, Borders, Paragraph, Tabs},
+    widgets::Tabs,
     Frame,
 };
+use ratatui_ui::{Panel, StatusBar, TextBlock, Theme as RatatuiTheme};
 
 use super::types::{RATerminal, RatatuiAdapter};
 
@@ -136,6 +137,7 @@ fn render_column(
     state: &AppState,
     colors: &crate::presentation::tui::components::theme::ColorPalette,
 ) {
+    let rt_theme = RatatuiTheme::default();
     let is_selected = state.ui_state.current_column == column;
     let border_color = if is_selected {
         colors.border_active
@@ -143,22 +145,20 @@ fn render_column(
         colors.border_inactive
     };
 
-    let block = Block::default()
+    let panel = Panel::new(&rt_theme)
         .title(format!(
             " {} ",
             get_column_title(state.ui_state.current_tab, column)
         ))
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(border_color));
-
-    f.render_widget(block, area);
+        .style(Style::default().fg(border_color).bg(colors.background));
 
     // Content inside column (inset by 1 for border)
     let inner = area.inner(Margin::default());
-    let paragraph = Paragraph::new(content)
-        .scroll((0, 0))
-        .style(Style::default().fg(colors.text));
-    f.render_widget(paragraph, inner);
+    let paragraph = TextBlock::new(content, &rt_theme)
+        .style(Style::default().fg(colors.text).bg(colors.background))
+        .into_paragraph()
+        .block(panel.into_block());
+    f.render_widget(paragraph, area);
 }
 
 fn render_status_bar(
@@ -193,13 +193,10 @@ fn render_status_bar(
         tab_name, col_name, focus_status, selected_idx
     );
 
-    let status_paragraph = Paragraph::new(status_text).style(
-        Style::default()
-            .bg(colors.status_bar_bg)
-            .fg(colors.status_bar_fg),
-    );
-
-    f.render_widget(status_paragraph, status_area);
+    let rt_theme = RatatuiTheme::default();
+    let status = StatusBar::new(status_text, &rt_theme)
+        .style(Style::default().fg(colors.status_bar_fg).bg(colors.status_bar_bg));
+    f.render_widget(status.to_line(), status_area);
 }
 
 // === Column title helpers ===
