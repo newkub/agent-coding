@@ -12,7 +12,10 @@ pub(crate) fn render_api_tab(state: &AppState) -> TabRenderResult<'_> {
         "API\n\nSelected Endpoint: {}\n\n(api-app: {} endpoints, last response: {})",
         tab_state.selected_endpoint_index,
         api_uc.endpoints().len(),
-        api_uc.last_response().map(|r| format!("{} {}", r.status, r.body)).unwrap_or_else(|| "None".to_string()),
+        api_uc
+            .last_response()
+            .map(|r| format!("{} {}", r.status, r.body))
+            .unwrap_or_else(|| "None".to_string()),
     ));
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
 }
@@ -59,10 +62,7 @@ pub(crate) fn render_tasks_tab(state: &AppState) -> TabRenderResult<'_> {
 
     let total = tm.tasks().len();
     let filtered = tm.filtered_tasks().len();
-    let selected = tm
-        .selected_task()
-        .map(|t| t.title.as_str())
-        .unwrap_or("-");
+    let selected = tm.selected_task().map(|t| t.title.as_str()).unwrap_or("-");
     let path_str = path.as_deref().unwrap_or("No workspace");
 
     let content = Paragraph::new(format!(

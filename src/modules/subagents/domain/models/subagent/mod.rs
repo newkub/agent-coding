@@ -1,7 +1,7 @@
 //! Subagent domain model
 
-mod types;
 mod model;
+mod types;
 
 #[cfg(test)]
 mod tests;

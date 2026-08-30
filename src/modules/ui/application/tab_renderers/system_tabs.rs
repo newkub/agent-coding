@@ -17,7 +17,8 @@ pub(crate) fn render_logs_tab(state: &AppState) -> TabRenderResult<'_> {
 /// Render System tab content — uses system-app for data
 pub(crate) fn render_system_tab(_state: &AppState) -> TabRenderResult<'_> {
     let sys_uc = system_tui::SystemUseCase::new();
-    let metrics_text = sys_uc.metrics()
+    let metrics_text = sys_uc
+        .metrics()
         .iter()
         .map(|m| format!("{:?}: {:.2}", m.metric_type, m.value))
         .collect::<Vec<_>>()
@@ -27,7 +28,11 @@ pub(crate) fn render_system_tab(_state: &AppState) -> TabRenderResult<'_> {
     let alerts_text = if alerts.is_empty() {
         "No alerts".to_string()
     } else {
-        alerts.iter().map(|a| a.message.clone()).collect::<Vec<_>>().join("\n")
+        alerts
+            .iter()
+            .map(|a| a.message.clone())
+            .collect::<Vec<_>>()
+            .join("\n")
     };
 
     let content = Paragraph::new(format!(

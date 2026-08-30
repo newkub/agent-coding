@@ -16,7 +16,7 @@ use ratatui::{
     Frame,
 };
 
-use super::types::{RatatuiAdapter, RATerminal};
+use super::types::{RATerminal, RatatuiAdapter};
 
 #[async_trait]
 impl UIRenderer for RatatuiAdapter {

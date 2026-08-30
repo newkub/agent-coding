@@ -4,8 +4,8 @@ use chrono::Utc;
 use std::collections::HashMap;
 
 use super::types::{
-    Subagent, AgentType, SubagentConfig, SubagentStatus,
-    SubagentTask, TaskType, TaskStatus, TaskContext,
+    AgentType, Subagent, SubagentConfig, SubagentStatus, SubagentTask, TaskContext, TaskStatus,
+    TaskType,
 };
 
 impl Subagent {

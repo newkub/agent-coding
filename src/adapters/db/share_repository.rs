@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use sqlx::{Row, SqlitePool};
 
+use crate::modules::session::domain::models::Session;
 use crate::modules::share::domain::models::{ExportMetadata, ExportedSession};
 use crate::modules::share::ports::ShareRepository;
-use crate::modules::session::domain::models::Session;
 use crate::shared::kernel::result::{AppError, AppResult};
 
 /// SQLite implementation of `ShareRepository` for session export/import.
@@ -87,7 +87,8 @@ impl ShareRepository for SqliteShareRepository {
             .fetch_optional(&self.pool)
             .await?;
 
-        let row = row.ok_or_else(|| AppError::NotFound(format!("Session {} not found", session_id)))?;
+        let row =
+            row.ok_or_else(|| AppError::NotFound(format!("Session {} not found", session_id)))?;
         let session = self.row_to_session(row)?;
 
         let exported = ExportedSession::new(

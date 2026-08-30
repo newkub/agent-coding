@@ -1,7 +1,7 @@
 //! Subagent domain model - Tests
 
-use super::types::*;
 use super::model::*;
+use super::types::*;
 
 #[test]
 fn test_subagent_creation() {
