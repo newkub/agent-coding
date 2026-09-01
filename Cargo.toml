@@ -62,7 +62,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 ratatui = "0.30.2"
 crossterm = "0.29.0"
 tokio-stream = "0.1.18"
-ratatui-ui = { path = "../../../packages/lib/tui/ratatui-ui" }
+ratatui-ui = { path = "../../../packages/lib/ratatui-ui" }
 
 # System metrics
 sysinfo = "0.32"
