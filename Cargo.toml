@@ -62,7 +62,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 ratatui = "0.30.2"
 crossterm = "0.29.0"
 tokio-stream = "0.1.18"
-ratatui-ui = { git = "https://github.com/newkub/ratatui-ui.git" }
+ratatui-ui = { path = "../../../packages/lib/tui/ratatui-ui" }
 
 # System metrics
 sysinfo = "0.32"
@@ -130,14 +130,17 @@ tempfile = "3.27.0"
 once_cell = "1.20.2"
 
 # Tab apps (Clean Architecture split)
-terminal-tui = { git = "https://github.com/newkub/terminal-tui.git" }
-task-tui = { git = "https://github.com/newkub/task-tui.git" }
-files-tui = { git = "https://github.com/newkub/files-tui.git" }
-git-tui = { git = "https://github.com/newkub/git-tui.git" }
-api-tui = { git = "https://github.com/newkub/api-tui.git" }
-database-tui = { git = "https://github.com/newkub/database-tui.git" }
-system-tui = { git = "https://github.com/newkub/system-tui.git" }
+terminal-tui = { path = "../terminal-tui" }
+task-tui = { path = "../task-tui" }
+files-tui = { path = "../files-tui" }
+git-tui = { path = "../git-tui" }
+api-tui = { path = "../api-tui" }
+database-tui = { path = "../database-tui" }
+system-tui = { path = "../system-tui" }
 
 [features]
 default = []
 terminal = []
+
+[workspace]
+resolver = "2"

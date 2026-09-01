@@ -1,10 +1,11 @@
 use ratatui::{
-    layout::{Alignment, Constraint, Layout, Rect},
+    layout::Rect,
     style::{Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
+    text::{Line, Span, Text},
+    widgets::ListItem,
     Frame,
 };
+use ratatui_ui::{CommandItem, CommandPalette};
 
 use super::styles::*;
 use crate::modules::ui::domain::models::app_commands::get_tab_specific_commands;
@@ -15,103 +16,45 @@ pub(crate) fn draw_command_palette(frame: &mut Frame, area: Rect, state: &AppSta
         return;
     }
 
-    let [input_area, list_area] =
-        Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]).areas(area);
-
-    // Search input
-    let input_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(accent()))
-        .border_type(BorderType::Rounded)
-        .title("🔍 Command Palette")
-        .title_style(Style::default().fg(text_bright()));
-
-    let input_text = format!("> {}", state.command_input);
-    let input_para = Paragraph::new(input_text).style(Style::default().fg(text()));
-
-    frame.render_widget(input_block, input_area);
-    frame.render_widget(
-        input_para,
-        input_area.inner(ratatui::layout::Margin {
-            horizontal: 2,
-            vertical: 1,
-        }),
-    );
-
-    // Command list - use tab-specific commands
-    let query = if state.command_input.len() > 1 {
-        state.command_input[1..].trim_start()
-    } else {
-        ""
-    };
-
-    // Get tab-specific commands
+    let theme = rt_theme();
     let tab_commands = get_tab_specific_commands(state.ui_state.current_tab);
 
-    // Filter commands by query
-    let filtered_commands = if query.is_empty() {
-        tab_commands
-    } else {
-        let query_lower = query.to_lowercase();
-        tab_commands
-            .into_iter()
-            .filter(|cmd| {
-                cmd.name.to_lowercase().contains(&query_lower)
-                    || cmd.description.to_lowercase().contains(&query_lower)
-            })
-            .collect()
-    };
+    let items: Vec<CommandItem<'static>> = tab_commands
+        .into_iter()
+        .map(|cmd| {
+            let label = cmd.name.clone();
+            let mut spans = vec![
+                Span::styled(
+                    cmd.name.clone(),
+                    Style::default()
+                        .fg(text_bright())
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" "),
+            ];
+            if let Some(shortcut) = &cmd.shortcut {
+                spans.push(Span::styled(
+                    format!("[{}]", shortcut),
+                    Style::default().fg(text_dim()),
+                ));
+                spans.push(Span::raw(" "));
+            }
+            spans.push(Span::styled(
+                cmd.description.clone(),
+                Style::default().fg(text()),
+            ));
 
-    let items: Vec<ListItem> = filtered_commands
-        .iter()
-        .enumerate()
-        .map(|(idx, cmd)| {
-            let highlight = idx == state.command_palette_selected;
-
-            let shortcut_text = cmd
-                .shortcut
-                .as_ref()
-                .map(|s| format!("[{}]", s))
-                .unwrap_or_default();
-            ListItem::new(vec![
-                Line::from(vec![
-                    Span::raw("  "),
-                    Span::styled(
-                        &cmd.name,
-                        Style::default()
-                            .fg(if highlight { bg() } else { text_bright() })
-                            .add_modifier(Modifier::BOLD),
-                    ),
-                    Span::raw(" "),
-                    Span::styled(
-                        shortcut_text,
-                        Style::default().fg(if highlight { text_bright() } else { text_dim() }),
-                    ),
-                ]),
-                Line::from(vec![
-                    Span::raw("    "),
-                    Span::styled(
-                        &cmd.description,
-                        Style::default().fg(if highlight { text() } else { text_dim() }),
-                    ),
-                ]),
-            ])
-            .style(Style::default().bg(if highlight { accent() } else { bg_light() }))
+            let item = ListItem::new(Text::from(vec![Line::from(spans)]));
+            CommandItem::new(label, item)
         })
         .collect();
 
-    let list = List::new(items)
-        .block(Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM))
-        .style(Style::default().fg(accent()));
+    let palette = CommandPalette::new(&theme)
+        .items(items)
+        .query(state.command_input.clone())
+        .selected(Some(state.command_palette_selected))
+        .title(Line::raw("🔍 Command Palette"))
+        .placeholder("Type a command…");
 
-    frame.render_widget(list, list_area);
-
-    // Instructions
-    let hint = "↑↓ Navigate | Enter Select | Esc Close";
-    let hint_para = Paragraph::new(hint)
-        .style(Style::default().fg(text_dim()))
-        .alignment(Alignment::Center);
-
-    let hint_area = Rect::new(area.x, area.y + area.height - 1, area.width, 1);
-    frame.render_widget(hint_para, hint_area);
+    palette.render(area, frame.buffer_mut());
 }

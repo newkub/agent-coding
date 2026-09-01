@@ -194,8 +194,11 @@ fn render_status_bar(
     );
 
     let rt_theme = RatatuiTheme::default();
-    let status = StatusBar::new(status_text, &rt_theme)
-        .style(Style::default().fg(colors.status_bar_fg).bg(colors.status_bar_bg));
+    let status = StatusBar::new(status_text, &rt_theme).style(
+        Style::default()
+            .fg(colors.status_bar_fg)
+            .bg(colors.status_bar_bg),
+    );
     f.render_widget(status.to_line(), status_area);
 }
 

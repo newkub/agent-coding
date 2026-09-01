@@ -1,52 +1,43 @@
 use std::collections::VecDeque;
 
-use ratatui::{
-    layout::{Alignment, Constraint, Layout, Rect},
-    style::Style,
-    text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Paragraph},
-    Frame,
-};
+use ratatui::{layout::Rect, text::Line, Frame};
+use ratatui_ui::{Toast, ToastLevel, ToastManager, ToastPosition};
 
 use super::styles::*;
 use crate::modules::ui::domain::models::{AppState, ToastKind, ToastNotification};
+
+fn to_level(kind: ToastKind) -> ToastLevel {
+    match kind {
+        ToastKind::Info => ToastLevel::Info,
+        ToastKind::Success => ToastLevel::Success,
+        ToastKind::Warning => ToastLevel::Warning,
+        ToastKind::Error => ToastLevel::Error,
+    }
+}
 
 pub(crate) fn draw_toasts(frame: &mut Frame, area: Rect, state: &AppState) {
     if state.toasts.is_empty() {
         return;
     }
 
-    let [toast_area, _] =
-        Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]).areas(area);
-
-    let toasts: Vec<Line> = state
+    let theme = rt_theme();
+    let toasts: Vec<Toast<'_>> = state
         .toasts
         .iter()
         .map(|toast| {
-            let icon = match toast.kind {
-                ToastKind::Info => "ℹ️",
-                ToastKind::Success => "✅",
-                ToastKind::Warning => "⚠️",
-                ToastKind::Error => "❌",
-            };
-            let time = toast.timestamp.format("%H:%M").to_string();
-
-            Line::from(vec![
-                Span::raw(" "),
-                Span::raw(icon),
-                Span::raw(" "),
-                Span::raw(&toast.message),
-                Span::raw("  "),
-                Span::styled(time, Style::default().fg(text_dim())),
-            ])
+            Toast::new(
+                Line::raw(toast.message.clone()),
+                to_level(toast.kind),
+                &theme,
+            )
         })
         .collect();
 
-    let paragraph = Paragraph::new(toasts)
-        .alignment(Alignment::Left)
-        .style(Style::default().bg(bg_light()));
-
-    frame.render_widget(paragraph, toast_area);
+    ToastManager::new(&theme)
+        .toasts(toasts)
+        .position(ToastPosition::BottomRight)
+        .width(40)
+        .render(area, frame.buffer_mut());
 }
 
 pub(crate) fn draw_toast_overlay(
@@ -54,49 +45,21 @@ pub(crate) fn draw_toast_overlay(
     area: Rect,
     toasts: &VecDeque<ToastNotification>,
 ) {
-    // Draw a toast notification in the bottom-left corner
     if toasts.is_empty() {
         return;
     }
 
-    let toast_width = 40.min(area.width - 2);
-    let toast_height = 3;
-    let x = 1;
-    let y = area.height.saturating_sub(toast_height + 1);
-
-    let toast_area = Rect::new(x, y, toast_width, toast_height);
-
+    let theme = rt_theme();
     if let Some(toast) = toasts.front() {
-        let icon = match toast.kind {
-            ToastKind::Info => "ℹ️",
-            ToastKind::Success => "✅",
-            ToastKind::Warning => "⚠️",
-            ToastKind::Error => "❌",
-        };
-        let border_color = match toast.kind {
-            ToastKind::Info => accent(),
-            ToastKind::Success => accent_green(),
-            ToastKind::Warning => accent_yellow(),
-            ToastKind::Error => accent_red(),
-        };
-
-        let content = format!("{} {} ", icon, toast.message);
-
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded)
-            .border_style(Style::default().fg(border_color))
-            .style(Style::default().bg(bg_light()));
-
-        let paragraph = Paragraph::new(content).style(Style::default().fg(text()));
-
-        frame.render_widget(block, toast_area);
-        frame.render_widget(
-            paragraph,
-            toast_area.inner(ratatui::layout::Margin {
-                horizontal: 1,
-                vertical: 0,
-            }),
+        let t = Toast::new(
+            Line::raw(toast.message.clone()),
+            to_level(toast.kind),
+            &theme,
         );
+        ToastManager::new(&theme)
+            .toasts(vec![t])
+            .position(ToastPosition::BottomLeft)
+            .width(40)
+            .render(area, frame.buffer_mut());
     }
 }

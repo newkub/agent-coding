@@ -3,6 +3,7 @@ use crate::modules::ui::domain::models::AppState;
 use crate::presentation::tui::components::markdown_renderer;
 use ratatui::layout::Rect;
 use ratatui::widgets::Paragraph;
+use std::sync::Arc;
 
 /// Render Agent tab content
 pub(crate) fn render_agent_tab(state: &AppState) -> TabRenderResult<'_> {
@@ -51,17 +52,27 @@ pub(crate) fn render_agent_tab(state: &AppState) -> TabRenderResult<'_> {
 /// Render Git tab content — uses git-app for data
 pub(crate) fn render_git_tab(state: &AppState) -> TabRenderResult<'_> {
     let tab_state = &state.git_tab_state;
-    let git_uc = git_tui::GitUseCase::new();
+    let (git_staged, git_unstaged) = git_usecase()
+        .map(|uc| (uc.state().staged.len(), uc.state().unstaged.len()))
+        .unwrap_or((0, 0));
 
     let content = Paragraph::new(format!(
         "Git Status\n\nStaged: {}\nUnstaged: {}\n\nSelected: {}\n\n(git-app: {} staged, {} unstaged)",
         tab_state.staged_files.len(),
         tab_state.unstaged_files.len(),
         tab_state.selected_file_index,
-        git_uc.staged_files().len(),
-        git_uc.unstaged_files().len(),
+        git_staged,
+        git_unstaged,
     ));
     TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
+}
+
+fn git_usecase() -> Option<git_tui::GitUseCase> {
+    let path = std::env::current_dir().ok()?;
+    let repo = git_tui::GitCliRepository::new(path.as_path()).ok()?;
+    Some(git_tui::GitUseCase::new(
+        Arc::new(repo) as Arc<dyn git_tui::GitRepository>
+    ))
 }
 
 /// Render Files tab content — uses files-app for data

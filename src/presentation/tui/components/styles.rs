@@ -1,5 +1,6 @@
 use super::theme::Theme;
 use ratatui::style::Color;
+use ratatui_ui::Theme as RatatuiTheme;
 use std::sync::Mutex;
 
 // Get current theme (thread-safe singleton pattern)
@@ -50,4 +51,20 @@ pub(crate) fn bg() -> Color {
 }
 pub(crate) fn bg_light() -> Color {
     get_theme().colors.background_light
+}
+
+/// Convert the active app theme to the shared `ratatui-ui` theme.
+pub(crate) fn rt_theme() -> RatatuiTheme {
+    let t = get_theme().colors;
+    RatatuiTheme {
+        primary: t.accent,
+        success: t.success,
+        warning: t.warning,
+        error: t.error,
+        info: t.info,
+        muted: t.text_dim,
+        border: t.border,
+        bg: t.background,
+        fg: t.text,
+    }
 }
