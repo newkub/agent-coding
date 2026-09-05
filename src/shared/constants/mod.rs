@@ -1,4 +1,5 @@
 // Static constants (compile-time)
+#![allow(dead_code)]
 
 /// Default tab height in rows
 pub(crate) const DEFAULT_TAB_HEIGHT: u16 = 3;

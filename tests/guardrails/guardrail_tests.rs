@@ -1,5 +1,5 @@
 use agent_tui::modules::guardrails::domain::models::guardrail::{
-    Guardrail, GuardrailAction, GuardrailCheck, GuardrailRule, GuardrailType, RuleType, Severity,
+    Guardrail, GuardrailCheck, GuardrailRule, GuardrailType,
 };
 
 #[test]

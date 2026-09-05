@@ -112,6 +112,7 @@ pub fn validate_task_context(
 }
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
     use crate::modules::subagents::domain::models::subagent::{AgentType, TaskContext, TaskType};

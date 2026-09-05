@@ -1,3 +1,5 @@
+#![allow(clippy::field_reassign_with_default)]
+
 use agent_tui::modules::subagents::domain::models::subagent::{
     AgentType, Subagent, SubagentConfig, SubagentTask, TaskContext, TaskType,
 };

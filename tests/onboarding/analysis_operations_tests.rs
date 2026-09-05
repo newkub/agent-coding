@@ -1,9 +1,11 @@
+#![allow(clippy::field_reassign_with_default)]
+
 use agent_tui::modules::onboarding::domain::models::codebase_analysis::{
-    Dependencies, ProjectStructure, TechStack,
+    Dependencies, ProjectStructure,
 };
 use agent_tui::modules::onboarding::domain::operations::analysis_operations::{
     calculate_language_distribution, detect_project_type, estimate_complexity,
-    identify_main_directories, infer_tech_stack_from_deps, ComplexityLevel,
+    infer_tech_stack_from_deps, ComplexityLevel,
 };
 
 #[test]

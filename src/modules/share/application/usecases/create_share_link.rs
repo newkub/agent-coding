@@ -64,8 +64,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::modules::share::domain::models::share_link::SharePermissions;
-    use std::sync::Arc;
 
     // Mock implementations for testing
     struct MockRepository;

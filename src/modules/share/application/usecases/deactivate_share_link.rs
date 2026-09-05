@@ -68,7 +68,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
 
     struct MockRepository;
     struct MockNotifier;

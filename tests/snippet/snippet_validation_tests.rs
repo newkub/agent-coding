@@ -1,6 +1,5 @@
 //! Snippet validation tests
 
-use agent_tui::modules::snippet::domain::models::Snippet;
 use agent_tui::modules::snippet::domain::operations::{
     validate_snippet_code, validate_snippet_name, SnippetValidationError,
 };

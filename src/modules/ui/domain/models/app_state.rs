@@ -14,7 +14,7 @@ use super::{
         LogsTabState, NotesTabState, PackagesTabState, SettingsTabState, SkillsTabState,
         SnippetTabState, SystemTabState, TasksTabState, TerminalTabState, WorkflowsTabState,
     },
-    toast::ToastNotification,
+    toast::{ToastKind, ToastNotification},
 };
 
 /// Complete application state
@@ -103,14 +103,9 @@ impl AppState {
             notes_tab: TabContent::with_content(Tab::Notes, "Folders", "Editor", "Tags"),
             logs_tab: TabContent::with_content(Tab::Logs, "Sources", "Viewer", "Filters"),
             system_tab: TabContent::with_content(Tab::System, "Overview", "Details", "Alerts"),
-            skills_tab: TabContent::with_content(Tab::Skills, "Library", "Editor", "Tags"),
-            workflows_tab: TabContent::with_content(Tab::Workflows, "Library", "Editor", "Tags"),
-            settings_tab: TabContent::with_content(
-                Tab::Settings,
-                "General",
-                "Appearance",
-                "Advanced",
-            ),
+            skills_tab: TabContent::with_content(Tab::Skills, "Tree", "Detail", "Progress"),
+            workflows_tab: TabContent::with_content(Tab::Workflows, "List", "Editor", "History"),
+            settings_tab: TabContent::with_content(Tab::Settings, "Categories", "Options", "Keys"),
             cli_tab: TabContent::with_content(Tab::Cli, "Input", "Output", "History"),
             // Initialize tab-specific states
             agent_tab_state: AgentTabState::default(),
@@ -194,6 +189,23 @@ impl AppState {
             Tab::Workflows => &mut self.workflows_tab,
             Tab::Settings => &mut self.settings_tab,
             Tab::Cli => &mut self.cli_tab,
+        }
+    }
+
+    /// Push a toast notification
+    pub fn push_toast(&mut self, kind: ToastKind, message: impl Into<String>) {
+        self.toasts.push_back(ToastNotification {
+            kind,
+            message: message.into(),
+            timestamp: chrono::Utc::now(),
+        });
+    }
+
+    /// Drop toast notifications older than the display TTL
+    pub fn prune_expired_toasts(&mut self) {
+        let cutoff = chrono::Utc::now() - chrono::Duration::seconds(5);
+        while self.toasts.front().is_some_and(|t| t.timestamp < cutoff) {
+            self.toasts.pop_front();
         }
     }
 

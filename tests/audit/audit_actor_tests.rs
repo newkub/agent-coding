@@ -1,6 +1,6 @@
 //! Audit Actor tests
 
-use agent_tui::modules::audit::domain::models::{Actor, ActorType};
+use agent_tui::modules::audit::domain::models::ActorType;
 
 #[test]
 fn test_actor_type_variants() {

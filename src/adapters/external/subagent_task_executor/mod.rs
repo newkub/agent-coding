@@ -155,9 +155,9 @@ impl SubagentTaskExecutor for DefaultSubagentTaskExecutor {
     async fn execute_tasks_parallel(&self, tasks: &mut [SubagentTask]) -> Result<(), AppError> {
         let mut handles = Vec::new();
 
-        for i in 0..tasks.len() {
-            let task_id = tasks[i].id.clone();
-            let mut task = tasks[i].clone();
+        for task in tasks.iter_mut() {
+            let task_id = task.id.clone();
+            let mut task = task.clone();
             let executor = self.clone();
 
             let handle = tokio::spawn(async move {

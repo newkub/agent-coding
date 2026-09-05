@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use std::path::PathBuf;
+use std::path::Path;
 use tokio::fs;
 use walkdir::WalkDir;
 
@@ -26,7 +26,7 @@ impl Default for DefaultFileScanner {
 
 #[async_trait]
 impl FileScanner for DefaultFileScanner {
-    async fn scan_directory(&self, path: &PathBuf) -> Result<ProjectStructure, AppError> {
+    async fn scan_directory(&self, path: &Path) -> Result<ProjectStructure, AppError> {
         let mut structure = ProjectStructure::default();
         let mut total_lines = 0;
         let mut language_counts: std::collections::HashMap<String, usize> =
@@ -107,12 +107,12 @@ impl FileScanner for DefaultFileScanner {
         Ok(structure)
     }
 
-    async fn count_lines(&self, path: &PathBuf) -> Result<usize, AppError> {
+    async fn count_lines(&self, path: &Path) -> Result<usize, AppError> {
         let content = fs::read_to_string(path).await?;
         Ok(content.lines().count())
     }
 
-    fn detect_language(&self, file_path: &PathBuf) -> Option<String> {
+    fn detect_language(&self, file_path: &Path) -> Option<String> {
         let extension = file_path.extension()?.to_str()?;
 
         match extension.to_lowercase().as_str() {
@@ -174,6 +174,7 @@ impl DefaultFileScanner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn test_detect_language_rust() {

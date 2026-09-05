@@ -1,4 +1,5 @@
 // Pure utility functions for shared kernel
+#![allow(dead_code)]
 
 /// Utility: Format text with width limit
 pub(crate) fn format_text_width(text: &str, width: usize) -> String {

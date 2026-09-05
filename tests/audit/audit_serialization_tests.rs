@@ -1,4 +1,5 @@
 //! Audit serialization tests
+#![allow(clippy::field_reassign_with_default)]
 
 use agent_tui::modules::audit::domain::models::*;
 use chrono::Utc;

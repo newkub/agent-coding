@@ -1,5 +1,5 @@
 use agent_tui::modules::subagents::domain::models::subagent::{
-    AgentType, Subagent, SubagentStatus, SubagentTask, TaskContext, TaskStatus, TaskType,
+    AgentType, Subagent, SubagentTask, TaskContext, TaskStatus, TaskType,
 };
 
 #[test]

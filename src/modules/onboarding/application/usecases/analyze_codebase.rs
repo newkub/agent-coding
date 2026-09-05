@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::modules::onboarding::domain::models::codebase_analysis::{
     CodebaseAnalysis, EntryPoint, EntryPointType,
@@ -75,7 +75,7 @@ where
     fn identify_entry_points(
         &self,
         _structure: &crate::modules::onboarding::domain::models::codebase_analysis::ProjectStructure,
-        project_path: &PathBuf,
+        project_path: &Path,
     ) -> Vec<EntryPoint> {
         let mut entry_points = Vec::new();
 
@@ -105,7 +105,7 @@ where
                 EntryPointType::Server,
                 "Node.js server entry point",
             ),
-            ("cli.rs", EntryPointType::CLI, "Rust CLI entry point"),
+            ("cli.rs", EntryPointType::Cli, "Rust CLI entry point"),
         ];
 
         for (filename, type_, description) in &common_entries {
@@ -194,7 +194,7 @@ where
     async fn save_analysis(
         &self,
         analysis: &CodebaseAnalysis,
-        path: &PathBuf,
+        path: &Path,
     ) -> Result<(), AppError> {
         let json = serde_json::to_string_pretty(analysis)
             .map_err(|e| AppError::State(format!("Failed to serialize analysis: {}", e)))?;
@@ -202,7 +202,7 @@ where
         Ok(())
     }
 
-    async fn load_analysis(&self, path: &PathBuf) -> Result<CodebaseAnalysis, AppError> {
+    async fn load_analysis(&self, path: &Path) -> Result<CodebaseAnalysis, AppError> {
         let content = tokio::fs::read_to_string(path).await?;
         let analysis: CodebaseAnalysis = serde_json::from_str(&content)
             .map_err(|e| AppError::State(format!("Failed to deserialize analysis: {}", e)))?;

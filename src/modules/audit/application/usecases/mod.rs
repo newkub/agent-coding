@@ -11,7 +11,7 @@ pub(crate) async fn log_entry<R>(
     resource: Resource,
 ) -> AppResult<AuditEntry>
 where
-    R: AuditRepository,
+    R: AuditRepository + ?Sized,
 {
     // Side effects (ID generation, timestamp) in application layer
     let id = AuditId::from_string(uuid::Uuid::new_v4().to_string());
@@ -25,7 +25,7 @@ where
 /// Use case: Query audit logs
 pub(crate) async fn query_logs<R>(repo: &R, filters: AuditQuery) -> AppResult<Vec<AuditEntry>>
 where
-    R: AuditRepository,
+    R: AuditRepository + ?Sized,
 {
     repo.query(filters).await
 }
@@ -35,7 +35,7 @@ pub(crate) async fn get_statistics<R>(
     repo: &R,
 ) -> AppResult<crate::modules::audit::domain::operations::AuditSummary>
 where
-    R: AuditRepository,
+    R: AuditRepository + ?Sized,
 {
     let entries = repo.query(AuditQuery::default()).await?;
     Ok(crate::modules::audit::domain::operations::generate_audit_summary(&entries))

@@ -1,4 +1,5 @@
 //! Ratatui adapter - Tests
+#![allow(clippy::module_inception)]
 
 #[cfg(test)]
 mod tests {

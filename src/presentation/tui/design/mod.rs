@@ -1,4 +1,5 @@
 // Design system module for TUI
+#![allow(dead_code)]
 // Provides design tokens, themes, and accessibility features
 
 pub(crate) mod tokens;

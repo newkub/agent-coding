@@ -1,3 +1,5 @@
+#![allow(dead_code, clippy::enum_variant_names)]
+
 use std::fs;
 use std::path::PathBuf;
 

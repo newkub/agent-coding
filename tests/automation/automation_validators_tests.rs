@@ -1,9 +1,11 @@
+#![allow(clippy::field_reassign_with_default)]
+
 use agent_tui::modules::automation::domain::models::issue_pr::{AutomationConfig, Issue};
 use agent_tui::modules::automation::domain::validators::automation_validators;
 
 #[test]
 fn test_validate_issue_for_automation_success() {
-    let mut issue = Issue::new(
+    let issue = Issue::new(
         1,
         "Test Issue".to_string(),
         "Please /automate this".to_string(),

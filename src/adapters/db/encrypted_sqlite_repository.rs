@@ -1,4 +1,5 @@
 // Encrypted SQLite repository adapter
+#![allow(dead_code)]
 // Provides transparent encryption for SQLite database operations
 
 use crate::shared::kernel::encryption::{EncryptionError, SessionEncryptor};
@@ -85,7 +86,6 @@ impl EncryptedSqliteRepository {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_encryption_enabled() {

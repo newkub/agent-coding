@@ -1,15 +1,18 @@
 //! Ratatui adapter - Rendering implementation
 
+use crate::modules::ui::application::tab_renderers::render_tab_columns;
 use crate::modules::ui::domain::models::AppState;
 use crate::modules::ui::ports::UIRenderer;
+use crate::presentation::tui::components::command_palette::draw_command_palette;
 use crate::presentation::tui::components::help::draw_help_modal;
 use crate::presentation::tui::components::styles::with_theme;
+use crate::presentation::tui::components::toast::draw_toasts;
 use crate::shared::constants::{COLUMN_PERCENTAGES, DEFAULT_TAB_HEIGHT};
 use crate::shared::kernel::result::AppResult;
 use crate::shared::types::{Column, Tab};
 use async_trait::async_trait;
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Margin, Rect},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     symbols,
     widgets::Tabs,
@@ -90,6 +93,10 @@ pub(crate) fn render_app_state(terminal: &mut RATerminal, state: &AppState) -> A
 
         // Render status bar at bottom
         render_status_bar(f, state, size, colors);
+
+        // Render overlays on top: command palette, then toasts
+        draw_command_palette(f, size, state);
+        draw_toasts(f, size, state);
     })?;
 
     Ok(())
@@ -101,8 +108,9 @@ fn render_tab_content(
     area: Rect,
     colors: &crate::presentation::tui::components::theme::ColorPalette,
 ) {
-    // Get tab content from app state
-    let content = state.current_tab_content();
+    // Column titles come from TabContent; body content from live tab renderers
+    let titles = state.current_tab_content();
+    let columns_content = render_tab_columns(state);
 
     // 3-column layout
     let column_widths = [
@@ -117,22 +125,40 @@ fn render_tab_content(
         .split(area);
 
     // Render each column
-    render_column(f, columns[0], Column::Left, &content.left, state, colors);
+    render_column(
+        f,
+        columns[0],
+        Column::Left,
+        &titles.left,
+        &columns_content.left,
+        state,
+        colors,
+    );
     render_column(
         f,
         columns[1],
         Column::Center,
-        &content.center,
+        &titles.center,
+        &columns_content.center,
         state,
         colors,
     );
-    render_column(f, columns[2], Column::Right, &content.right, state, colors);
+    render_column(
+        f,
+        columns[2],
+        Column::Right,
+        &titles.right,
+        &columns_content.right,
+        state,
+        colors,
+    );
 }
 
 fn render_column(
     f: &mut Frame,
     area: Rect,
     column: Column,
+    title: &str,
     content: &str,
     state: &AppState,
     colors: &crate::presentation::tui::components::theme::ColorPalette,
@@ -146,14 +172,9 @@ fn render_column(
     };
 
     let panel = Panel::new(&rt_theme)
-        .title(format!(
-            " {} ",
-            get_column_title(state.ui_state.current_tab, column)
-        ))
+        .title(format!(" {title} "))
         .style(Style::default().fg(border_color).bg(colors.background));
 
-    // Content inside column (inset by 1 for border)
-    let inner = area.inner(Margin::default());
     let paragraph = TextBlock::new(content, &rt_theme)
         .style(Style::default().fg(colors.text).bg(colors.background))
         .into_paragraph()
@@ -200,38 +221,6 @@ fn render_status_bar(
             .bg(colors.status_bar_bg),
     );
     f.render_widget(status.to_line(), status_area);
-}
-
-// === Column title helpers ===
-
-const fn get_column_title(tab: Tab, column: Column) -> &'static str {
-    match (tab, column) {
-        (Tab::Agent, Column::Left) => "Context",
-        (Tab::Agent, Column::Center) => "Chat",
-        (Tab::Agent, Column::Right) => "Actions",
-        (Tab::Git, Column::Left) => "Status",
-        (Tab::Git, Column::Center) => "Diff",
-        (Tab::Git, Column::Right) => "History",
-        (Tab::Cli, Column::Left) => "Input",
-        (Tab::Cli, Column::Center) => "Output",
-        (Tab::Cli, Column::Right) => "History",
-        (Tab::Snippet, Column::Left) => "Library",
-        (Tab::Snippet, Column::Center) => "Editor",
-        (Tab::Snippet, Column::Right) => "Tags",
-        (Tab::Skills, Column::Left) => "Tree",
-        (Tab::Skills, Column::Center) => "Detail",
-        (Tab::Skills, Column::Right) => "Progress",
-        (Tab::Workflows, Column::Left) => "List",
-        (Tab::Workflows, Column::Center) => "Editor",
-        (Tab::Workflows, Column::Right) => "History",
-        (Tab::Files, Column::Left) => "Explorer",
-        (Tab::Files, Column::Center) => "Content",
-        (Tab::Files, Column::Right) => "Actions",
-        (Tab::Settings, Column::Left) => "Categories",
-        (Tab::Settings, Column::Center) => "Options",
-        (Tab::Settings, Column::Right) => "Keys",
-        _ => "Unknown",
-    }
 }
 
 fn get_selected_index(state: &AppState) -> String {

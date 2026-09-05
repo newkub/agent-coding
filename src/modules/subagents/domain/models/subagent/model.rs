@@ -39,17 +39,20 @@ impl Subagent {
     }
 
     pub const fn can_handle(&self, task_type: &TaskType) -> bool {
-        match (&self.agent_type, task_type) {
-            (AgentType::CodeReviewer, TaskType::CodeReview) => true,
-            (AgentType::BugHunter, TaskType::BugDetection) => true,
-            (AgentType::Refactorer, TaskType::Refactoring) => true,
-            (AgentType::Documenter, TaskType::Documentation) => true,
-            (AgentType::Tester, TaskType::TestGeneration) => true,
-            (AgentType::SecurityAuditor, TaskType::SecurityAudit) => true,
-            (AgentType::PerformanceOptimizer, TaskType::PerformanceAnalysis) => true,
-            (AgentType::DependencyManager, TaskType::DependencyUpdate) => true,
-            _ => false,
-        }
+        matches!(
+            (&self.agent_type, task_type),
+            (AgentType::CodeReviewer, TaskType::CodeReview)
+                | (AgentType::BugHunter, TaskType::BugDetection)
+                | (AgentType::Refactorer, TaskType::Refactoring)
+                | (AgentType::Documenter, TaskType::Documentation)
+                | (AgentType::Tester, TaskType::TestGeneration)
+                | (AgentType::SecurityAuditor, TaskType::SecurityAudit)
+                | (
+                    AgentType::PerformanceOptimizer,
+                    TaskType::PerformanceAnalysis
+                )
+                | (AgentType::DependencyManager, TaskType::DependencyUpdate)
+        )
     }
 }
 

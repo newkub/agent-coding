@@ -1,11 +1,18 @@
 use super::TabAction;
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
-use database_tui::DatabaseUseCase;
+use database_tui::{ConnectionConfig, DatabaseUseCase, SqliteDbPort};
 
 /// Database tab action handler — delegates to database-app
+#[allow(clippy::let_underscore_future)]
 pub(crate) fn handle_database_action(state: &mut AppState, action: TabAction) -> AppResult<()> {
-    let mut uc = DatabaseUseCase::new();
+    let mut uc = DatabaseUseCase::new(
+        ConnectionConfig {
+            url: String::new(),
+            database: String::new(),
+        },
+        Box::new(SqliteDbPort::new()),
+    );
     match action {
         TabAction::Execute => {
             uc.set_query_input(state.database_tab_state.query_input.clone());

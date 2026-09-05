@@ -8,7 +8,7 @@ use crate::shared::kernel::result::AppResult;
 
 /// Entry point for the CLI presentation layer.
 /// Parses the command line and dispatches to a handler.
-pub(crate) async fn run() -> AppResult<()> {
+pub async fn run() -> AppResult<()> {
     let cli = Cli::parse();
 
     match cli.command {

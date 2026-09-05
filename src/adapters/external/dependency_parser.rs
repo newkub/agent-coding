@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::Path;
 use tokio::fs;
 
 use crate::modules::onboarding::domain::models::codebase_analysis::{Dependencies, DependencyInfo};
@@ -24,7 +24,7 @@ impl Default for DefaultDependencyParser {
 
 #[async_trait]
 impl DependencyParser for DefaultDependencyParser {
-    async fn parse_package_json(&self, path: &PathBuf) -> Result<Dependencies, AppError> {
+    async fn parse_package_json(&self, path: &Path) -> Result<Dependencies, AppError> {
         let content = fs::read_to_string(path).await?;
         let json: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| AppError::State(format!("Invalid package.json: {}", e)))?;
@@ -68,7 +68,7 @@ impl DependencyParser for DefaultDependencyParser {
         Ok(dependencies)
     }
 
-    async fn parse_cargo_toml(&self, path: &PathBuf) -> Result<Dependencies, AppError> {
+    async fn parse_cargo_toml(&self, path: &Path) -> Result<Dependencies, AppError> {
         let content = fs::read_to_string(path).await?;
         let toml: toml::Value = toml::from_str(&content)
             .map_err(|e| AppError::State(format!("Invalid Cargo.toml: {}", e)))?;
@@ -132,7 +132,7 @@ impl DependencyParser for DefaultDependencyParser {
         Ok(dependencies)
     }
 
-    async fn parse_requirements_txt(&self, path: &PathBuf) -> Result<Dependencies, AppError> {
+    async fn parse_requirements_txt(&self, path: &Path) -> Result<Dependencies, AppError> {
         let content = fs::read_to_string(path).await?;
 
         let mut dependencies = Dependencies {
@@ -167,7 +167,7 @@ impl DependencyParser for DefaultDependencyParser {
         Ok(dependencies)
     }
 
-    async fn parse_dependencies(&self, project_path: &PathBuf) -> Result<Dependencies, AppError> {
+    async fn parse_dependencies(&self, project_path: &Path) -> Result<Dependencies, AppError> {
         // Try package.json first
         let package_json = project_path.join("package.json");
         if package_json.exists() {

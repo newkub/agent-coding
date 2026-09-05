@@ -1,13 +1,7 @@
-// Binary entry point - thin shell that delegates to the presentation layer.
-// All command parsing, dispatching, and handler logic lives in
-// `presentation::cli` so this file stays minimal and focused.
+// Binary entry point - thin shell that delegates to the library's
+// presentation layer. All business logic lives in the `agent_tui` lib.
 
-mod adapters;
-mod modules;
-mod presentation;
-mod shared;
-
-use presentation::cli::runner;
+use agent_tui::presentation::cli::runner;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

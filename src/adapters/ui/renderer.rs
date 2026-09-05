@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::adapters::ui::ratatui_adapter::{render_app_state, RATerminal};
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;

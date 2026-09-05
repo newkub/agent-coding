@@ -1,6 +1,6 @@
 //! Diff operations tests
 
-use agent_tui::modules::diff::domain::models::{DiffFilter, DiffHunk, HunkStatus};
+use agent_tui::modules::diff::domain::models::{DiffFilter, DiffHunk};
 use agent_tui::modules::diff::domain::operations::*;
 
 #[test]
@@ -72,7 +72,7 @@ fn test_all_hunks_not_all_approved() {
         1,
         vec![],
     );
-    let mut hunk2 = DiffHunk::create(
+    let hunk2 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ @@".to_string(),
         1,
@@ -89,7 +89,7 @@ fn test_all_hunks_not_all_approved() {
 
 #[test]
 fn test_any_hunk_rejected() {
-    let mut hunk1 = DiffHunk::create(
+    let hunk1 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ @@".to_string(),
         1,

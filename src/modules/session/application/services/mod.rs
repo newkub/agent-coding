@@ -12,12 +12,10 @@ pub(crate) fn filter_sessions(
 pub(crate) fn sort_sessions(sessions: Vec<Session>, by: SortCriteria) -> Vec<Session> {
     let mut sorted = sessions;
     match by {
-        SortCriteria::Name => sorted.sort_by(|a, b| a.name.cmp(&b.name)),
-        SortCriteria::CreatedAt => sorted.sort_by(|a, b| b.created_at.cmp(&a.created_at)),
-        SortCriteria::UpdatedAt => sorted.sort_by(|a, b| b.updated_at.cmp(&a.updated_at)),
-        SortCriteria::MessageCount => {
-            sorted.sort_by(|a, b| b.messages.len().cmp(&a.messages.len()))
-        }
+        SortCriteria::Name => sorted.sort_by_key(|a| a.name.clone()),
+        SortCriteria::CreatedAt => sorted.sort_by_key(|a| std::cmp::Reverse(a.created_at)),
+        SortCriteria::UpdatedAt => sorted.sort_by_key(|a| std::cmp::Reverse(a.updated_at)),
+        SortCriteria::MessageCount => sorted.sort_by_key(|a| std::cmp::Reverse(a.messages.len())),
     }
     sorted
 }

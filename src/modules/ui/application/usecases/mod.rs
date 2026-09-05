@@ -1,7 +1,9 @@
 use super::super::domain::{
     events::UIEvent,
     models::AppState,
-    operations::{calculate_next_column, calculate_next_tab, calculate_prev_tab},
+    operations::{
+        calculate_next_column, calculate_next_tab, calculate_prev_column, calculate_prev_tab,
+    },
 };
 use crate::shared::types::Tab;
 
@@ -33,6 +35,14 @@ pub(crate) fn switch_next_column(state: &mut AppState) -> UIEvent {
     let from = state.ui_state.current_column;
     let to = calculate_next_column(from);
     state.ui_state.next_column();
+    UIEvent::column_changed(from, to)
+}
+
+/// Use case: Switch to previous column
+pub(crate) fn switch_prev_column(state: &mut AppState) -> UIEvent {
+    let from = state.ui_state.current_column;
+    let to = calculate_prev_column(from);
+    state.ui_state.prev_column();
     UIEvent::column_changed(from, to)
 }
 

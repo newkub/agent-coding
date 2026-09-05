@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_headless_executor_creation() {
-        let executor = DefaultHeadlessCommandExecutor::new();
+        let _executor = DefaultHeadlessCommandExecutor::new();
         // Just test creation
     }
 

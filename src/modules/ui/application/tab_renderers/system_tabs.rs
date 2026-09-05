@@ -1,31 +1,51 @@
-use super::TabRenderResult;
+use super::TabColumns;
 use crate::modules::ui::domain::models::AppState;
-use ratatui::layout::Rect;
-use ratatui::widgets::Paragraph;
 
-/// Render Logs tab content
-pub(crate) fn render_logs_tab(state: &AppState) -> TabRenderResult<'_> {
+/// Render Logs tab columns
+pub(crate) fn render_logs_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.logs_tab_state;
 
-    let content = Paragraph::new(format!(
-        "Logs\n\nSelected Log: {}",
-        tab_state.selected_log_index
-    ));
-    TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
+    let left = format!(
+        "Level: {}\nSelected: {}",
+        tab_state.log_level_filter.as_deref().unwrap_or("all"),
+        tab_state.selected_log_index,
+    );
+    let center = "No logs loaded".to_string();
+    let right = "Filters: -".to_string();
+
+    TabColumns::new(left, center, right)
 }
 
-/// Render System tab content — uses system-app for data
-pub(crate) fn render_system_tab(_state: &AppState) -> TabRenderResult<'_> {
+/// Render System tab columns — uses system-app for data
+pub(crate) fn render_system_tab(state: &AppState) -> TabColumns {
     let sys_uc = system_tui::SystemUseCase::new();
-    let metrics_text = sys_uc
-        .metrics()
-        .iter()
-        .map(|m| format!("{:?}: {:.2}", m.metric_type, m.value))
-        .collect::<Vec<_>>()
-        .join("\n");
+
+    let left = if sys_uc.metrics().is_empty() {
+        "No metrics collected".to_string()
+    } else {
+        sys_uc
+            .metrics()
+            .iter()
+            .enumerate()
+            .map(|(i, m)| {
+                let marker = if i == state.system_tab_state.selected_metric_index {
+                    ">"
+                } else {
+                    " "
+                };
+                format!("{marker} {}: {:.2}", m.label, m.value)
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    let center = format!(
+        "Selected metric: {}",
+        state.system_tab_state.selected_metric_index
+    );
 
     let alerts = sys_uc.alerts();
-    let alerts_text = if alerts.is_empty() {
+    let right = if alerts.is_empty() {
         "No alerts".to_string()
     } else {
         alerts
@@ -35,9 +55,5 @@ pub(crate) fn render_system_tab(_state: &AppState) -> TabRenderResult<'_> {
             .join("\n")
     };
 
-    let content = Paragraph::new(format!(
-        "System\n\nMonitoring system resources\n\n(system-app)\n{}\n\nAlerts:\n{}",
-        metrics_text, alerts_text
-    ));
-    TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
+    TabColumns::new(left, center, right)
 }

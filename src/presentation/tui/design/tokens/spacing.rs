@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 /// Spacing tokens for TUI
 /// Using character-based spacing
 #[derive(Debug, Clone, Copy)]

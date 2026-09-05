@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::adapters::config::settings::AccessibilitySettings;
 
 /// Screen reader announcer for accessibility

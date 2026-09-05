@@ -3,11 +3,14 @@
 // Keeping rendering in one place keeps the handlers thin and makes output
 // formatting easy to test in isolation.
 
+use crate::modules::audit::domain::models::AuditEntry;
 use crate::modules::automation::domain::models::issue_pr::AutomationWorkflow;
 use crate::modules::guardrails::domain::models::guardrail::GuardrailCheck;
 use crate::modules::onboarding::domain::models::codebase_analysis::CodebaseAnalysis;
 use crate::modules::performance::application::usecases::analyze_performance::PerformanceAnalysisResult;
 use crate::modules::performance::domain::models::metrics::PerformanceSnapshot;
+use crate::modules::session::domain::models::Session;
+use crate::modules::share::domain::models::share_link::ShareLink;
 use crate::modules::subagents::domain::models::subagent::Subagent;
 
 /// Version metadata shown by `agent-tui version`
@@ -77,6 +80,15 @@ pub(crate) fn print_subagent_result(output: &str) {
     println!("Output: {}", output);
 }
 
+pub(crate) fn print_subagent_details(agent: &Subagent) {
+    println!("  ID:          {}", agent.id);
+    println!("  Name:        {}", agent.name);
+    println!("  Description: {}", agent.description);
+    println!("  Type:        {:?}", agent.agent_type);
+    println!("  Capabilities: {:?}", agent.capabilities);
+    println!("  Status:      {:?}", agent.status);
+}
+
 pub(crate) fn print_guardrail_report(checks: &[GuardrailCheck]) {
     let passed = checks.iter().all(|c| c.passed);
     if passed {
@@ -136,4 +148,69 @@ pub(crate) fn print_performance_report(result: &PerformanceAnalysisResult) {
             );
         }
     }
+}
+
+pub(crate) fn print_session_list(sessions: &[Session]) {
+    if sessions.is_empty() {
+        println!("No sessions found.");
+        return;
+    }
+
+    println!("Sessions:");
+    for session in sessions {
+        println!(
+            "  - {} ({}): {} messages",
+            session.name,
+            session.id,
+            session.messages.len()
+        );
+    }
+}
+
+pub(crate) fn print_audit_entries(entries: &[AuditEntry]) {
+    if entries.is_empty() {
+        println!("No audit entries found.");
+        return;
+    }
+
+    println!("Audit entries:");
+    for entry in entries {
+        println!(
+            "  - {} | {} | {:?} | actor={} | resource={} | {:?}",
+            entry.timestamp,
+            entry.id.as_str(),
+            entry.action,
+            entry.actor.name,
+            entry.resource.type_,
+            entry.result
+        );
+    }
+}
+
+pub(crate) fn print_share_link_created(link: &ShareLink, url: &str) {
+    println!("Share link created:");
+    println!("  ID:      {}", link.id);
+    println!("  Token:   {}", link.token);
+    println!("  URL:     {}", url);
+    println!("  Active:  {}", link.is_active);
+    println!(
+        "  Expires: {}",
+        link.expires_at
+            .map_or("never".to_string(), |d| d.to_rfc3339())
+    );
+}
+
+pub(crate) fn print_share_link_deactivated(link: &ShareLink) {
+    println!("Share link deactivated:");
+    println!("  ID:     {}", link.id);
+    println!("  Token:  {}", link.token);
+    println!("  Active: {}", link.is_active);
+}
+
+pub(crate) fn print_share_link_accessed(link: &ShareLink) {
+    println!("Share link accessed:");
+    println!("  ID:           {}", link.id);
+    println!("  Token:        {}", link.token);
+    println!("  Access count: {}", link.access_count);
+    println!("  Active:       {}", link.is_active);
 }

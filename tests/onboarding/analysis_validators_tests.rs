@@ -1,3 +1,5 @@
+#![allow(clippy::field_reassign_with_default)]
+
 use agent_tui::modules::onboarding::domain::models::codebase_analysis::CodebaseAnalysis;
 use agent_tui::modules::onboarding::domain::validators::analysis_validators;
 use std::path::PathBuf;

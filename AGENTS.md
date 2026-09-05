@@ -16,7 +16,9 @@ Project has:
 - ✅ Clean Architecture (FP-style) implementation
 - ✅ idea-features.md with 40 features for markdown rendering, streaming animation, and UX/UI improvements
 - ✅ All TODO items resolved (git operations removed, events implemented)
-- ⚠️ Mock implementations in share module need conversion to production code
+- ✅ Mock implementations in share module converted to production SQLite repository
+- ✅ Lib/bin architecture unified (main.rs uses agent_tui lib)
+- ✅ Clippy clean (0 warnings) with wired session, audit, share, subagent CLI features
 
 ## Workflows
 

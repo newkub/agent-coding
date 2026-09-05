@@ -69,12 +69,35 @@ pub(crate) enum Commands {
         action: String,
     },
 
+    /// Manage share links
+    Share {
+        #[command(subcommand)]
+        command: ShareCommands,
+    },
+
+    /// Manage audit logs
+    Audit {
+        #[command(subcommand)]
+        command: AuditCommands,
+    },
+
+    /// Manage sessions
+    Session {
+        #[command(subcommand)]
+        command: SessionCommands,
+    },
+
     /// Show version information
     Version,
 }
 
 #[derive(Debug, Subcommand)]
 pub(crate) enum SubagentCommands {
+    /// Get subagent details
+    Get {
+        /// Subagent name or ID
+        name: String,
+    },
     /// List available subagents
     List,
     /// Execute a subagent task
@@ -83,6 +106,72 @@ pub(crate) enum SubagentCommands {
         agent: String,
         /// Task input
         input: String,
+    },
+    /// Delete a subagent
+    Delete {
+        /// Subagent name or ID
+        name: String,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub(crate) enum ShareCommands {
+    /// Create a share link for a session
+    Create {
+        /// Session name
+        session_name: String,
+    },
+    /// Deactivate a share link by token
+    Deactivate {
+        /// Share link token
+        token: String,
+    },
+    /// Access a shared session by token
+    Access {
+        /// Share link token
+        token: String,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub(crate) enum AuditCommands {
+    /// Log an audit entry
+    Log {
+        /// Audit message
+        message: String,
+        /// Audit category
+        #[arg(short, long, default_value = "system")]
+        category: String,
+    },
+    /// Query audit logs
+    Query {
+        /// Start time (RFC 3339)
+        #[arg(short, long)]
+        from: Option<String>,
+        /// Filter by category
+        #[arg(short, long)]
+        level: Option<String>,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub(crate) enum SessionCommands {
+    /// List all sessions
+    List,
+    /// Create a new session
+    Create {
+        /// Session name
+        name: String,
+    },
+    /// Delete a session by ID
+    Delete {
+        /// Session ID
+        id: String,
+    },
+    /// Search sessions by name
+    Search {
+        /// Search query
+        query: String,
     },
 }
 
@@ -105,6 +194,9 @@ pub(crate) async fn dispatch(command: Commands) -> AppResult<()> {
             guardrail_type,
         } => handlers::guardrail::run(input, guardrail_type).await,
         Commands::Performance { action } => handlers::performance::run(action).await,
+        Commands::Share { command } => handlers::share::run(command).await,
+        Commands::Audit { command } => handlers::audit::run(command).await,
+        Commands::Session { command } => handlers::session::run(command).await,
         Commands::Version => handlers::version::run(),
     }
 }

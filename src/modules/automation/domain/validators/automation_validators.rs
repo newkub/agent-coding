@@ -75,12 +75,13 @@ pub fn validate_repository_access(repository: &str) -> Result<(), AppError> {
 }
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_validate_issue_for_automation_success() {
-        let mut issue = Issue::new(
+        let issue = Issue::new(
             1,
             "Test Issue".to_string(),
             "Please /automate this".to_string(),

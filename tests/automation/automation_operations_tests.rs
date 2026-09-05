@@ -1,7 +1,7 @@
 use agent_tui::modules::automation::domain::models::issue_pr::{AutomationConfig, Issue};
 use agent_tui::modules::automation::domain::operations::automation_operations::{
     determine_target_branch, extract_labels, generate_branch_name, generate_commit_message,
-    generate_pr_body, generate_pr_title,
+    generate_pr_title,
 };
 
 #[test]
