@@ -1,6 +1,7 @@
 // Automation handler - executes the ExecuteAutomationUseCase for issue-to-PR workflows
 
-use crate::modules::automation::domain::models::issue_pr::{AutomationConfig, AutomationWorkflow};
+use crate::adapters::config::loader::load_automation_config;
+use crate::modules::automation::domain::models::issue_pr::AutomationWorkflow;
 use crate::modules::automation::ports::GitHubClient;
 use crate::presentation::cli::output;
 use crate::presentation::tui::di::DIContainer;
@@ -24,7 +25,7 @@ pub(crate) async fn run(repository: String, number: u32) -> AppResult<()> {
     let issue = github.get_issue(&repository, number).await?;
 
     let mut workflow = AutomationWorkflow::new(issue);
-    let config = AutomationConfig::default();
+    let config = load_automation_config();
 
     match use_case.execute(&mut workflow, &config).await {
         Ok(_) => {

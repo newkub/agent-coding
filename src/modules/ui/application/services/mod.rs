@@ -1,7 +1,7 @@
-use super::super::domain::models::{AppState, PackageItem, SkillItem, WorkflowItem};
+use super::super::domain::models::{AppState, PackageItem, SkillItem, ToastKind, WorkflowItem};
+use crate::adapters::config::loader::load_automation_config;
 use crate::modules::audit::application::usecases::{log_entry, AuditQuery};
 use crate::modules::audit::domain::models::{Actor, ActorType, AuditAction, Resource};
-use crate::modules::automation::domain::models::issue_pr::AutomationConfig;
 use crate::modules::onboarding::ports::DependencyParser;
 use crate::modules::performance::ports::MetricsCollector;
 use crate::modules::subagents::ports::SubagentManager;
@@ -10,10 +10,40 @@ use crate::presentation::tui::di::DIContainer;
 use crate::shared::kernel::result::AppResult;
 use sqlx::Row;
 use std::path::Path;
+use task_tui::task_manager::adapters::storage::JsonFileStorage;
+use task_tui::task_manager::ports::WorkspaceRepository;
 
 /// Service: Initialize app state
 pub(crate) fn initialize_app_state() -> AppState {
-    AppState::new()
+    let mut state = AppState::new();
+    load_tasks(&mut state);
+    state
+}
+
+/// Load persisted task workspaces from `task-tui` JSON storage into the task manager.
+pub(crate) fn load_tasks(state: &mut AppState) {
+    let Ok(storage) = JsonFileStorage::default_location() else {
+        return;
+    };
+    if let Ok(workspaces) = storage.load() {
+        if !workspaces.is_empty() {
+            state.tasks_tab_state.task_manager.tree.workspaces = workspaces;
+        }
+    }
+}
+
+/// Persist the task manager tree to `task-tui` JSON storage.
+pub(crate) fn persist_tasks(state: &mut AppState) {
+    let Ok(storage) = JsonFileStorage::default_location() else {
+        state.push_toast(
+            ToastKind::Error,
+            "Task storage is not available".to_string(),
+        );
+        return;
+    };
+    if let Err(e) = storage.save(&state.tasks_tab_state.task_manager.tree.workspaces) {
+        state.push_toast(ToastKind::Error, format!("Failed to save tasks: {e}"));
+    }
 }
 
 /// Service: Get current tab content
@@ -271,7 +301,7 @@ pub(crate) async fn refresh_skills(state: &mut AppState, di: &DIContainer) {
 /// Workflows tab: the automation pipeline plan derived from the real
 /// automation configuration and the current git branch.
 pub(crate) fn refresh_workflows(state: &mut AppState, di: &DIContainer) {
-    let config = AutomationConfig::default();
+    let config = load_automation_config();
     let branch = di
         .git_adapter()
         .and_then(|g| g.current_branch_name())

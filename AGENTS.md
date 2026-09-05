@@ -28,6 +28,11 @@ Project has:
 - ✅ Token-bucket rate limiting for GitHub and OpenAI API calls
 - ✅ SQLite indexes added for common lookup paths in sessions, macros, headless, share, subagents, guardrails, and UI content
 - ✅ End-to-end CLI test coverage for database backup/restore lifecycle
+- ✅ `AutomationSettings` in `config.toml` drives `AutomationConfig` for CLI and Workflows tab
+- ✅ `Api` tab executes real HTTP requests via `api-tui` `HttpClient`
+- ✅ `Agent` tab generates assistant responses through `SubagentTaskExecutor` (OpenAI)
+- ✅ `Workflows` tab runs/cancels real `ExecuteAutomationUseCase` pipelines (`owner/repo#issue` input)
+- ✅ `Tasks` tab persists workspaces to `task-tui` JSON storage
 
 ## Workflows
 

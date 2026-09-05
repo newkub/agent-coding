@@ -81,6 +81,10 @@ pub struct WorkflowsTabState {
     pub execution_status: Option<String>,
     /// Automation workflows available for execution
     pub workflows: Vec<WorkflowItem>,
+    /// `owner/repo#issue` input used by `RunWorkflow`
+    pub automation_input: String,
+    /// ID of the currently running workflow (for `StopWorkflow`)
+    pub current_workflow_id: Option<String>,
 }
 
 /// Files tab state
@@ -149,6 +153,16 @@ pub struct AgentMessage {
 pub struct ApiTabState {
     pub selected_endpoint_index: usize,
     pub is_editing: bool,
+    /// Request URL being edited
+    pub request_url: String,
+    /// HTTP method (GET/POST/PUT/DELETE/PATCH)
+    pub request_method: String,
+    /// Optional request body
+    pub request_body: String,
+    /// Last response body
+    pub response: String,
+    /// Whether a request is in flight
+    pub is_executing: bool,
 }
 
 /// Database tab state

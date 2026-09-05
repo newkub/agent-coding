@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::modules::automation::domain::models::issue_pr::AutomationConfig;
+
 /// Application settings
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppSettings {
@@ -15,6 +17,8 @@ pub struct AppSettings {
     pub memory: MemorySettings,
     /// Security settings
     pub security: SecuritySettings,
+    /// Automation settings
+    pub automation: AutomationSettings,
 }
 
 /// UI configuration
@@ -122,6 +126,46 @@ pub struct SecuritySettings {
     pub mask_sensitive_data: bool,
 }
 
+/// Automation configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutomationSettings {
+    /// Automatically create a feature branch
+    pub auto_create_branch: bool,
+    /// Automatically commit changes
+    pub auto_commit: bool,
+    /// Automatically push the branch
+    pub auto_push: bool,
+    /// Automatically create a pull request
+    pub auto_create_pr: bool,
+    /// Optional pull request template
+    pub pr_template: Option<String>,
+    /// Branch name template (must contain `{number}`)
+    pub branch_name_template: String,
+    /// Commit message template
+    pub commit_message_template: String,
+    /// Default reviewers for created PRs
+    pub default_reviewers: Vec<String>,
+    /// Default labels for created PRs
+    pub default_labels: Vec<String>,
+}
+
+impl AutomationSettings {
+    /// Convert settings to the domain `AutomationConfig` used by automation use cases.
+    pub fn to_config(&self) -> AutomationConfig {
+        AutomationConfig {
+            auto_create_branch: self.auto_create_branch,
+            auto_commit: self.auto_commit,
+            auto_push: self.auto_push,
+            auto_create_pr: self.auto_create_pr,
+            pr_template: self.pr_template.clone(),
+            branch_name_template: self.branch_name_template.clone(),
+            commit_message_template: self.commit_message_template.clone(),
+            default_reviewers: self.default_reviewers.clone(),
+            default_labels: self.default_labels.clone(),
+        }
+    }
+}
+
 impl Default for UISettings {
     fn default() -> Self {
         Self {
@@ -202,6 +246,22 @@ impl Default for SecuritySettings {
             enable_audit_logging: true,
             enable_sandbox: true,
             mask_sensitive_data: true,
+        }
+    }
+}
+
+impl Default for AutomationSettings {
+    fn default() -> Self {
+        Self {
+            auto_create_branch: true,
+            auto_commit: true,
+            auto_push: true,
+            auto_create_pr: true,
+            pr_template: None,
+            branch_name_template: "feature/issue-{number}".to_string(),
+            commit_message_template: "feat: {title}".to_string(),
+            default_reviewers: Vec::new(),
+            default_labels: vec!["automated".to_string()],
         }
     }
 }

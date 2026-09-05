@@ -4,6 +4,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use super::settings::AppSettings;
+use crate::modules::automation::domain::models::issue_pr::AutomationConfig;
 
 /// Configuration loader for application settings
 pub(crate) struct ConfigLoader {
@@ -67,6 +68,14 @@ impl Default for ConfigLoader {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Load `AutomationConfig` from `config.toml`, falling back to defaults.
+pub(crate) fn load_automation_config() -> AutomationConfig {
+    ConfigLoader::new()
+        .load()
+        .map(|settings| settings.automation.to_config())
+        .unwrap_or_else(|_| AutomationConfig::default())
 }
 
 /// Configuration errors
