@@ -70,9 +70,10 @@ impl DefaultSubagentTaskExecutor {
         Ok(client)
     }
 
-    /// Call the OpenAI Chat Completions API for a single task.
+    /// Call the OpenAI Chat Completions API for a single task, with retry.
     async fn generate(&self, task: &SubagentTask) -> Result<String, AppError> {
         let client = self.client().await?;
+        let correlation_id = uuid::Uuid::new_v4().to_string();
 
         let system_prompt = prompts::system_prompt_for(&task.task_type);
         let model = prompts::model_for(&task.task_type);
@@ -96,19 +97,81 @@ impl DefaultSubagentTaskExecutor {
             .build()
             .map_err(|e| AppError::State(format!("openai request build error: {e}")))?;
 
-        let response = client.chat().create(request).await.map_err(|e| {
-            tracing::error!(task_id = %task.id, error = %e, "openai chat completion failed");
-            AppError::State(format!("openai chat completion error: {e}"))
-        })?;
+        let span = tracing::info_span!(
+            "openai_chat_completion",
+            correlation_id = %correlation_id,
+            task_id = %task.id
+        );
 
-        let content = response
-            .choices
-            .into_iter()
-            .next()
-            .and_then(|choice| choice.message.content)
-            .ok_or_else(|| AppError::State("openai returned an empty completion".to_string()))?;
+        let mut delay = std::time::Duration::from_millis(500);
+        let mut last_error = None;
 
-        Ok(content)
+        for attempt in 1..=3 {
+            let start = std::time::Instant::now();
+            let result = client.chat().create(request.clone()).await;
+            let elapsed = start.elapsed();
+
+            match result {
+                Ok(response) => {
+                    tracing::info!(
+                        parent: &span,
+                        attempt,
+                        elapsed_ms = elapsed.as_millis() as u64,
+                        "openai chat completion succeeded"
+                    );
+                    let content = response
+                        .choices
+                        .into_iter()
+                        .next()
+                        .and_then(|choice| choice.message.content)
+                        .ok_or_else(|| {
+                            AppError::State("openai returned an empty completion".to_string())
+                        })?;
+                    return Ok(content);
+                }
+                Err(e) if is_retryable_openai_error(&e) && attempt < 3 => {
+                    tracing::warn!(
+                        parent: &span,
+                        attempt,
+                        error = %e,
+                        elapsed_ms = elapsed.as_millis() as u64,
+                        delay_ms = delay.as_millis() as u64,
+                        "openai chat completion failed; retrying"
+                    );
+                    last_error = Some(e);
+                    tokio::time::sleep(delay).await;
+                    delay *= 2;
+                }
+                Err(e) => {
+                    tracing::error!(
+                        parent: &span,
+                        attempt,
+                        error = %e,
+                        elapsed_ms = elapsed.as_millis() as u64,
+                        "openai chat completion failed"
+                    );
+                    return Err(AppError::State(format!(
+                        "openai chat completion error: {e}"
+                    )));
+                }
+            }
+        }
+
+        let error = last_error.expect("last error set when retries exhausted");
+        Err(AppError::State(format!(
+            "openai chat completion error: {error}"
+        )))
+    }
+}
+
+fn is_retryable_openai_error(error: &async_openai::error::OpenAIError) -> bool {
+    match error {
+        async_openai::error::OpenAIError::ApiError(api) => matches!(
+            api.api_error.code.as_deref(),
+            Some("rate_limit_exceeded" | "server_error" | "temporarily_unavailable")
+        ),
+        async_openai::error::OpenAIError::Reqwest(_) => true,
+        _ => false,
     }
 }
 
