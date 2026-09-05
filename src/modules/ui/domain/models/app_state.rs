@@ -10,9 +10,10 @@ use super::{
     },
     tab_content::TabContent,
     tab_states::{
-        AgentTabState, ApiTabState, CliTabState, DatabaseTabState, FilesTabState, GitTabState,
-        LogsTabState, NotesTabState, PackagesTabState, SettingsTabState, SkillsTabState,
-        SnippetTabState, SystemTabState, TasksTabState, TerminalTabState, WorkflowsTabState,
+        AgentTabState, ApiTabState, CliTabState, CollaborationTabState, DatabaseTabState,
+        FilesTabState, GitTabState, LogsTabState, MacroTabState, NotesTabState, PackagesTabState,
+        SettingsTabState, SkillsTabState, SnippetTabState, SystemTabState, TasksTabState,
+        TerminalTabState, WorkflowsTabState,
     },
     toast::{ToastKind, ToastNotification},
 };
@@ -38,6 +39,8 @@ pub struct AppState {
     pub workflows_tab: TabContent,
     pub settings_tab: TabContent,
     pub cli_tab: TabContent,
+    pub collaboration_tab: TabContent,
+    pub macros_tab: TabContent,
     // Tab-specific states
     pub agent_tab_state: AgentTabState,
     pub packages_tab_state: PackagesTabState,
@@ -55,6 +58,8 @@ pub struct AppState {
     pub skills_tab_state: SkillsTabState,
     pub workflows_tab_state: WorkflowsTabState,
     pub settings_tab_state: SettingsTabState,
+    pub collaboration_tab_state: CollaborationTabState,
+    pub macros_tab_state: MacroTabState,
     // Legacy states (kept for compatibility)
     pub diff_state: DiffReviewState,
     pub snippet_state: SnippetState,
@@ -107,6 +112,13 @@ impl AppState {
             workflows_tab: TabContent::with_content(Tab::Workflows, "List", "Editor", "History"),
             settings_tab: TabContent::with_content(Tab::Settings, "Categories", "Options", "Keys"),
             cli_tab: TabContent::with_content(Tab::Cli, "Input", "Output", "History"),
+            collaboration_tab: TabContent::with_content(
+                Tab::Collaboration,
+                "Sessions",
+                "Messages",
+                "Participants",
+            ),
+            macros_tab: TabContent::with_content(Tab::Macros, "Macros", "Steps", "Recording"),
             // Initialize tab-specific states
             agent_tab_state: AgentTabState::default(),
             packages_tab_state: PackagesTabState::default(),
@@ -127,6 +139,8 @@ impl AppState {
             skills_tab_state: SkillsTabState::default(),
             workflows_tab_state: WorkflowsTabState::default(),
             settings_tab_state: SettingsTabState::default(),
+            collaboration_tab_state: CollaborationTabState::default(),
+            macros_tab_state: MacroTabState::default(),
             // Legacy states
             diff_state: DiffReviewState::default(),
             snippet_state: SnippetState::default(),
@@ -167,6 +181,8 @@ impl AppState {
             Tab::Workflows => &self.workflows_tab,
             Tab::Settings => &self.settings_tab,
             Tab::Cli => &self.cli_tab,
+            Tab::Collaboration => &self.collaboration_tab,
+            Tab::Macros => &self.macros_tab,
         }
     }
 
@@ -189,6 +205,8 @@ impl AppState {
             Tab::Workflows => &mut self.workflows_tab,
             Tab::Settings => &mut self.settings_tab,
             Tab::Cli => &mut self.cli_tab,
+            Tab::Collaboration => &mut self.collaboration_tab,
+            Tab::Macros => &mut self.macros_tab,
         }
     }
 

@@ -47,5 +47,7 @@ pub(crate) fn render_tab_columns(state: &AppState) -> TabColumns {
         Tab::Settings => development_tabs::render_settings_tab(state),
         Tab::Logs => system_tabs::render_logs_tab(state),
         Tab::System => system_tabs::render_system_tab(state),
+        Tab::Collaboration => development_tabs::render_collaboration_tab(state),
+        Tab::Macros => development_tabs::render_macros_tab(state),
     }
 }

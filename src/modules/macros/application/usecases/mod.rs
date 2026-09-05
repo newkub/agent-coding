@@ -9,7 +9,7 @@ pub(crate) async fn start_recording<R>(
     description: String,
 ) -> AppResult<MacroId>
 where
-    R: MacroRepository,
+    R: MacroRepository + ?Sized,
 {
     let id = crate::modules::macros::domain::models::MacroId::from_string(
         uuid::Uuid::new_v4().to_string(),
@@ -23,7 +23,7 @@ where
 /// Use case: Stop recording and save macro
 pub(crate) async fn stop_recording<R>(repo: &R, id: &MacroId) -> AppResult<Option<Macro>>
 where
-    R: MacroRepository,
+    R: MacroRepository + ?Sized,
 {
     repo.finish_recording(id).await
 }
@@ -35,7 +35,7 @@ pub(crate) async fn playback_macro<E>(
     context: Option<MacroContext>,
 ) -> AppResult<PlaybackResult>
 where
-    E: MacroExecutor,
+    E: MacroExecutor + ?Sized,
 {
     let ctx = context.unwrap_or_default();
     let mut results = Vec::new();
@@ -58,7 +58,7 @@ where
 /// Use case: Delete a macro
 pub(crate) async fn delete_macro<R>(repo: &R, id: &MacroId) -> AppResult<()>
 where
-    R: MacroRepository,
+    R: MacroRepository + ?Sized,
 {
     repo.delete(id).await
 }
@@ -66,7 +66,7 @@ where
 /// Use case: List all macros
 pub(crate) async fn list_macros<R>(repo: &R) -> AppResult<Vec<Macro>>
 where
-    R: MacroRepository,
+    R: MacroRepository + ?Sized,
 {
     repo.find_all().await
 }

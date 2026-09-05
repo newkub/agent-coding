@@ -3,6 +3,8 @@
 // Centralized DI for testability and flexibility
 
 use crate::adapters::db::audit_repository::InMemoryAuditRepository;
+use crate::adapters::db::collaboration_repository::InMemoryCollaborationRepository;
+use crate::adapters::db::macro_repository::InMemoryMacroRepository;
 use crate::adapters::db::session_repository::InMemorySessionRepository;
 use crate::adapters::db::share_link_repository::SqliteShareLinkRepository;
 use crate::adapters::db::share_repository::SqliteShareRepository;
@@ -10,8 +12,9 @@ use crate::adapters::external::{
     dependency_parser::DefaultDependencyParser, file_scanner::DefaultFileScanner,
     git_operations::Git2Adapter, github_client::ReqwestGitHubClient,
     headless_command_executor::DefaultHeadlessCommandExecutor,
-    headless_session_manager::InMemorySessionManager, metrics_collector::SystemMetricsCollector,
-    subagent_manager::InMemorySubagentManager,
+    headless_session_manager::InMemorySessionManager, macro_executor::InMemoryMacroExecutor,
+    metrics_collector::SystemMetricsCollector, optimization_manager::InMemoryOptimizationManager,
+    snapshot_manager::InMemorySnapshotManager, subagent_manager::InMemorySubagentManager,
 };
 use crate::adapters::input::crossterm_handler::CrosstermInputHandler;
 use crate::adapters::ui::ratatui_adapter::RatatuiAdapter;
@@ -19,7 +22,9 @@ use crate::modules::audit::ports::AuditRepository;
 use crate::modules::automation::application::usecases::execute_automation::ExecuteAutomationUseCase;
 use crate::modules::collaboration::ports::CollaborationRepository;
 use crate::modules::headless::application::usecases::execute_headless::ExecuteHeadlessUseCase;
+use crate::modules::macros::ports::{MacroExecutor, MacroRepository};
 use crate::modules::onboarding::application::usecases::analyze_codebase::AnalyzeCodebaseUseCase;
+use crate::modules::performance::application::usecases::analyze_performance::AnalyzePerformanceUseCase;
 use crate::modules::session::ports::SessionRepository;
 use crate::modules::share::ports::ShareRepository as ShareRepoPort;
 use crate::shared::kernel::result::AppResult;
@@ -33,6 +38,11 @@ type AnalyzeCodebaseUseCaseConcrete =
 type ExecuteAutomationUseCaseConcrete = ExecuteAutomationUseCase<Git2Adapter, ReqwestGitHubClient>;
 type ExecuteHeadlessUseCaseConcrete =
     ExecuteHeadlessUseCase<DefaultHeadlessCommandExecutor, InMemorySessionManager>;
+type AnalyzePerformanceUseCaseConcrete = AnalyzePerformanceUseCase<
+    SystemMetricsCollector,
+    InMemorySnapshotManager,
+    InMemoryOptimizationManager,
+>;
 
 /// DI Container for managing dependencies
 pub(crate) struct DIContainer {
@@ -40,6 +50,7 @@ pub(crate) struct DIContainer {
     session_repo: Option<Box<dyn SessionRepository>>,
     audit_repo: Option<Box<dyn AuditRepository>>,
     collaboration_repo: Option<Box<dyn CollaborationRepository>>,
+    macro_repo: Option<Box<dyn MacroRepository>>,
     share_link_repo: Option<SqliteShareLinkRepository>,
     share_repo: Option<Box<dyn ShareRepoPort>>,
 
@@ -50,6 +61,7 @@ pub(crate) struct DIContainer {
     dependency_parser: Option<DefaultDependencyParser>,
     metrics_collector: Option<SystemMetricsCollector>,
     subagent_manager: Option<InMemorySubagentManager>,
+    macro_executor: Option<Box<dyn MacroExecutor>>,
 
     // UI adapters
     input_handler: Option<CrosstermInputHandler>,
@@ -59,6 +71,7 @@ pub(crate) struct DIContainer {
     analyze_codebase: Option<AnalyzeCodebaseUseCaseConcrete>,
     execute_automation: Option<ExecuteAutomationUseCaseConcrete>,
     execute_headless: Option<ExecuteHeadlessUseCaseConcrete>,
+    analyze_performance: Option<AnalyzePerformanceUseCaseConcrete>,
 }
 
 impl DIContainer {
@@ -68,6 +81,7 @@ impl DIContainer {
             session_repo: None,
             audit_repo: None,
             collaboration_repo: None,
+            macro_repo: None,
             share_link_repo: None,
             share_repo: None,
             git_adapter: None,
@@ -76,11 +90,13 @@ impl DIContainer {
             dependency_parser: None,
             metrics_collector: None,
             subagent_manager: None,
+            macro_executor: None,
             input_handler: None,
             renderer: None,
             analyze_codebase: None,
             execute_automation: None,
             execute_headless: None,
+            analyze_performance: None,
         }
     }
 
@@ -118,9 +134,19 @@ impl DIContainer {
         let execute_headless =
             ExecuteHeadlessUseCase::new(headless_executor, headless_session_manager);
 
+        // Performance analysis use case (sysinfo collector + in-memory stores)
+        let analyze_performance = AnalyzePerformanceUseCase::new(
+            SystemMetricsCollector::new(),
+            InMemorySnapshotManager::new(),
+            InMemoryOptimizationManager::new(),
+        );
+
         // Wire in-memory repositories (fast, no DB connection)
         self.session_repo = Some(Box::new(InMemorySessionRepository::new()));
         self.audit_repo = Some(Box::new(InMemoryAuditRepository::new()));
+        self.collaboration_repo = Some(Box::new(InMemoryCollaborationRepository::new()));
+        self.macro_repo = Some(Box::new(InMemoryMacroRepository::new()));
+        self.macro_executor = Some(Box::new(InMemoryMacroExecutor::new()));
 
         // Wire dependencies (skip DB connection - defer to when needed)
         self.git_adapter = Some(git_adapter);
@@ -134,6 +160,7 @@ impl DIContainer {
         self.analyze_codebase = Some(analyze_codebase);
         self.execute_automation = Some(execute_automation);
         self.execute_headless = Some(execute_headless);
+        self.analyze_performance = Some(analyze_performance);
 
         // Note: share_link_repo with DB connection is deferred to when actually needed
         // This reduces startup time by ~500ms
@@ -174,6 +201,16 @@ impl DIContainer {
     /// Get collaboration repository
     pub(crate) fn collaboration_repo(&self) -> Option<&dyn CollaborationRepository> {
         self.collaboration_repo.as_deref()
+    }
+
+    /// Get macro repository
+    pub(crate) fn macro_repo(&self) -> Option<&dyn MacroRepository> {
+        self.macro_repo.as_deref()
+    }
+
+    /// Get macro executor
+    pub(crate) fn macro_executor(&self) -> Option<&dyn MacroExecutor> {
+        self.macro_executor.as_deref()
     }
 
     /// Get share link repository
@@ -247,6 +284,13 @@ impl DIContainer {
         self.execute_headless.as_ref()
     }
 
+    /// Get analyze performance use case
+    pub(crate) const fn analyze_performance_use_case(
+        &self,
+    ) -> Option<&AnalyzePerformanceUseCaseConcrete> {
+        self.analyze_performance.as_ref()
+    }
+
     /// Set custom session repository (for testing)
     pub(crate) fn with_session_repo(mut self, repo: Box<dyn SessionRepository>) -> Self {
         self.session_repo = Some(repo);
@@ -265,6 +309,18 @@ impl DIContainer {
         repo: Box<dyn CollaborationRepository>,
     ) -> Self {
         self.collaboration_repo = Some(repo);
+        self
+    }
+
+    /// Set custom macro repository (for testing)
+    pub(crate) fn with_macro_repo(mut self, repo: Box<dyn MacroRepository>) -> Self {
+        self.macro_repo = Some(repo);
+        self
+    }
+
+    /// Set custom macro executor (for testing)
+    pub(crate) fn with_macro_executor(mut self, executor: Box<dyn MacroExecutor>) -> Self {
+        self.macro_executor = Some(executor);
         self
     }
 

@@ -54,4 +54,24 @@ pub enum TabAction {
     // Settings specific
     ApplySettings,
     ResetDefaults,
+
+    // Collaboration specific
+    Create,
+    Join,
+    Leave,
+
+    // Macros specific
+    StartRecording,
+    StopRecording,
+    Playback,
+
+    // Headless session specific (Terminal tab)
+    ListSessions,
+    CreateSession,
+    DeleteSession,
+    LoadSession,
+    SaveSession,
+
+    // Performance specific (System tab)
+    Snapshot,
 }

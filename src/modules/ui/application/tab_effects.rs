@@ -7,8 +7,14 @@
 use super::handlers::TabAction;
 use super::services;
 use crate::modules::audit::domain::models::AuditAction;
+use crate::modules::collaboration::application::usecases as collaboration_usecases;
+use crate::modules::collaboration::domain::models::{
+    CollaborationId, Participant, ParticipantId, ParticipantRole, SharedMessageType,
+};
+use crate::modules::macros::application::usecases as macro_usecases;
+use crate::modules::macros::domain::models::MacroId;
 use crate::modules::session::domain::models::{Message, MessageRole, Session, SessionId};
-use crate::modules::ui::domain::models::AppState;
+use crate::modules::ui::domain::models::{AppState, ToastKind};
 use crate::presentation::tui::di::DIContainer;
 use crate::shared::kernel::result::AppResult;
 use crate::shared::kernel::types::Tab;
@@ -28,14 +34,15 @@ pub(crate) async fn apply_tab_effects(
         (Tab::Packages, TabAction::Refresh) => services::refresh_packages(state, di).await,
         (Tab::Database, _) => database_effects(state, action, di).await,
         (Tab::Logs, _) => logs_effects(state, action, di).await,
-        (Tab::System, TabAction::Refresh) | (Tab::System, TabAction::Select) => {
-            services::refresh_system_metrics(state, di).await
-        }
+        (Tab::System, _) => system_effects(state, action, di).await,
         (Tab::Skills, _) => skills_effects(state, action, di).await,
+        (Tab::Collaboration, _) => collaboration_effects(state, action, di).await,
+        (Tab::Macros, _) => macros_effects(state, action, di).await,
         (Tab::Terminal, TabAction::Execute) => {
             let command = state.terminal_tab_state.terminal_input.clone();
             run_shell_command(state, &command, ShellTarget::Terminal, di).await;
         }
+        (Tab::Terminal, _) => headless_session_effects(state, action, di).await,
         (Tab::Cli, TabAction::RunCommand(command)) => {
             let command = command.clone();
             state.cli_tab_state.command_input.clear();
@@ -304,6 +311,302 @@ async fn skills_effects(state: &mut AppState, action: &TabAction, di: &DIContain
     match action {
         TabAction::LoadSkill | TabAction::RunSkill => {
             services::record_audit_event(di, AuditAction::PluginLoad { name }).await;
+        }
+        _ => {}
+    }
+}
+
+/// Collaboration tab: sessions and shared messages via the collaboration
+/// repository use cases.
+async fn collaboration_effects(state: &mut AppState, action: &TabAction, di: &DIContainer) {
+    let Some(repo) = di.collaboration_repo() else {
+        return;
+    };
+
+    match action {
+        TabAction::Refresh => services::refresh_collaboration_sessions(state, di).await,
+        TabAction::Select => {
+            // Load the message history of the selected session.
+            let idx = state.collaboration_tab_state.selected_session_index;
+            if let Some(session) = state.collaboration_tab_state.sessions.get(idx).cloned() {
+                if let Ok(messages) = repo.get_messages(&session.id).await {
+                    state.collaboration_tab_state.messages = messages;
+                }
+            }
+        }
+        TabAction::Create => {
+            let name = state.collaboration_tab_state.input.trim().to_string();
+            if name.is_empty() {
+                return;
+            }
+            let ai_session = state
+                .agent_tab_state
+                .session_id
+                .clone()
+                .unwrap_or_else(|| "tui".to_string());
+            match collaboration_usecases::create_session(
+                repo,
+                name,
+                "local-user".to_string(),
+                ai_session,
+            )
+            .await
+            {
+                Ok(session) => {
+                    state.collaboration_tab_state.input.clear();
+                    state.collaboration_tab_state.is_host = true;
+                    state.collaboration_tab_state.local_participant_id = session
+                        .participants
+                        .first()
+                        .map(|p| p.id.as_str().to_string());
+                    state.join_collaboration(session.id.as_str().to_string());
+                    state.collaboration_state.participants = session.participants.clone();
+                }
+                Err(e) => {
+                    state.push_toast(ToastKind::Error, format!("Create session failed: {e}"));
+                }
+            }
+            services::refresh_collaboration_sessions(state, di).await;
+        }
+        TabAction::Join => {
+            let idx = state.collaboration_tab_state.selected_session_index;
+            let Some(session) = state.collaboration_tab_state.sessions.get(idx).cloned() else {
+                return;
+            };
+            let participant = Participant {
+                id: ParticipantId::from_string(uuid::Uuid::new_v4().to_string()),
+                name: "local-user".to_string(),
+                role: ParticipantRole::Editor,
+                joined_at: chrono::Utc::now(),
+                is_online: true,
+                cursor_position: None,
+            };
+            match collaboration_usecases::join_session(repo, &session.id, participant.clone()).await
+            {
+                Ok(updated) => {
+                    state.collaboration_tab_state.is_host = false;
+                    state.collaboration_tab_state.local_participant_id =
+                        Some(participant.id.as_str().to_string());
+                    state.join_collaboration(updated.id.as_str().to_string());
+                    state.collaboration_state.participants = updated.participants.clone();
+                    if let Ok(messages) = repo.get_messages(&updated.id).await {
+                        state.collaboration_tab_state.messages = messages;
+                    }
+                }
+                Err(e) => {
+                    state.push_toast(ToastKind::Error, format!("Join session failed: {e}"));
+                }
+            }
+            services::refresh_collaboration_sessions(state, di).await;
+        }
+        TabAction::Leave => {
+            let session_id = state.collaboration_state.session_id.clone();
+            let participant_id = state.collaboration_tab_state.local_participant_id.clone();
+            if let (Some(sid), Some(pid)) = (session_id, participant_id) {
+                let cid = CollaborationId::from_string(sid);
+                let pid = ParticipantId::from_string(pid);
+                if let Err(e) = collaboration_usecases::leave_session(repo, &cid, &pid).await {
+                    state.push_toast(ToastKind::Error, format!("Leave session failed: {e}"));
+                }
+            }
+            state.leave_collaboration();
+            state.collaboration_tab_state.is_host = false;
+            state.collaboration_tab_state.local_participant_id = None;
+            state.collaboration_tab_state.messages.clear();
+            services::refresh_collaboration_sessions(state, di).await;
+        }
+        TabAction::SendMessage(content) => {
+            let session_id = state.collaboration_state.session_id.clone();
+            let sender_id = state.collaboration_tab_state.local_participant_id.clone();
+            let (Some(sid), Some(pid)) = (session_id, sender_id) else {
+                return;
+            };
+            let cid = CollaborationId::from_string(sid);
+            match collaboration_usecases::send_message(
+                repo,
+                &cid,
+                ParticipantId::from_string(pid),
+                content.clone(),
+                SharedMessageType::Chat,
+            )
+            .await
+            {
+                Ok(_) => {
+                    if let Ok(messages) = repo.get_messages(&cid).await {
+                        state.collaboration_tab_state.messages = messages;
+                    }
+                }
+                Err(e) => {
+                    state.push_toast(ToastKind::Error, format!("Send message failed: {e}"));
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Macros tab: recording/playback/deletion via the macro repository and
+/// executor use cases.
+async fn macros_effects(state: &mut AppState, action: &TabAction, di: &DIContainer) {
+    match action {
+        TabAction::Refresh => services::refresh_macros(state, di).await,
+        TabAction::StartRecording => {
+            let Some(repo) = di.macro_repo() else {
+                return;
+            };
+            let name = {
+                let input = state.macros_tab_state.input.trim();
+                if input.is_empty() {
+                    format!("macro-{}", state.macros_tab_state.macros.len() + 1)
+                } else {
+                    input.to_string()
+                }
+            };
+            match macro_usecases::start_recording(repo, name, String::new()).await {
+                Ok(id) => {
+                    state.macros_tab_state.input.clear();
+                    state.macros_tab_state.recording_id = Some(id.as_str().to_string());
+                    state.macros_tab_state.status = Some(format!("recording {id}"));
+                    // Keep the legacy macro state in sync.
+                    state.start_macro_recording(id.as_str().to_string());
+                }
+                Err(e) => {
+                    state.macros_tab_state.status = Some(format!("record failed: {e}"));
+                }
+            }
+            services::refresh_macros(state, di).await;
+        }
+        TabAction::StopRecording => {
+            let Some(repo) = di.macro_repo() else {
+                return;
+            };
+            let Some(id_str) = state.macros_tab_state.recording_id.take() else {
+                return;
+            };
+            let id = MacroId::from_string(id_str);
+            state.macros_tab_state.status = match macro_usecases::stop_recording(repo, &id).await {
+                Ok(Some(m)) => Some(format!("saved {} ({} steps)", m.name, m.step_count())),
+                Ok(None) => Some("no active recording".to_string()),
+                Err(e) => Some(format!("stop failed: {e}")),
+            };
+            state.stop_macro_recording();
+            services::refresh_macros(state, di).await;
+        }
+        TabAction::Playback => {
+            let (Some(repo), Some(executor)) = (di.macro_repo(), di.macro_executor()) else {
+                return;
+            };
+            let Some(mut macro_def) = state
+                .macros_tab_state
+                .macros
+                .get(state.macros_tab_state.selected_index)
+                .cloned()
+            else {
+                return;
+            };
+            macro_def.increment_usage();
+            let _ = repo.save(&macro_def).await;
+            state.macros_tab_state.status =
+                match macro_usecases::playback_macro(executor, &macro_def, None).await {
+                    Ok(result) => Some(format!(
+                        "playback {}: {} step(s), success={}",
+                        macro_def.name,
+                        result.step_results.len(),
+                        result.success
+                    )),
+                    Err(e) => Some(format!("playback failed: {e}")),
+                };
+            services::refresh_macros(state, di).await;
+        }
+        TabAction::Delete => {
+            let Some(repo) = di.macro_repo() else {
+                return;
+            };
+            let idx = state.macros_tab_state.selected_index;
+            let Some(macro_def) = state.macros_tab_state.macros.get(idx).cloned() else {
+                return;
+            };
+            state.macros_tab_state.status =
+                match macro_usecases::delete_macro(repo, &macro_def.id).await {
+                    Ok(()) => Some(format!("deleted {}", macro_def.name)),
+                    Err(e) => Some(format!("delete failed: {e}")),
+                };
+            services::refresh_macros(state, di).await;
+        }
+        _ => {}
+    }
+}
+
+/// Terminal tab: headless session management via the headless use case.
+async fn headless_session_effects(state: &mut AppState, action: &TabAction, di: &DIContainer) {
+    let Some(use_case) = di.execute_headless_use_case() else {
+        return;
+    };
+
+    let selected_session = |state: &AppState| {
+        state
+            .terminal_tab_state
+            .headless_sessions
+            .get(state.terminal_tab_state.selected_session_index)
+            .cloned()
+    };
+
+    let result = match action {
+        TabAction::ListSessions => None,
+        TabAction::CreateSession => Some(match use_case.create_session().await {
+            Ok(id) => format!("created headless session {id}"),
+            Err(e) => e.to_string(),
+        }),
+        TabAction::DeleteSession => match selected_session(state) {
+            Some(id) => Some(match use_case.delete_session(&id).await {
+                Ok(()) => format!("deleted headless session {id}"),
+                Err(e) => e.to_string(),
+            }),
+            None => Some("no headless session selected".to_string()),
+        },
+        TabAction::LoadSession => match selected_session(state) {
+            Some(id) => Some(match use_case.load_session(&id).await {
+                Ok(()) => format!("loaded headless session {id}"),
+                Err(e) => e.to_string(),
+            }),
+            None => Some("no headless session selected".to_string()),
+        },
+        TabAction::SaveSession => match selected_session(state) {
+            Some(id) => Some(match use_case.save_session(&id).await {
+                Ok(()) => format!("saved headless session {id}"),
+                Err(e) => e.to_string(),
+            }),
+            None => Some("no headless session selected".to_string()),
+        },
+        _ => return,
+    };
+
+    if let Some(line) = result {
+        state.terminal_tab_state.output.push(line);
+    }
+    services::refresh_headless_sessions(state, di).await;
+}
+
+/// System tab: host metrics plus performance analysis, snapshots and
+/// optimization suggestions via the performance use case.
+async fn system_effects(state: &mut AppState, action: &TabAction, di: &DIContainer) {
+    match action {
+        TabAction::Refresh | TabAction::Select => {
+            services::refresh_system_metrics(state, di).await;
+            services::refresh_performance(state, di).await;
+        }
+        TabAction::Snapshot => {
+            if let Some(use_case) = di.analyze_performance_use_case() {
+                let name = format!("tui-{}", chrono::Utc::now().format("%H:%M:%S"));
+                match use_case.create_snapshot(name).await {
+                    Ok(snapshot) => state.push_toast(
+                        ToastKind::Success,
+                        format!("Snapshot saved: {}", snapshot.name),
+                    ),
+                    Err(e) => state.push_toast(ToastKind::Error, format!("Snapshot failed: {e}")),
+                }
+            }
+            services::refresh_performance(state, di).await;
         }
         _ => {}
     }

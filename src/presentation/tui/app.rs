@@ -154,6 +154,12 @@ impl TUIApp {
                 Tab::Cli => {
                     self.state.cli_tab_state.command_input.pop();
                 }
+                Tab::Collaboration => {
+                    self.state.collaboration_tab_state.input.pop();
+                }
+                Tab::Macros => {
+                    self.state.macros_tab_state.input.pop();
+                }
                 _ => {}
             },
             KeyCode::Char('f') if key.modifiers.is_empty() => {
@@ -192,6 +198,26 @@ impl TUIApp {
                     Some(TabAction::Execute)
                 }
             }
+            Tab::Collaboration => {
+                if self.state.collaboration_state.is_active
+                    && !self.state.collaboration_tab_state.input.is_empty()
+                {
+                    Some(TabAction::SendMessage(
+                        self.state.collaboration_tab_state.input.clone(),
+                    ))
+                } else {
+                    Some(TabAction::Select)
+                }
+            }
+            Tab::Macros => {
+                if self.state.macros_tab_state.recording {
+                    Some(TabAction::StopRecording)
+                } else if !self.state.macros_tab_state.input.is_empty() {
+                    Some(TabAction::StartRecording)
+                } else {
+                    Some(TabAction::Playback)
+                }
+            }
             _ => Some(TabAction::Select),
         };
         if let Some(action) = action {
@@ -211,6 +237,12 @@ impl TUIApp {
             }
             Tab::Cli => {
                 self.state.cli_tab_state.command_input.push(c);
+            }
+            Tab::Collaboration => {
+                self.state.collaboration_tab_state.input.push(c);
+            }
+            Tab::Macros => {
+                self.state.macros_tab_state.input.push(c);
             }
             Tab::Git => match c {
                 's' => {
@@ -365,6 +397,72 @@ impl TUIApp {
                     &self.di,
                 )
                 .await?;
+                true
+            }
+            (Tab::Terminal, "List Sessions") => {
+                handle_tab_action(&mut self.state, TabAction::ListSessions, &self.di).await?;
+                true
+            }
+            (Tab::Terminal, "New Session") => {
+                handle_tab_action(&mut self.state, TabAction::CreateSession, &self.di).await?;
+                true
+            }
+            (Tab::Terminal, "Load Session") => {
+                handle_tab_action(&mut self.state, TabAction::LoadSession, &self.di).await?;
+                true
+            }
+            (Tab::Terminal, "Save Session") => {
+                handle_tab_action(&mut self.state, TabAction::SaveSession, &self.di).await?;
+                true
+            }
+            (Tab::Terminal, "Delete Session") => {
+                handle_tab_action(&mut self.state, TabAction::DeleteSession, &self.di).await?;
+                true
+            }
+            (Tab::System, "Snapshot") => {
+                handle_tab_action(&mut self.state, TabAction::Snapshot, &self.di).await?;
+                true
+            }
+            (Tab::Collaboration, "New Session") => {
+                handle_tab_action(&mut self.state, TabAction::Create, &self.di).await?;
+                true
+            }
+            (Tab::Collaboration, "Join") => {
+                handle_tab_action(&mut self.state, TabAction::Join, &self.di).await?;
+                true
+            }
+            (Tab::Collaboration, "Leave") => {
+                handle_tab_action(&mut self.state, TabAction::Leave, &self.di).await?;
+                true
+            }
+            (Tab::Collaboration, "Send") => {
+                let content = self.state.collaboration_tab_state.input.clone();
+                handle_tab_action(&mut self.state, TabAction::SendMessage(content), &self.di)
+                    .await?;
+                true
+            }
+            (Tab::Collaboration, "Refresh") => {
+                handle_tab_action(&mut self.state, TabAction::Refresh, &self.di).await?;
+                true
+            }
+            (Tab::Macros, "Record") => {
+                handle_tab_action(&mut self.state, TabAction::StartRecording, &self.di).await?;
+                true
+            }
+            (Tab::Macros, "Stop") => {
+                handle_tab_action(&mut self.state, TabAction::StopRecording, &self.di).await?;
+                true
+            }
+            (Tab::Macros, "Playback") => {
+                handle_tab_action(&mut self.state, TabAction::Playback, &self.di).await?;
+                true
+            }
+            (Tab::Macros, "Delete") => {
+                handle_tab_action(&mut self.state, TabAction::Delete, &self.di).await?;
+                true
+            }
+            (Tab::Macros, "Refresh") => {
+                handle_tab_action(&mut self.state, TabAction::Refresh, &self.di).await?;
                 true
             }
             _ => false,

@@ -110,6 +110,15 @@ pub fn get_tab_specific_commands(tab: Tab) -> Vec<Command> {
             Command::new("Split", None, "Split terminal"),
             Command::new("Clear", Some("Ctrl+L"), "Clear terminal"),
             Command::new("Kill Process", None, "Kill current process"),
+            Command::new("List Sessions", None, "List headless sessions"),
+            Command::new("New Session", None, "Create a headless session"),
+            Command::new("Load Session", None, "Load the selected headless session"),
+            Command::new("Save Session", None, "Save the selected headless session"),
+            Command::new(
+                "Delete Session",
+                None,
+                "Delete the selected headless session",
+            ),
             Command::new("Settings", None, "Terminal settings"),
         ],
         Tab::Snippets => vec![
@@ -152,6 +161,7 @@ pub fn get_tab_specific_commands(tab: Tab) -> Vec<Command> {
         ],
         Tab::System => vec![
             Command::new("Refresh", Some("Ctrl+R"), "Refresh system info"),
+            Command::new("Snapshot", None, "Save a performance snapshot"),
             Command::new("Kill Process", None, "Kill selected process"),
             Command::new("Alerts", None, "Configure alerts"),
             Command::new("Settings", None, "System settings"),
@@ -182,6 +192,20 @@ pub fn get_tab_specific_commands(tab: Tab) -> Vec<Command> {
             Command::new("Execute", None, "Execute CLI command"),
             Command::new("History", None, "Command history"),
             Command::new("Settings", None, "CLI settings"),
+        ],
+        Tab::Collaboration => vec![
+            Command::new("New Session", None, "Create a collaboration session"),
+            Command::new("Join", None, "Join the selected session"),
+            Command::new("Leave", None, "Leave the joined session"),
+            Command::new("Send", None, "Send the input as a chat message"),
+            Command::new("Refresh", None, "Reload sessions and messages"),
+        ],
+        Tab::Macros => vec![
+            Command::new("Record", None, "Start recording a macro"),
+            Command::new("Stop", None, "Stop the active recording"),
+            Command::new("Playback", None, "Run the selected macro"),
+            Command::new("Delete", None, "Delete the selected macro"),
+            Command::new("Refresh", None, "Reload the macro list"),
         ],
     };
 

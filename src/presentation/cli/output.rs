@@ -5,10 +5,14 @@
 
 use crate::modules::audit::domain::models::AuditEntry;
 use crate::modules::automation::domain::models::issue_pr::AutomationWorkflow;
+use crate::modules::collaboration::domain::models::CollaborationSession;
 use crate::modules::guardrails::domain::models::guardrail::GuardrailCheck;
+use crate::modules::macros::domain::models::Macro;
 use crate::modules::onboarding::domain::models::codebase_analysis::CodebaseAnalysis;
 use crate::modules::performance::application::usecases::analyze_performance::PerformanceAnalysisResult;
-use crate::modules::performance::domain::models::metrics::PerformanceSnapshot;
+use crate::modules::performance::domain::models::metrics::{
+    OptimizationSuggestion, PerformanceSnapshot,
+};
 use crate::modules::session::domain::models::Session;
 use crate::modules::share::domain::models::share_link::ShareLink;
 use crate::modules::subagents::domain::models::subagent::Subagent;
@@ -147,6 +151,104 @@ pub(crate) fn print_performance_report(result: &PerformanceAnalysisResult) {
                 suggestion.estimated_improvement * 100.0
             );
         }
+    }
+}
+
+pub(crate) fn print_snapshot_list(snapshots: &[PerformanceSnapshot]) {
+    if snapshots.is_empty() {
+        println!("No performance snapshots found.");
+        return;
+    }
+
+    println!("Performance snapshots:");
+    for snapshot in snapshots {
+        println!(
+            "  - {} ({}) @ {}",
+            snapshot.name, snapshot.id, snapshot.created_at
+        );
+    }
+}
+
+pub(crate) fn print_suggestions(suggestions: &[OptimizationSuggestion]) {
+    if suggestions.is_empty() {
+        println!("No optimization suggestions.");
+        return;
+    }
+
+    println!("Optimization suggestions:");
+    for suggestion in suggestions {
+        println!(
+            "  - [{:?}] {} (improvement: {:.0}%)",
+            suggestion.impact,
+            suggestion.title,
+            suggestion.estimated_improvement * 100.0
+        );
+    }
+}
+
+pub(crate) fn print_collaboration_sessions(sessions: &[CollaborationSession]) {
+    if sessions.is_empty() {
+        println!("No active collaboration sessions.");
+        return;
+    }
+
+    println!("Collaboration sessions:");
+    for session in sessions {
+        println!(
+            "  - {} ({}) [{:?}] participants={}",
+            session.name,
+            session.id.as_str(),
+            session.status,
+            session.participants.len()
+        );
+    }
+}
+
+pub(crate) fn print_collaboration_session(session: &CollaborationSession) {
+    println!("Collaboration session:");
+    println!("  ID:           {}", session.id.as_str());
+    println!("  Name:         {}", session.name);
+    println!("  Status:       {:?}", session.status);
+    println!("  AI session:   {}", session.session_id);
+    println!("  Participants: {}", session.participants.len());
+    for participant in &session.participants {
+        println!(
+            "    - {} ({}) {:?} online={}",
+            participant.name,
+            participant.id.as_str(),
+            participant.role,
+            participant.is_online
+        );
+    }
+}
+
+pub(crate) fn print_macro_list(macros: &[Macro]) {
+    if macros.is_empty() {
+        println!("No macros found.");
+        return;
+    }
+
+    println!("Macros:");
+    for macro_def in macros {
+        println!(
+            "  - {} ({}): {} steps, {} uses",
+            macro_def.name,
+            macro_def.id.as_str(),
+            macro_def.step_count(),
+            macro_def.usage_count
+        );
+    }
+}
+
+pub(crate) fn print_headless_sessions(sessions: &[String]) {
+    if sessions.is_empty() {
+        println!("No headless sessions found.");
+        return;
+    }
+
+    println!("Headless sessions:");
+    for session_id in sessions {
+        println!("  - {session_id}");
     }
 }
 

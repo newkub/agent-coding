@@ -44,9 +44,13 @@ impl AppState {
         .await;
         refresh_audit_logs(self, di).await;
         refresh_system_metrics(self, di).await;
+        refresh_performance(self, di).await;
         refresh_database_tables(self, di).await;
         refresh_skills(self, di).await;
         refresh_workflows(self, di);
+        refresh_collaboration_sessions(self, di).await;
+        refresh_macros(self, di).await;
+        refresh_headless_sessions(self, di).await;
         seed_notes(self);
         Ok(())
     }
@@ -287,6 +291,91 @@ pub(crate) fn refresh_workflows(state: &mut AppState, di: &DIContainer) {
                 step("Create pull request", config.auto_create_pr),
             ],
         }];
+    }
+}
+
+/// System tab: performance analysis (score + suggestions) and snapshot list
+/// via the `AnalyzePerformanceUseCase`.
+pub(crate) async fn refresh_performance(state: &mut AppState, di: &DIContainer) {
+    let Some(use_case) = di.analyze_performance_use_case() else {
+        return;
+    };
+
+    if let Ok(result) = use_case.analyze_current().await {
+        state.system_tab_state.performance_score = Some(result.score);
+        if !result.is_healthy {
+            state
+                .system_tab_state
+                .alerts
+                .push("Performance degraded".to_string());
+        }
+        state.system_tab_state.suggestions = result
+            .suggestions
+            .iter()
+            .map(|s| {
+                format!(
+                    "[{:?}] {} (+{:.0}%)",
+                    s.impact,
+                    s.title,
+                    s.estimated_improvement * 100.0
+                )
+            })
+            .collect();
+    }
+
+    if let Ok(snapshots) = use_case.list_snapshots().await {
+        state.system_tab_state.snapshots = snapshots
+            .iter()
+            .map(|s| format!("{} ({})", s.name, s.id))
+            .collect();
+    }
+}
+
+/// Collaboration tab: active sessions from the collaboration repository.
+pub(crate) async fn refresh_collaboration_sessions(state: &mut AppState, di: &DIContainer) {
+    let Some(repo) = di.collaboration_repo() else {
+        return;
+    };
+    if let Ok(sessions) = repo.find_active().await {
+        state.collaboration_tab_state.sessions = sessions;
+        let max = state
+            .collaboration_tab_state
+            .sessions
+            .len()
+            .saturating_sub(1);
+        state.collaboration_tab_state.selected_session_index = state
+            .collaboration_tab_state
+            .selected_session_index
+            .min(max);
+    }
+}
+
+/// Macros tab: all macros from the macro repository.
+pub(crate) async fn refresh_macros(state: &mut AppState, di: &DIContainer) {
+    let Some(repo) = di.macro_repo() else {
+        return;
+    };
+    if let Ok(macros) = crate::modules::macros::application::usecases::list_macros(repo).await {
+        state.macros_tab_state.macros = macros;
+        let max = state.macros_tab_state.macros.len().saturating_sub(1);
+        state.macros_tab_state.selected_index = state.macros_tab_state.selected_index.min(max);
+    }
+}
+
+/// Terminal tab: headless session ids from the headless session manager.
+pub(crate) async fn refresh_headless_sessions(state: &mut AppState, di: &DIContainer) {
+    let Some(use_case) = di.execute_headless_use_case() else {
+        return;
+    };
+    if let Ok(sessions) = use_case.list_sessions().await {
+        state.terminal_tab_state.headless_sessions = sessions;
+        let max = state
+            .terminal_tab_state
+            .headless_sessions
+            .len()
+            .saturating_sub(1);
+        state.terminal_tab_state.selected_session_index =
+            state.terminal_tab_state.selected_session_index.min(max);
     }
 }
 

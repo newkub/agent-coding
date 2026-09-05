@@ -189,6 +189,179 @@ pub(crate) fn render_workflows_tab(state: &AppState) -> TabColumns {
     TabColumns::new(left, center, right)
 }
 
+/// Render Collaboration tab columns — backed by `collaboration_tab_state`
+/// (sessions/messages from the collaboration repository)
+pub(crate) fn render_collaboration_tab(state: &AppState) -> TabColumns {
+    let tab_state = &state.collaboration_tab_state;
+
+    let left = {
+        let items: Vec<String> = tab_state
+            .sessions
+            .iter()
+            .take(20)
+            .enumerate()
+            .map(|(i, s)| {
+                let marker = if i == tab_state.selected_session_index {
+                    ">"
+                } else {
+                    " "
+                };
+                format!(
+                    "{marker} {} ({:?}, {} peers)",
+                    s.name,
+                    s.status,
+                    s.participants.len()
+                )
+            })
+            .collect();
+        if items.is_empty() {
+            "(no sessions — Ctrl+K → New Session)".to_string()
+        } else {
+            items.join("\n")
+        }
+    };
+
+    let center = if tab_state.messages.is_empty() {
+        if tab_state.input.is_empty() {
+            "(no messages — join a session, then type and press Enter)".to_string()
+        } else {
+            format!("Input:\n> {}", tab_state.input)
+        }
+    } else {
+        let history = tab_state
+            .messages
+            .iter()
+            .rev()
+            .take(30)
+            .rev()
+            .map(|m| {
+                format!(
+                    "[{}] {}: {}",
+                    m.timestamp.format("%H:%M:%S"),
+                    m.sender_id.as_str(),
+                    m.content
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        if tab_state.input.is_empty() {
+            history
+        } else {
+            format!("{history}\n\n> {}", tab_state.input)
+        }
+    };
+
+    let right = {
+        let participants = tab_state
+            .sessions
+            .get(tab_state.selected_session_index)
+            .map(|s| {
+                s.participants
+                    .iter()
+                    .map(|p| {
+                        format!(
+                            "  {} {:?}{}",
+                            p.name,
+                            p.role,
+                            if p.is_online { " (online)" } else { "" }
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            })
+            .unwrap_or_else(|| "  (none)".to_string());
+        format!(
+            "Joined: {}\nHost: {}\n\nParticipants:\n{}\n\n[Enter] Select/Send\n[Ctrl+K] Actions",
+            if state.collaboration_state.is_active {
+                state
+                    .collaboration_state
+                    .session_id
+                    .as_deref()
+                    .unwrap_or("yes")
+            } else {
+                "no"
+            },
+            tab_state.is_host,
+            participants,
+        )
+    };
+
+    TabColumns::new(left, center, right)
+}
+
+/// Render Macros tab columns — backed by `macros_tab_state`
+/// (macros from the macro repository)
+pub(crate) fn render_macros_tab(state: &AppState) -> TabColumns {
+    let tab_state = &state.macros_tab_state;
+
+    let left = {
+        let items: Vec<String> = tab_state
+            .macros
+            .iter()
+            .take(20)
+            .enumerate()
+            .map(|(i, m)| {
+                let marker = if i == tab_state.selected_index {
+                    ">"
+                } else {
+                    " "
+                };
+                format!(
+                    "{marker} {} ({} steps, {} uses)",
+                    m.name,
+                    m.step_count(),
+                    m.usage_count
+                )
+            })
+            .collect();
+        if items.is_empty() {
+            "(no macros — type a name, Enter records)".to_string()
+        } else {
+            items.join("\n")
+        }
+    };
+
+    let center = match tab_state.macros.get(tab_state.selected_index) {
+        Some(m) => {
+            let steps = m
+                .steps
+                .iter()
+                .enumerate()
+                .map(|(i, s)| format!("  {}. {:?}", i + 1, s))
+                .collect::<Vec<_>>()
+                .join("\n");
+            format!(
+                "{}\n{}\n\nSteps:\n{}",
+                m.name,
+                if m.description.is_empty() {
+                    "(no description)"
+                } else {
+                    m.description.as_str()
+                },
+                if steps.is_empty() {
+                    "  (empty)".to_string()
+                } else {
+                    steps
+                },
+            )
+        }
+        None => "No macro selected".to_string(),
+    };
+
+    let right = format!(
+        "Recording: {}\nStatus: {}\nInput: {}\n\n[Enter] Record/Stop/Playback\n[Ctrl+K] Actions",
+        if tab_state.recording {
+            tab_state.recording_id.as_deref().unwrap_or("starting…")
+        } else {
+            "off"
+        },
+        tab_state.status.as_deref().unwrap_or("idle"),
+        tab_state.input,
+    );
+
+    TabColumns::new(left, center, right)
+}
+
 /// Render Settings tab columns — shows the real loaded settings
 pub(crate) fn render_settings_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.settings_tab_state;

@@ -1,22 +1,18 @@
 // Performance handler - delegates to the AnalyzePerformanceUseCase
-// Wires the concrete adapters (metrics collector, snapshot manager, optimization manager)
-// through the use case and renders the result.
+// obtained from the DI container (SystemMetricsCollector +
+// InMemorySnapshotManager + InMemoryOptimizationManager) and renders the result.
 
-use crate::adapters::external::metrics_collector::SystemMetricsCollector;
-use crate::adapters::external::optimization_manager::InMemoryOptimizationManager;
-use crate::adapters::external::snapshot_manager::InMemorySnapshotManager;
-use crate::modules::performance::application::usecases::analyze_performance::AnalyzePerformanceUseCase;
 use crate::presentation::cli::output;
-use crate::shared::kernel::result::AppResult;
+use crate::presentation::tui::di::DIContainer;
+use crate::shared::kernel::result::{AppError, AppResult};
 
 pub(crate) async fn run(action: String) -> AppResult<()> {
     output::print_section(&format!("Performance action: {}", action));
 
-    let collector = SystemMetricsCollector::new();
-    let snapshot_manager = InMemorySnapshotManager::new();
-    let optimization_manager = InMemoryOptimizationManager::new();
-    let use_case =
-        AnalyzePerformanceUseCase::new(collector, snapshot_manager, optimization_manager);
+    let container = DIContainer::new().build().await?;
+    let use_case = container
+        .analyze_performance_use_case()
+        .ok_or_else(|| AppError::State("Analyze performance use case not available".to_string()))?;
 
     match action.as_str() {
         "analyze" => match use_case.analyze_current().await {
@@ -30,6 +26,14 @@ pub(crate) async fn run(action: String) -> AppResult<()> {
         "report" => match use_case.analyze_current().await {
             Ok(result) => output::print_performance_report(&result),
             Err(e) => output::print_error(&format!("Error generating report: {}", e)),
+        },
+        "list" => match use_case.list_snapshots().await {
+            Ok(snapshots) => output::print_snapshot_list(&snapshots),
+            Err(e) => output::print_error(&format!("Error listing snapshots: {}", e)),
+        },
+        "suggestions" => match use_case.get_suggestions().await {
+            Ok(suggestions) => output::print_suggestions(&suggestions),
+            Err(e) => output::print_error(&format!("Error listing suggestions: {}", e)),
         },
         other => output::print_error(&format!("Unknown action: {}", other)),
     }

@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Main application tabs - 17 tabs total
+/// Main application tabs - 19 tabs total
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum Tab {
     #[default]
@@ -23,10 +23,12 @@ pub enum Tab {
     Workflows,
     Settings,
     Cli,
+    Collaboration,
+    Macros,
 }
 
 impl Tab {
-    pub const fn all() -> [Self; 17] {
+    pub const fn all() -> [Self; 19] {
         [
             Self::Agent,
             Self::Packages,
@@ -45,6 +47,8 @@ impl Tab {
             Self::Workflows,
             Self::Settings,
             Self::Cli,
+            Self::Collaboration,
+            Self::Macros,
         ]
     }
 
@@ -66,13 +70,15 @@ impl Tab {
             Self::Skills => Self::Workflows,
             Self::Workflows => Self::Settings,
             Self::Settings => Self::Cli,
-            Self::Cli => Self::Agent,
+            Self::Cli => Self::Collaboration,
+            Self::Collaboration => Self::Macros,
+            Self::Macros => Self::Agent,
         }
     }
 
     pub const fn prev(self) -> Self {
         match self {
-            Self::Agent => Self::Cli,
+            Self::Agent => Self::Macros,
             Self::Packages => Self::Agent,
             Self::Files => Self::Packages,
             Self::Git => Self::Files,
@@ -89,6 +95,8 @@ impl Tab {
             Self::Workflows => Self::Skills,
             Self::Settings => Self::Workflows,
             Self::Cli => Self::Settings,
+            Self::Collaboration => Self::Cli,
+            Self::Macros => Self::Collaboration,
         }
     }
 
@@ -111,12 +119,14 @@ impl Tab {
             Self::Workflows => "Workflows",
             Self::Settings => "Settings",
             Self::Cli => "CLI",
+            Self::Collaboration => "Collab",
+            Self::Macros => "Macros",
         }
     }
 
     /// Get tab count
     pub const fn count() -> usize {
-        17
+        19
     }
 }
 

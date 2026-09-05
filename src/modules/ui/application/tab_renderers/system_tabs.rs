@@ -96,10 +96,25 @@ pub(crate) fn render_system_tab(state: &AppState) -> TabColumns {
         .map(|(label, value)| format!("{label}\n\n{value}"))
         .unwrap_or_else(|| "Select a metric".to_string());
 
-    let right = if tab_state.alerts.is_empty() {
-        "Alerts: none\n\n[r] Refresh".to_string()
-    } else {
-        format!("Alerts:\n{}", tab_state.alerts.join("\n"))
+    let right = {
+        let mut lines = Vec::new();
+        if let Some(score) = tab_state.performance_score {
+            lines.push(format!("Perf score: {score:.1}/100"));
+        }
+        if !tab_state.snapshots.is_empty() {
+            lines.push(format!("Snapshots: {}", tab_state.snapshots.len()));
+        }
+        if !tab_state.suggestions.is_empty() {
+            lines.push("Suggestions:".to_string());
+            lines.extend(tab_state.suggestions.iter().take(8).cloned());
+        }
+        if tab_state.alerts.is_empty() {
+            lines.push("Alerts: none".to_string());
+        } else {
+            lines.push(format!("Alerts:\n{}", tab_state.alerts.join("\n")));
+        }
+        lines.push("[r] Refresh  [Ctrl+K → Snapshot]".to_string());
+        lines.join("\n")
     };
 
     TabColumns::new(left, center, right)

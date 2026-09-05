@@ -59,12 +59,20 @@ fn test_ui_state_next_tab() {
     state.next_tab();
     assert_eq!(state.current_tab, Tab::Cli);
     state.next_tab();
+    assert_eq!(state.current_tab, Tab::Collaboration);
+    state.next_tab();
+    assert_eq!(state.current_tab, Tab::Macros);
+    state.next_tab();
     assert_eq!(state.current_tab, Tab::Agent);
 }
 
 #[test]
 fn test_ui_state_prev_tab() {
     let mut state = UIState::new();
+    state.prev_tab();
+    assert_eq!(state.current_tab, Tab::Macros);
+    state.prev_tab();
+    assert_eq!(state.current_tab, Tab::Collaboration);
     state.prev_tab();
     assert_eq!(state.current_tab, Tab::Cli);
     state.prev_tab();

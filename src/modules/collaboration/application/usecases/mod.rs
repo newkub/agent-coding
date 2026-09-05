@@ -14,7 +14,7 @@ pub(crate) async fn create_session<R>(
     session_id: String,
 ) -> AppResult<CollaborationSession>
 where
-    R: CollaborationRepository,
+    R: CollaborationRepository + ?Sized,
 {
     // Side effects (ID generation, timestamp) in application layer
     let owner_id = ParticipantId::from_string(uuid::Uuid::new_v4().to_string());
@@ -44,7 +44,7 @@ pub(crate) async fn join_session<R>(
     participant: Participant,
 ) -> AppResult<CollaborationSession>
 where
-    R: CollaborationRepository,
+    R: CollaborationRepository + ?Sized,
 {
     let mut session = repo.find_by_id(collaboration_id).await?.ok_or_else(|| {
         crate::shared::kernel::result::AppError::State(
@@ -66,7 +66,7 @@ pub(crate) async fn update_cursor<R>(
     position: CursorPosition,
 ) -> AppResult<()>
 where
-    R: CollaborationRepository,
+    R: CollaborationRepository + ?Sized,
 {
     let mut session = repo.find_by_id(collaboration_id).await?.ok_or_else(|| {
         crate::shared::kernel::result::AppError::State(
@@ -87,7 +87,7 @@ pub(crate) async fn leave_session<R>(
     participant_id: &ParticipantId,
 ) -> AppResult<CollaborationSession>
 where
-    R: CollaborationRepository,
+    R: CollaborationRepository + ?Sized,
 {
     let mut session = repo.find_by_id(collaboration_id).await?.ok_or_else(|| {
         crate::shared::kernel::result::AppError::State(
@@ -110,7 +110,7 @@ pub(crate) async fn send_message<R>(
     message_type: crate::modules::collaboration::domain::models::SharedMessageType,
 ) -> AppResult<SharedMessage>
 where
-    R: CollaborationRepository,
+    R: CollaborationRepository + ?Sized,
 {
     let message = SharedMessage {
         id: uuid::Uuid::new_v4().to_string(),

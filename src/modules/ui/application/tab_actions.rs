@@ -32,6 +32,8 @@ pub(crate) async fn handle_tab_action(
         Tab::Workflows => super::handlers::handle_workflows_action(state, action.clone()),
         Tab::Settings => super::handlers::handle_settings_action(state, action.clone()),
         Tab::Cli => super::handlers::handle_cli_action(state, action.clone()),
+        Tab::Collaboration => super::handlers::handle_collaboration_action(state, action.clone()),
+        Tab::Macros => super::handlers::handle_macros_action(state, action.clone()),
     }?;
 
     super::tab_effects::apply_tab_effects(state, &action, di).await
