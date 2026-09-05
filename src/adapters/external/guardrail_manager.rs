@@ -19,6 +19,8 @@ impl InMemoryGuardrailManager {
         }
     }
 
+    #[cfg(test)]
+    #[allow(dead_code)]
     pub(crate) async fn initialize_default_guardrails(&self) -> Result<(), AppError> {
         let default_guardrails = vec![
             (

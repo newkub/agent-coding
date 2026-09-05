@@ -12,7 +12,7 @@ fn test_check_guardrail_pass() {
         agent_tui::modules::guardrails::domain::models::guardrail::GuardrailType::SecurityCheck,
         "Test description".to_string(),
     );
-    let check = check_input_against_guardrail("safe input", &guardrail);
+    let check = check_input_against_guardrail("safe input", &guardrail).unwrap();
     assert!(check.passed);
 }
 
@@ -23,7 +23,7 @@ fn test_should_take_action() {
         agent_tui::modules::guardrails::domain::models::guardrail::GuardrailType::SecurityCheck,
         "Test description".to_string(),
     );
-    let check = check_input_against_guardrail("safe input", &guardrail);
+    let check = check_input_against_guardrail("safe input", &guardrail).unwrap();
     let action = should_take_action(&check);
     assert_eq!(action, GuardrailAction::Allow);
 }

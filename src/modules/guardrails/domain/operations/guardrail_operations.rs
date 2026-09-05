@@ -1,13 +1,19 @@
 use crate::modules::guardrails::domain::models::guardrail::{
-    Guardrail, GuardrailAction, GuardrailCheck, GuardrailRule, RuleType, Severity,
+    Guardrail, GuardrailAction, GuardrailCheck, GuardrailRule, RuleType,
 };
+use crate::shared::kernel::result::AppError;
 
-/// Pure function to check input against guardrail rules
-pub fn check_input_against_guardrail(input: &str, guardrail: &Guardrail) -> GuardrailCheck {
+/// Check input against guardrail rules.
+///
+/// Unsupported rule types return an explicit error instead of being skipped.
+pub fn check_input_against_guardrail(
+    input: &str,
+    guardrail: &Guardrail,
+) -> Result<GuardrailCheck, AppError> {
     let mut check = GuardrailCheck::new(guardrail.id.clone(), guardrail.name.clone());
 
     if !guardrail.is_enabled() {
-        return check;
+        return Ok(check);
     }
 
     for rule in &guardrail.rules {
@@ -15,27 +21,30 @@ pub fn check_input_against_guardrail(input: &str, guardrail: &Guardrail) -> Guar
             continue;
         }
 
-        if let Some(violation) = check_rule(input, rule) {
+        if let Some(violation) = check_rule(input, rule)? {
             check.add_violation(violation);
         }
     }
 
-    check
+    Ok(check)
 }
 
-/// Pure function to check a single rule
+/// Check a single rule and return an explicit error for unsupported types.
 fn check_rule(
     input: &str,
     rule: &GuardrailRule,
-) -> Option<crate::modules::guardrails::domain::models::guardrail::GuardrailViolation> {
+) -> Result<
+    Option<crate::modules::guardrails::domain::models::guardrail::GuardrailViolation>,
+    AppError,
+> {
     match &rule.rule_type {
         RuleType::PatternMatch => {
             if let Some(pattern) = &rule.pattern {
                 if input.contains(pattern) {
-                    return Some(create_violation(
+                    return Ok(Some(create_violation(
                         rule,
                         "Pattern matched in input".to_string(),
-                    ));
+                    )));
                 }
             }
         }
@@ -44,48 +53,73 @@ fn check_rule(
                 let input_lower = input.to_lowercase();
                 let pattern_lower = pattern.to_lowercase();
                 if input_lower.contains(&pattern_lower) {
-                    return Some(create_violation(
+                    return Ok(Some(create_violation(
                         rule,
-                        format!("Keyword '{}' detected", pattern),
-                    ));
+                        format!("Keyword '{pattern}' detected"),
+                    )));
                 }
             }
         }
         RuleType::LengthCheck => {
             if let Some(pattern) = &rule.pattern {
-                if let Ok(max_length) = pattern.parse::<usize>() {
-                    if input.len() > max_length {
-                        return Some(create_violation(
-                            rule,
-                            format!("Input exceeds maximum length of {}", max_length),
-                        ));
-                    }
+                let max_length = pattern.parse::<usize>().map_err(|_| {
+                    AppError::ValidationError(format!(
+                        "length-check rule '{}' requires a numeric pattern",
+                        rule.name
+                    ))
+                })?;
+                if input.len() > max_length {
+                    return Ok(Some(create_violation(
+                        rule,
+                        format!("Input exceeds maximum length of {max_length}"),
+                    )));
                 }
             }
         }
         RuleType::FormatValidation => {
             if let Some(pattern) = &rule.pattern {
-                if !regex::Regex::new(pattern)
-                    .map(|re| re.is_match(input))
-                    .unwrap_or(false)
-                {
-                    return Some(create_violation(
+                let regex = regex::Regex::new(pattern).map_err(|e| {
+                    AppError::ValidationError(format!(
+                        "format-validation rule '{}' has an invalid pattern: {e}",
+                        rule.name
+                    ))
+                })?;
+                if !regex.is_match(input) {
+                    return Ok(Some(create_violation(
                         rule,
                         "Input format validation failed".to_string(),
-                    ));
+                    )));
                 }
             }
         }
         RuleType::ContentClassification => {
-            // In a real implementation, this would use ML classification
-            // For now, we'll skip
+            let Some(pattern) = &rule.pattern else {
+                return Err(AppError::ValidationError(format!(
+                    "content-classification rule '{}' requires comma-separated terms",
+                    rule.name
+                )));
+            };
+            let input_lower = input.to_lowercase();
+            let matched = pattern
+                .split(',')
+                .map(str::trim)
+                .filter(|term| !term.is_empty())
+                .find(|term| input_lower.contains(&term.to_lowercase()));
+            if let Some(term) = matched {
+                return Ok(Some(create_violation(
+                    rule,
+                    format!("Classified content term '{term}' detected"),
+                )));
+            }
         }
-        RuleType::Custom(_) => {
-            // Custom rules would be handled by external logic
+        RuleType::Custom(name) => {
+            return Err(AppError::State(format!(
+                "custom guardrail rule '{name}' is not registered"
+            )));
         }
     }
 
-    None
+    Ok(None)
 }
 
 /// Pure function to create violation from rule
@@ -105,7 +139,8 @@ fn create_violation(
         rule_id: rule.id.clone(),
         rule_name: rule.name.clone(),
         message,
-        severity: Severity::Medium, // Would be configured per rule
+        severity: rule.severity.clone(),
+        action: rule.action.clone(),
         suggested_action,
     }
 }
@@ -116,19 +151,18 @@ pub fn should_take_action(check: &GuardrailCheck) -> GuardrailAction {
         return GuardrailAction::Allow;
     }
 
-    if check.has_critical_violations() {
-        return GuardrailAction::Block;
-    }
-
-    // Check for block actions in violations
-    for violation in &check.violations {
-        // In a real implementation, we'd check the rule's action
-        if matches!(violation.severity, Severity::High | Severity::Critical) {
-            return GuardrailAction::Block;
+    for action in [
+        GuardrailAction::Block,
+        GuardrailAction::Escalate,
+        GuardrailAction::Modify,
+        GuardrailAction::Warn,
+    ] {
+        if check.violations.iter().any(|v| v.action == action) {
+            return action;
         }
     }
 
-    GuardrailAction::Warn
+    GuardrailAction::Allow
 }
 
 /// Pure function to filter output based on guardrails
@@ -174,7 +208,7 @@ mod tests {
         )
         .with_rules(vec![rule]);
 
-        let check = check_input_against_guardrail("This is a secret key", &guardrail);
+        let check = check_input_against_guardrail("This is a secret key", &guardrail).unwrap();
         assert!(!check.passed);
     }
 
@@ -194,7 +228,7 @@ mod tests {
         )
         .with_rules(vec![rule]);
 
-        let check = check_input_against_guardrail("This is too long", &guardrail);
+        let check = check_input_against_guardrail("This is too long", &guardrail).unwrap();
         assert!(!check.passed);
     }
 

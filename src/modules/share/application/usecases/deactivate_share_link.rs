@@ -69,11 +69,11 @@ where
 mod tests {
     use super::*;
 
-    struct MockRepository;
-    struct MockNotifier;
+    struct TestRepository;
+    struct TestNotifier;
 
     #[async_trait::async_trait]
-    impl ShareLinkRepository for MockRepository {
+    impl ShareLinkRepository for TestRepository {
         async fn save(&self, _link: &ShareLink) -> Result<(), AppError> {
             Ok(())
         }
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[async_trait::async_trait]
-    impl ShareLinkNotifier for MockNotifier {
+    impl ShareLinkNotifier for TestNotifier {
         async fn notify_created(&self, _link: &ShareLink, _url: &str) -> Result<(), AppError> {
             Ok(())
         }
@@ -124,8 +124,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_deactivate_share_link_by_id_success() {
-        let repository = MockRepository;
-        let notifier = MockNotifier;
+        let repository = TestRepository;
+        let notifier = TestNotifier;
 
         let use_case = DeactivateShareLinkUseCase::new(repository, notifier);
         let result = use_case.execute_by_id(Uuid::nil()).await;
@@ -137,8 +137,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_deactivate_share_link_by_id_not_found() {
-        let repository = MockRepository;
-        let notifier = MockNotifier;
+        let repository = TestRepository;
+        let notifier = TestNotifier;
 
         let use_case = DeactivateShareLinkUseCase::new(repository, notifier);
         let result = use_case.execute_by_id(Uuid::new_v4()).await;

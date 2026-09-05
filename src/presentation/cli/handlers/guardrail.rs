@@ -1,10 +1,10 @@
 // Guardrail handler - runs a one-shot input check through the GuardrailChecker port
 
 use crate::adapters::external::guardrail_checker::DefaultGuardrailChecker;
-use crate::adapters::external::guardrail_manager::InMemoryGuardrailManager;
 use crate::modules::guardrails::ports::GuardrailChecker;
 use crate::presentation::cli::output;
-use crate::shared::kernel::result::AppResult;
+use crate::presentation::tui::di::DIContainer;
+use crate::shared::kernel::result::{AppError, AppResult};
 
 pub(crate) async fn run(input: String, guardrail_type: String) -> AppResult<()> {
     output::print_section(&format!(
@@ -12,10 +12,12 @@ pub(crate) async fn run(input: String, guardrail_type: String) -> AppResult<()> 
         input, guardrail_type
     ));
 
-    let manager = InMemoryGuardrailManager::new();
-    if let Err(e) = manager.initialize_default_guardrails().await {
-        output::print_error(&format!("Failed to initialize guardrails: {}", e));
-    }
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
+    let manager = container
+        .guardrail_manager()
+        .cloned()
+        .ok_or_else(|| AppError::State("Guardrail manager not available".to_string()))?;
     let checker = DefaultGuardrailChecker::new(manager);
 
     match checker.check_input(&input).await {

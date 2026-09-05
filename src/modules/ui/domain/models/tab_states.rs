@@ -33,6 +33,8 @@ pub struct WorkflowItem {
 /// A note entry listed in the Notes tab
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NoteItem {
+    #[serde(default = "new_ui_item_id")]
+    pub id: String,
     pub title: String,
     pub content: String,
 }
@@ -40,9 +42,15 @@ pub struct NoteItem {
 /// A snippet entry listed in the Snippet(s) tab
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SnippetItem {
+    #[serde(default = "new_ui_item_id")]
+    pub id: String,
     pub name: String,
     pub language: String,
     pub code: String,
+}
+
+fn new_ui_item_id() -> String {
+    uuid::Uuid::new_v4().to_string()
 }
 
 /// Snippet tab state
@@ -52,7 +60,7 @@ pub struct SnippetTabState {
     pub selected_snippet_index: usize,
     pub is_editing: bool,
     pub edit_content: String,
-    /// Snippets created during this session
+    /// Snippets persisted through the UI content repository
     pub snippets: Vec<SnippetItem>,
 }
 
@@ -168,7 +176,7 @@ pub struct LogsTabState {
 pub struct NotesTabState {
     pub selected_note_index: usize,
     pub is_editing: bool,
-    /// In-memory notes (no notes repository exists yet)
+    /// Notes persisted through the UI content repository
     pub notes: Vec<NoteItem>,
 }
 

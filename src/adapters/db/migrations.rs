@@ -115,6 +115,94 @@ const MIGRATIONS: &[(&str, &str)] = &[
         )
         "#,
     ),
+    (
+        "0007_performance",
+        r#"
+        CREATE TABLE IF NOT EXISTS performance_snapshots (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            metrics TEXT NOT NULL,
+            baseline TEXT,
+            data TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_performance_snapshots_created_at
+            ON performance_snapshots (created_at);
+        CREATE TABLE IF NOT EXISTS optimization_suggestions (
+            id TEXT PRIMARY KEY,
+            category TEXT NOT NULL,
+            title TEXT NOT NULL,
+            impact TEXT NOT NULL,
+            effort TEXT NOT NULL,
+            estimated_improvement REAL NOT NULL,
+            created_at TEXT NOT NULL,
+            applied_at TEXT,
+            data TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_optimization_suggestions_created_at
+            ON optimization_suggestions (created_at);
+        "#,
+    ),
+    (
+        "0008_automation_workflows",
+        r#"
+        CREATE TABLE IF NOT EXISTS automation_workflows (
+            id TEXT PRIMARY KEY,
+            issue_number INTEGER NOT NULL,
+            repository TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            data TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_automation_workflows_repository
+            ON automation_workflows (repository);
+        "#,
+    ),
+    (
+        "0009_catalogs",
+        r#"
+        CREATE TABLE IF NOT EXISTS subagents (
+            id TEXT PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            agent_type TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            data TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS guardrails (
+            id TEXT PRIMARY KEY,
+            name TEXT UNIQUE NOT NULL,
+            guardrail_type TEXT NOT NULL,
+            enabled INTEGER NOT NULL,
+            severity TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            data TEXT NOT NULL
+        );
+        "#,
+    ),
+    (
+        "0010_ui_content",
+        r#"
+        CREATE TABLE IF NOT EXISTS ui_notes (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS ui_snippets (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            language TEXT NOT NULL,
+            code TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+        "#,
+    ),
 ];
 
 /// Run all embedded migrations against the pool. Idempotent.

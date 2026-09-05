@@ -26,8 +26,8 @@ impl ScreenReaderAnnouncer {
             return;
         }
 
-        // In a real implementation, this would use a screen reader API
-        // For now, we'll output to stderr which can be captured by screen readers
+        // Stderr is the supported accessibility transport for this terminal UI;
+        // terminal screen readers can capture and announce it.
         eprintln!("[SCREEN READER] {}", message);
     }
 

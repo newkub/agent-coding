@@ -1,12 +1,17 @@
 pub(crate) mod audit_repository;
+pub(crate) mod automation_workflow_repository;
 pub(crate) mod collaboration_repository;
 pub(crate) mod encrypted_sqlite_repository;
+pub(crate) mod guardrail_repository;
 pub(crate) mod headless_session_repository;
 pub(crate) mod macro_repository;
 pub(crate) mod migrations;
+pub(crate) mod performance_repository;
 pub(crate) mod session_repository;
 pub(crate) mod share_link_repository;
 pub(crate) mod share_repository;
+pub(crate) mod subagent_repository;
+pub(crate) mod ui_content_repository;
 
 use crate::shared::kernel::result::AppError;
 

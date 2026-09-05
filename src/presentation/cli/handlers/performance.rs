@@ -1,6 +1,6 @@
 // Performance handler - delegates to the AnalyzePerformanceUseCase
 // obtained from the DI container (SystemMetricsCollector +
-// InMemorySnapshotManager + InMemoryOptimizationManager) and renders the result.
+// SQLite-backed snapshot and optimization managers) and renders the result.
 
 use crate::presentation::cli::output;
 use crate::presentation::tui::di::DIContainer;
@@ -9,7 +9,8 @@ use crate::shared::kernel::result::{AppError, AppResult};
 pub(crate) async fn run(action: String) -> AppResult<()> {
     output::print_section(&format!("Performance action: {}", action));
 
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let use_case = container
         .analyze_performance_use_case()
         .ok_or_else(|| AppError::State("Analyze performance use case not available".to_string()))?;

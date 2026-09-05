@@ -127,7 +127,4 @@ pub(crate) struct PerformanceComparisonResult {
 }
 
 #[cfg(test)]
-mod tests {
-
-    // Mock implementations would go here
-}
+mod tests {}

@@ -1,10 +1,11 @@
-use super::super::domain::models::{AppState, NoteItem, PackageItem, SkillItem, WorkflowItem};
+use super::super::domain::models::{AppState, PackageItem, SkillItem, WorkflowItem};
 use crate::modules::audit::application::usecases::{log_entry, AuditQuery};
 use crate::modules::audit::domain::models::{Actor, ActorType, AuditAction, Resource};
 use crate::modules::automation::domain::models::issue_pr::AutomationConfig;
 use crate::modules::onboarding::ports::DependencyParser;
 use crate::modules::performance::ports::MetricsCollector;
 use crate::modules::subagents::ports::SubagentManager;
+use crate::modules::ui::ports::UiContentRepository;
 use crate::presentation::tui::di::DIContainer;
 use crate::shared::kernel::result::AppResult;
 use sqlx::Row;
@@ -51,7 +52,8 @@ impl AppState {
         refresh_collaboration_sessions(self, di).await;
         refresh_macros(self, di).await;
         refresh_headless_sessions(self, di).await;
-        seed_notes(self);
+        refresh_notes(self, di).await;
+        refresh_snippets(self, di).await;
         Ok(())
     }
 }
@@ -382,11 +384,28 @@ pub(crate) async fn refresh_headless_sessions(state: &mut AppState, di: &DIConta
     }
 }
 
-/// Notes tab: no notes repository exists yet; seed a static welcome note.
-fn seed_notes(state: &mut AppState) {
-    state.notes_tab_state.notes = vec![NoteItem {
-        title: "Welcome".to_string(),
-        content: "Notes are kept in-memory for now. Press Enter to edit the selected note."
-            .to_string(),
-    }];
+/// Notes tab: persisted notes from the UI content repository.
+pub(crate) async fn refresh_notes(state: &mut AppState, di: &DIContainer) {
+    let Some(repo) = di.ui_content_repo() else {
+        return;
+    };
+    if let Ok(notes) = repo.list_notes().await {
+        state.notes_tab_state.notes = notes;
+        let max = state.notes_tab_state.notes.len().saturating_sub(1);
+        state.notes_tab_state.selected_note_index =
+            state.notes_tab_state.selected_note_index.min(max);
+    }
+}
+
+/// Snippets tabs: persisted snippets from the UI content repository.
+pub(crate) async fn refresh_snippets(state: &mut AppState, di: &DIContainer) {
+    let Some(repo) = di.ui_content_repo() else {
+        return;
+    };
+    if let Ok(snippets) = repo.list_snippets().await {
+        state.snippet_tab_state.snippets = snippets;
+        let max = state.snippet_tab_state.snippets.len().saturating_sub(1);
+        state.snippet_tab_state.selected_snippet_index =
+            state.snippet_tab_state.selected_snippet_index.min(max);
+    }
 }

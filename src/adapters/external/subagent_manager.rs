@@ -19,6 +19,7 @@ impl InMemorySubagentManager {
         }
     }
 
+    #[cfg(test)]
     pub(crate) async fn initialize_default_subagents(&self) -> Result<(), AppError> {
         let default_subagents = vec![
             (

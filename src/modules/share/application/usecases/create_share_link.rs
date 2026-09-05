@@ -65,13 +65,13 @@ where
 mod tests {
     use super::*;
 
-    // Mock implementations for testing
-    struct MockRepository;
-    struct MockUrlGenerator;
-    struct MockNotifier;
+    // Test implementations for testing
+    struct TestRepository;
+    struct TestUrlGenerator;
+    struct TestNotifier;
 
     #[async_trait::async_trait]
-    impl ShareLinkRepository for MockRepository {
+    impl ShareLinkRepository for TestRepository {
         async fn save(&self, _link: &ShareLink) -> Result<(), AppError> {
             Ok(())
         }
@@ -96,7 +96,7 @@ mod tests {
     }
 
     #[async_trait::async_trait]
-    impl ShareLinkUrlGenerator for MockUrlGenerator {
+    impl ShareLinkUrlGenerator for TestUrlGenerator {
         async fn generate_url(&self, token: &str) -> Result<String, AppError> {
             Ok(format!("https://share.agent-tui.com/{}", token))
         }
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[async_trait::async_trait]
-    impl ShareLinkNotifier for MockNotifier {
+    impl ShareLinkNotifier for TestNotifier {
         async fn notify_created(&self, _link: &ShareLink, _url: &str) -> Result<(), AppError> {
             Ok(())
         }
@@ -120,9 +120,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_share_link_success() {
-        let repository = MockRepository;
-        let url_generator = MockUrlGenerator;
-        let notifier = MockNotifier;
+        let repository = TestRepository;
+        let url_generator = TestUrlGenerator;
+        let notifier = TestNotifier;
 
         let use_case = CreateShareLinkUseCase::new(repository, url_generator, notifier);
         let session_id = Uuid::new_v4();
@@ -137,9 +137,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_share_link_invalid_expiration() {
-        let repository = MockRepository;
-        let url_generator = MockUrlGenerator;
-        let notifier = MockNotifier;
+        let repository = TestRepository;
+        let url_generator = TestUrlGenerator;
+        let notifier = TestNotifier;
 
         let use_case = CreateShareLinkUseCase::new(repository, url_generator, notifier);
         let session_id = Uuid::new_v4();

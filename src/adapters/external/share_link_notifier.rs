@@ -1,5 +1,6 @@
 use async_trait::async_trait;
-use tracing::info;
+use reqwest::Client;
+use tracing::{info, warn};
 
 use crate::modules::share::domain::models::share_link::ShareLink;
 use crate::modules::share::ports::ShareLinkNotifier;
@@ -22,35 +23,115 @@ impl Default for LogShareLinkNotifier {
 
 #[async_trait]
 impl ShareLinkNotifier for LogShareLinkNotifier {
-    async fn notify_created(&self, link: &ShareLink, url: &str) -> Result<(), AppError> {
+    async fn notify_created(&self, link: &ShareLink, _url: &str) -> Result<(), AppError> {
         info!(
-            "Share link created: ID={}, Session={}, Token={}, URL={}",
-            link.id, link.session_id, link.token, url
+            share_link_id = %link.id,
+            session_id = %link.session_id,
+            "share link created"
         );
         Ok(())
     }
 
     async fn notify_accessed(&self, link: &ShareLink) -> Result<(), AppError> {
         info!(
-            "Share link accessed: ID={}, Token={}, Access Count={}/{}",
-            link.id,
-            link.token,
-            link.access_count,
-            link.max_access.map_or("∞".to_string(), |m| m.to_string())
+            share_link_id = %link.id,
+            access_count = link.access_count,
+            max_access = link.max_access,
+            "share link accessed"
         );
         Ok(())
     }
 
     async fn notify_deactivated(&self, link: &ShareLink) -> Result<(), AppError> {
-        info!(
-            "Share link deactivated: ID={}, Token={}",
-            link.id, link.token
-        );
+        info!(share_link_id = %link.id, "share link deactivated");
         Ok(())
     }
 }
 
-/// No-op implementation for testing or when notifications are disabled
+/// Share-link notifier backed by a user-configured webhook.
+///
+/// `AGENT_TUI_SHARE_WEBHOOK_URL` enables real notifications. If it is absent,
+/// notifications are explicitly disabled and a warning is emitted instead of
+/// pretending that a notification was delivered.
+pub(crate) struct ConfiguredShareLinkNotifier {
+    client: Client,
+    webhook_url: Option<String>,
+}
+
+impl ConfiguredShareLinkNotifier {
+    pub(crate) fn from_env() -> Result<Self, AppError> {
+        let webhook_url = std::env::var("AGENT_TUI_SHARE_WEBHOOK_URL")
+            .ok()
+            .filter(|url| !url.trim().is_empty());
+
+        if let Some(url) = &webhook_url {
+            let parsed = reqwest::Url::parse(url).map_err(|e| {
+                AppError::ValidationError(format!(
+                    "AGENT_TUI_SHARE_WEBHOOK_URL is not a valid URL: {e}"
+                ))
+            })?;
+            if !matches!(parsed.scheme(), "http" | "https") {
+                return Err(AppError::ValidationError(
+                    "AGENT_TUI_SHARE_WEBHOOK_URL must use http or https".to_string(),
+                ));
+            }
+        } else {
+            warn!("AGENT_TUI_SHARE_WEBHOOK_URL is not set; share-link notifications are disabled");
+        }
+
+        Ok(Self {
+            client: Client::new(),
+            webhook_url,
+        })
+    }
+
+    async fn send(&self, event: &str, link: &ShareLink, url: Option<&str>) -> Result<(), AppError> {
+        let Some(webhook_url) = &self.webhook_url else {
+            warn!(event, share_link_id = %link.id, "share-link notification skipped");
+            return Ok(());
+        };
+
+        let payload = serde_json::json!({
+            "event": event,
+            "share_link_id": link.id,
+            "session_id": link.session_id,
+            "url": url,
+            "access_count": link.access_count,
+            "max_access": link.max_access,
+        });
+        let response = self
+            .client
+            .post(webhook_url)
+            .json(&payload)
+            .send()
+            .await
+            .map_err(|e| AppError::State(format!("share webhook request failed: {e}")))?;
+        if !response.status().is_success() {
+            return Err(AppError::State(format!(
+                "share webhook returned status {}",
+                response.status()
+            )));
+        }
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl ShareLinkNotifier for ConfiguredShareLinkNotifier {
+    async fn notify_created(&self, link: &ShareLink, url: &str) -> Result<(), AppError> {
+        self.send("share_link.created", link, Some(url)).await
+    }
+
+    async fn notify_accessed(&self, link: &ShareLink) -> Result<(), AppError> {
+        self.send("share_link.accessed", link, None).await
+    }
+
+    async fn notify_deactivated(&self, link: &ShareLink) -> Result<(), AppError> {
+        self.send("share_link.deactivated", link, None).await
+    }
+}
+
+/// No-op implementation for tests or explicitly disabled notifications
 #[allow(dead_code)]
 pub(crate) struct NoopShareLinkNotifier;
 

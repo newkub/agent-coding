@@ -3,20 +3,25 @@
 // Centralized DI for testability and flexibility
 
 use crate::adapters::db::audit_repository::SqliteAuditRepository;
+use crate::adapters::db::automation_workflow_repository::SqliteAutomationWorkflowRepository;
 use crate::adapters::db::collaboration_repository::SqliteCollaborationRepository;
+use crate::adapters::db::guardrail_repository::SqliteGuardrailManager;
 use crate::adapters::db::headless_session_repository::SqliteHeadlessSessionManager;
 use crate::adapters::db::macro_repository::SqliteMacroRepository;
 use crate::adapters::db::migrations;
+use crate::adapters::db::performance_repository::{
+    SqliteOptimizationManager, SqliteSnapshotManager,
+};
 use crate::adapters::db::session_repository::SqliteSessionRepository;
 use crate::adapters::db::share_link_repository::SqliteShareLinkRepository;
 use crate::adapters::db::share_repository::SqliteShareRepository;
+use crate::adapters::db::subagent_repository::SqliteSubagentManager;
+use crate::adapters::db::ui_content_repository::SqliteUiContentRepository;
 use crate::adapters::external::{
     dependency_parser::DefaultDependencyParser, file_scanner::DefaultFileScanner,
     git_operations::Git2Adapter, github_client::ReqwestGitHubClient,
     headless_command_executor::DefaultHeadlessCommandExecutor,
     macro_executor::InMemoryMacroExecutor, metrics_collector::SystemMetricsCollector,
-    optimization_manager::InMemoryOptimizationManager, snapshot_manager::InMemorySnapshotManager,
-    subagent_manager::InMemorySubagentManager,
 };
 use crate::adapters::input::crossterm_handler::CrosstermInputHandler;
 use crate::adapters::ui::ratatui_adapter::RatatuiAdapter;
@@ -29,7 +34,7 @@ use crate::modules::onboarding::application::usecases::analyze_codebase::Analyze
 use crate::modules::performance::application::usecases::analyze_performance::AnalyzePerformanceUseCase;
 use crate::modules::session::ports::SessionRepository;
 use crate::modules::share::ports::ShareRepository as ShareRepoPort;
-use crate::shared::kernel::result::AppResult;
+use crate::shared::kernel::result::{AppError, AppResult};
 use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::SqlitePool;
 use std::str::FromStr;
@@ -37,13 +42,14 @@ use std::str::FromStr;
 // Type aliases for use cases with concrete types
 type AnalyzeCodebaseUseCaseConcrete =
     AnalyzeCodebaseUseCase<DefaultFileScanner, DefaultDependencyParser>;
-type ExecuteAutomationUseCaseConcrete = ExecuteAutomationUseCase<Git2Adapter, ReqwestGitHubClient>;
+type ExecuteAutomationUseCaseConcrete =
+    ExecuteAutomationUseCase<Git2Adapter, ReqwestGitHubClient, SqliteAutomationWorkflowRepository>;
 type ExecuteHeadlessUseCaseConcrete =
     ExecuteHeadlessUseCase<DefaultHeadlessCommandExecutor, SqliteHeadlessSessionManager>;
 type AnalyzePerformanceUseCaseConcrete = AnalyzePerformanceUseCase<
     SystemMetricsCollector,
-    InMemorySnapshotManager,
-    InMemoryOptimizationManager,
+    SqliteSnapshotManager,
+    SqliteOptimizationManager,
 >;
 
 /// DI Container for managing dependencies
@@ -65,7 +71,9 @@ pub(crate) struct DIContainer {
     file_scanner: Option<DefaultFileScanner>,
     dependency_parser: Option<DefaultDependencyParser>,
     metrics_collector: Option<SystemMetricsCollector>,
-    subagent_manager: Option<InMemorySubagentManager>,
+    subagent_manager: Option<SqliteSubagentManager>,
+    guardrail_manager: Option<SqliteGuardrailManager>,
+    ui_content_repo: Option<SqliteUiContentRepository>,
     macro_executor: Option<Box<dyn MacroExecutor>>,
 
     // UI adapters
@@ -96,6 +104,8 @@ impl DIContainer {
             dependency_parser: None,
             metrics_collector: None,
             subagent_manager: None,
+            guardrail_manager: None,
+            ui_content_repo: None,
             macro_executor: None,
             input_handler: None,
             renderer: None,
@@ -141,22 +151,6 @@ impl DIContainer {
         // System metrics collector (sysinfo-backed)
         let metrics_collector = SystemMetricsCollector::new();
 
-        // Subagent manager seeded with the built-in agent roster
-        let subagent_manager = InMemorySubagentManager::new();
-        if let Err(e) = subagent_manager.initialize_default_subagents().await {
-            tracing::warn!("failed to seed default subagents: {e}");
-        }
-
-        let execute_automation =
-            ExecuteAutomationUseCase::new(git_adapter.clone(), github_client.clone());
-
-        // Performance analysis use case (sysinfo collector + in-memory stores)
-        let analyze_performance = AnalyzePerformanceUseCase::new(
-            SystemMetricsCollector::new(),
-            InMemorySnapshotManager::new(),
-            InMemoryOptimizationManager::new(),
-        );
-
         // The macro executor performs real local playback; it has no DB state.
         self.macro_executor = Some(Box::new(InMemoryMacroExecutor::new()));
 
@@ -166,12 +160,9 @@ impl DIContainer {
         self.file_scanner = Some(file_scanner);
         self.dependency_parser = Some(dependency_parser);
         self.metrics_collector = Some(metrics_collector);
-        self.subagent_manager = Some(subagent_manager);
         self.input_handler = Some(input_handler);
         self.renderer = Some(renderer);
         self.analyze_codebase = Some(analyze_codebase);
-        self.execute_automation = Some(execute_automation);
-        self.analyze_performance = Some(analyze_performance);
 
         // Note: all SQLite-backed adapters are wired in `init_db()` so that
         // `build()` stays fast and tests can inject repositories first.
@@ -221,10 +212,43 @@ impl DIContainer {
             share_repo.init_table().await?;
             self.share_repo = Some(Box::new(share_repo));
         }
+        if self.subagent_manager.is_none() {
+            let manager = SqliteSubagentManager::new(pool.clone());
+            manager.initialize_default_subagents().await?;
+            self.subagent_manager = Some(manager);
+        }
+        if self.guardrail_manager.is_none() {
+            let manager = SqliteGuardrailManager::new(pool.clone());
+            manager.initialize_default_guardrails().await?;
+            self.guardrail_manager = Some(manager);
+        }
+        if self.ui_content_repo.is_none() {
+            self.ui_content_repo = Some(SqliteUiContentRepository::new(pool.clone()));
+        }
+        if self.execute_automation.is_none() {
+            let Some(git_adapter) = self.git_adapter.clone() else {
+                return Err(AppError::State("Git adapter not available".to_string()));
+            };
+            let Some(github_client) = self.github_client.clone() else {
+                return Err(AppError::State("GitHub client not available".to_string()));
+            };
+            self.execute_automation = Some(ExecuteAutomationUseCase::new(
+                git_adapter,
+                github_client,
+                SqliteAutomationWorkflowRepository::new(pool.clone()),
+            ));
+        }
         if self.execute_headless.is_none() {
             self.execute_headless = Some(ExecuteHeadlessUseCase::new(
                 DefaultHeadlessCommandExecutor::new(),
-                SqliteHeadlessSessionManager::new(pool),
+                SqliteHeadlessSessionManager::new(pool.clone()),
+            ));
+        }
+        if self.analyze_performance.is_none() {
+            self.analyze_performance = Some(AnalyzePerformanceUseCase::new(
+                SystemMetricsCollector::new(),
+                SqliteSnapshotManager::new(pool.clone()),
+                SqliteOptimizationManager::new(pool),
             ));
         }
         Ok(())
@@ -290,9 +314,19 @@ impl DIContainer {
         self.metrics_collector.as_ref()
     }
 
-    /// Get subagent manager
-    pub(crate) const fn subagent_manager(&self) -> Option<&InMemorySubagentManager> {
+    /// Get the persistent subagent manager.
+    pub(crate) const fn subagent_manager(&self) -> Option<&SqliteSubagentManager> {
         self.subagent_manager.as_ref()
+    }
+
+    /// Get the persistent guardrail manager.
+    pub(crate) const fn guardrail_manager(&self) -> Option<&SqliteGuardrailManager> {
+        self.guardrail_manager.as_ref()
+    }
+
+    /// Get persistent UI content storage.
+    pub(crate) const fn ui_content_repo(&self) -> Option<&SqliteUiContentRepository> {
+        self.ui_content_repo.as_ref()
     }
 
     /// Get input handler
@@ -410,8 +444,13 @@ mod tests {
         let git_adapter = Git2Adapter::new(".".to_string());
         let github_token = std::env::var("GITHUB_TOKEN").unwrap_or_else(|_| "".to_string());
         let github_client = ReqwestGitHubClient::new(github_token);
-        let _execute_automation =
-            ExecuteAutomationUseCase::new(git_adapter.clone(), github_client.clone());
+        let workflow_repository =
+            SqliteAutomationWorkflowRepository::new(crate::adapters::db::test_pool().await);
+        let _execute_automation = ExecuteAutomationUseCase::new(
+            git_adapter.clone(),
+            github_client.clone(),
+            workflow_repository,
+        );
 
         let headless_executor = DefaultHeadlessCommandExecutor::new();
         let headless_session_manager = InMemorySessionManager::new();

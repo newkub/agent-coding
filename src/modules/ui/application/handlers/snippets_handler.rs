@@ -20,6 +20,7 @@ pub(crate) fn handle_snippets_action(state: &mut AppState, action: TabAction) ->
                 "text".to_string(),
             ) {
                 state.snippet_tab_state.snippets.push(SnippetItem {
+                    id: snippet.id.to_string(),
                     name: snippet.name,
                     language: snippet.language,
                     code: snippet.code,

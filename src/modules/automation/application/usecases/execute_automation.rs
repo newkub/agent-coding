@@ -6,40 +6,79 @@ use crate::modules::automation::domain::operations::automation_operations::{
     generate_pr_body, generate_pr_title,
 };
 use crate::modules::automation::domain::validators::automation_validators;
-use crate::modules::automation::ports::{AutomationWorkflowExecutor, GitHubClient, GitOperations};
+use crate::modules::automation::ports::{
+    AutomationWorkflowExecutor, AutomationWorkflowRepository, GitHubClient, GitOperations,
+};
 use crate::shared::kernel::result::AppError;
 
-/// Use case for executing issue-to-PR automation
-pub(crate) struct ExecuteAutomationUseCase<G, H>
+/// Use case for executing issue-to-PR automation.
+pub(crate) struct ExecuteAutomationUseCase<G, H, W>
 where
     G: GitOperations,
     H: GitHubClient,
+    W: AutomationWorkflowRepository,
 {
     git: G,
     github: H,
+    workflows: W,
 }
 
-impl<G, H> ExecuteAutomationUseCase<G, H>
+impl<G, H, W> ExecuteAutomationUseCase<G, H, W>
 where
     G: GitOperations,
     H: GitHubClient,
+    W: AutomationWorkflowRepository,
 {
-    pub(crate) const fn new(git: G, github: H) -> Self {
-        Self { git, github }
+    pub(crate) const fn new(git: G, github: H, workflows: W) -> Self {
+        Self {
+            git,
+            github,
+            workflows,
+        }
     }
 
-    /// Execute the automation workflow
+    /// Execute the automation workflow and persist its observable state.
     pub(crate) async fn execute(
         &self,
         workflow: &mut AutomationWorkflow,
         config: &AutomationConfig,
     ) -> Result<(), AppError> {
-        // Validate issue
         automation_validators::validate_issue_for_automation(&workflow.issue)?;
         automation_validators::validate_automation_config(config)?;
         automation_validators::validate_repository_access(&workflow.issue.repository)?;
 
-        // Add workflow steps
+        self.workflows.save(workflow).await?;
+        workflow.status = WorkflowStatus::InProgress;
+        self.workflows.update(workflow).await?;
+
+        match self.execute_steps(workflow, config).await {
+            Ok(()) => {
+                workflow.status = WorkflowStatus::Completed;
+                self.workflows.update(workflow).await?;
+                Ok(())
+            }
+            Err(error) => {
+                workflow.status = WorkflowStatus::Failed;
+                if let Some(step) = workflow
+                    .steps
+                    .iter_mut()
+                    .find(|step| matches!(step.status, StepStatus::Running | StepStatus::Pending))
+                {
+                    step.status = StepStatus::Failed;
+                    step.completed_at = Some(chrono::Utc::now());
+                    step.error = Some(error.to_string());
+                }
+                self.workflows.update(workflow).await?;
+                Err(error)
+            }
+        }
+    }
+
+    async fn execute_steps(
+        &self,
+        workflow: &mut AutomationWorkflow,
+        config: &AutomationConfig,
+    ) -> Result<(), AppError> {
         let step_create_branch = uuid::Uuid::new_v4().to_string();
         let step_commit = uuid::Uuid::new_v4().to_string();
         let step_push = uuid::Uuid::new_v4().to_string();
@@ -50,16 +89,14 @@ where
         workflow.add_step("Push to remote".to_string());
         workflow.add_step("Create pull request".to_string());
 
-        // Update step IDs
         workflow.steps[0].id = step_create_branch.clone();
         workflow.steps[1].id = step_commit.clone();
         workflow.steps[2].id = step_push.clone();
         workflow.steps[3].id = step_create_pr.clone();
+        self.workflows.update(workflow).await?;
 
-        workflow.status = WorkflowStatus::InProgress;
-
-        // Step 1: Create branch
         workflow.update_step(&step_create_branch, StepStatus::Running, None);
+        self.workflows.update(workflow).await?;
         let branch_name = generate_branch_name(&workflow.issue, config);
 
         if config.auto_create_branch {
@@ -73,9 +110,10 @@ where
         } else {
             workflow.update_step(&step_create_branch, StepStatus::Skipped, None);
         }
+        self.workflows.update(workflow).await?;
 
-        // Step 2: Commit changes
         workflow.update_step(&step_commit, StepStatus::Running, None);
+        self.workflows.update(workflow).await?;
         if config.auto_commit {
             let commit_message = generate_commit_message(&workflow.issue, config);
             self.git.commit(&commit_message).await?;
@@ -83,18 +121,20 @@ where
         } else {
             workflow.update_step(&step_commit, StepStatus::Skipped, None);
         }
+        self.workflows.update(workflow).await?;
 
-        // Step 3: Push to remote
         workflow.update_step(&step_push, StepStatus::Running, None);
+        self.workflows.update(workflow).await?;
         if config.auto_push {
             self.git.push(&branch_name).await?;
             workflow.update_step(&step_push, StepStatus::Completed, None);
         } else {
             workflow.update_step(&step_push, StepStatus::Skipped, None);
         }
+        self.workflows.update(workflow).await?;
 
-        // Step 4: Create pull request
         workflow.update_step(&step_create_pr, StepStatus::Running, None);
+        self.workflows.update(workflow).await?;
         if config.auto_create_pr {
             let pr_title = generate_pr_title(&workflow.issue);
             let pr_body = generate_pr_body(&workflow.issue, config);
@@ -111,7 +151,6 @@ where
                 )
                 .await?;
 
-            // Add labels
             let labels = extract_labels(&workflow.issue, config);
             if !labels.is_empty() {
                 self.github
@@ -119,7 +158,6 @@ where
                     .await?;
             }
 
-            // Add reviewers
             if !config.default_reviewers.is_empty() {
                 self.github
                     .add_reviewers(
@@ -135,17 +173,18 @@ where
         } else {
             workflow.update_step(&step_create_pr, StepStatus::Skipped, None);
         }
+        self.workflows.update(workflow).await?;
 
-        workflow.status = WorkflowStatus::Completed;
         Ok(())
     }
 }
 
 #[async_trait::async_trait]
-impl<G, H> AutomationWorkflowExecutor for ExecuteAutomationUseCase<G, H>
+impl<G, H, W> AutomationWorkflowExecutor for ExecuteAutomationUseCase<G, H, W>
 where
     G: GitOperations,
     H: GitHubClient,
+    W: AutomationWorkflowRepository,
 {
     async fn execute(
         &self,
@@ -155,21 +194,30 @@ where
         self.execute(workflow, config).await
     }
 
-    async fn get_status(&self, _workflow_id: &str) -> Result<AutomationWorkflow, AppError> {
-        // In a real implementation, this would load from storage
-        Err(AppError::NotFound("Workflow not found".to_string()))
+    async fn get_status(&self, workflow_id: &str) -> Result<AutomationWorkflow, AppError> {
+        self.workflows.find_by_id(workflow_id).await
     }
 
-    async fn cancel(&self, _workflow_id: &str) -> Result<(), AppError> {
-        Err(AppError::State(
-            "Workflow cancellation not implemented".to_string(),
-        ))
+    async fn cancel(&self, workflow_id: &str) -> Result<(), AppError> {
+        let mut workflow = self.workflows.find_by_id(workflow_id).await?;
+        match workflow.status {
+            WorkflowStatus::Completed | WorkflowStatus::Failed | WorkflowStatus::Cancelled => {
+                return Err(AppError::State(format!(
+                    "workflow {workflow_id} is already {:?}",
+                    workflow.status
+                )));
+            }
+            WorkflowStatus::Pending | WorkflowStatus::InProgress => {}
+        }
+
+        workflow.status = WorkflowStatus::Cancelled;
+        if let Some(step) = workflow
+            .steps
+            .iter_mut()
+            .find(|step| matches!(step.status, StepStatus::Running | StepStatus::Pending))
+        {
+            step.status = StepStatus::Skipped;
+        }
+        self.workflows.update(&workflow).await
     }
-}
-
-#[cfg(test)]
-mod tests {
-
-    // Mock implementations would go here
-    // For brevity, we'll skip full mock implementations
 }

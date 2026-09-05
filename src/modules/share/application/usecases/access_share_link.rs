@@ -82,11 +82,11 @@ mod tests {
 
     use uuid::Uuid;
 
-    struct MockRepository;
-    struct MockNotifier;
+    struct TestRepository;
+    struct TestNotifier;
 
     #[async_trait::async_trait]
-    impl ShareLinkRepository for MockRepository {
+    impl ShareLinkRepository for TestRepository {
         async fn save(&self, _link: &ShareLink) -> Result<(), AppError> {
             Ok(())
         }
@@ -117,7 +117,7 @@ mod tests {
     }
 
     #[async_trait::async_trait]
-    impl ShareLinkNotifier for MockNotifier {
+    impl ShareLinkNotifier for TestNotifier {
         async fn notify_created(&self, _link: &ShareLink, _url: &str) -> Result<(), AppError> {
             Ok(())
         }
@@ -131,8 +131,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_access_share_link_success() {
-        let repository = MockRepository;
-        let notifier = MockNotifier;
+        let repository = TestRepository;
+        let notifier = TestNotifier;
 
         let use_case = AccessShareLinkUseCase::new(repository, notifier);
         let result = use_case.execute("valid_token", ShareAction::Read).await;
@@ -142,8 +142,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_access_share_link_not_found() {
-        let repository = MockRepository;
-        let notifier = MockNotifier;
+        let repository = TestRepository;
+        let notifier = TestNotifier;
 
         let use_case = AccessShareLinkUseCase::new(repository, notifier);
         let result = use_case.execute("invalid_token", ShareAction::Read).await;
@@ -153,8 +153,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_access_share_link_permission_denied() {
-        let repository = MockRepository;
-        let notifier = MockNotifier;
+        let repository = TestRepository;
+        let notifier = TestNotifier;
 
         let use_case = AccessShareLinkUseCase::new(repository, notifier);
         // Default permissions are read-only, so write should fail

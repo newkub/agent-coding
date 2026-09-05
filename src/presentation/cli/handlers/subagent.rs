@@ -1,15 +1,15 @@
-// Subagent handler - lists, gets, deletes, or executes subagent tasks
-// Production wiring goes through the ExecuteSubagentTaskUseCase via DI.
-// Listing is rendered from the static catalog so it works without booting the container.
+// Subagent handler - lists, gets, deletes, or executes subagent tasks.
+// The catalog is persisted through the SQLite-backed subagent manager.
 
-use crate::adapters::external::subagent_manager::InMemorySubagentManager;
+use crate::adapters::db::subagent_repository::SqliteSubagentManager;
 use crate::adapters::external::subagent_task_executor::DefaultSubagentTaskExecutor;
 use crate::modules::subagents::application::usecases::execute_subagent_task::ExecuteSubagentTaskUseCase;
 use crate::modules::subagents::domain::models::subagent::TaskType;
 use crate::modules::subagents::ports::SubagentManager;
 use crate::presentation::cli::commands::SubagentCommands;
 use crate::presentation::cli::output;
-use crate::shared::kernel::result::AppResult;
+use crate::presentation::tui::di::DIContainer;
+use crate::shared::kernel::result::{AppError, AppResult};
 
 pub(crate) async fn run(command: SubagentCommands) -> AppResult<()> {
     match command {
@@ -20,11 +20,19 @@ pub(crate) async fn run(command: SubagentCommands) -> AppResult<()> {
     }
 }
 
+async fn subagent_manager() -> AppResult<SqliteSubagentManager> {
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
+    container
+        .subagent_manager()
+        .cloned()
+        .ok_or_else(|| AppError::State("Subagent manager not available".to_string()))
+}
+
 async fn get_subagent(name: &str) -> AppResult<()> {
     output::print_section(&format!("Subagent: {}", name));
 
-    let manager = InMemorySubagentManager::new();
-    manager.initialize_default_subagents().await?;
+    let manager = subagent_manager().await?;
 
     match manager.get_subagent(name).await {
         Ok(agent) => {
@@ -46,12 +54,8 @@ async fn get_subagent(name: &str) -> AppResult<()> {
 }
 
 async fn list_subagents() -> AppResult<()> {
-    let manager = InMemorySubagentManager::new();
-    // Initialize default subagents so listing reflects the real catalog.
-    if let Err(e) = manager.initialize_default_subagents().await {
-        output::print_error(&format!("Failed to load subagent catalog: {}", e));
-    }
-    let subagents = manager.get_available_subagents().await.unwrap_or_default();
+    let manager = subagent_manager().await?;
+    let subagents = manager.get_available_subagents().await?;
     output::print_subagent_list(&subagents);
     Ok(())
 }
@@ -59,8 +63,7 @@ async fn list_subagents() -> AppResult<()> {
 async fn delete_subagent(name: &str) -> AppResult<()> {
     output::print_section(&format!("Deleting subagent: {}", name));
 
-    let manager = InMemorySubagentManager::new();
-    manager.initialize_default_subagents().await?;
+    let manager = subagent_manager().await?;
 
     // Try direct id deletion first.
     match manager.delete_subagent(name).await {
@@ -95,8 +98,7 @@ async fn execute_subagent(agent: &str, input: &str) -> AppResult<()> {
         agent, input
     ));
 
-    let manager = InMemorySubagentManager::new();
-    manager.initialize_default_subagents().await?;
+    let manager = subagent_manager().await?;
 
     let executor = DefaultSubagentTaskExecutor::new();
     let use_case = ExecuteSubagentTaskUseCase::new(manager, executor);

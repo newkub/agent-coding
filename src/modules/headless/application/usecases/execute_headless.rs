@@ -42,11 +42,15 @@ where
         // Parse command type
         let command_type = parse_command(&input).map_err(AppError::ValidationError)?;
 
-        // Handle session-related commands
-        let session_id = match command_type {
+        // Session commands are backed by the configured session manager rather
+        // than by the command executor, so their results are real persisted data.
+        let session_result = match command_type {
             CommandType::SessionCreate => {
                 let session_id = self.session_manager.create_session().await?;
-                Some(session_id)
+                Some((
+                    Some(session_id.clone()),
+                    format!("Created session: {session_id}"),
+                ))
             }
             CommandType::SessionLoad => {
                 let args: Vec<&str> = input.split_whitespace().collect();
@@ -57,7 +61,19 @@ where
                 }
                 let session_id = args[1].to_string();
                 self.session_manager.load_session(&session_id).await?;
-                Some(session_id)
+                Some((
+                    Some(session_id.clone()),
+                    format!("Loaded session: {session_id}"),
+                ))
+            }
+            CommandType::SessionList => {
+                let sessions = self.session_manager.list_sessions().await?;
+                let output = if sessions.is_empty() {
+                    "No headless sessions found".to_string()
+                } else {
+                    format!("Available sessions: [{}]", sessions.join(", "))
+                };
+                Some((None, output))
             }
             _ => None,
         };
@@ -66,15 +82,22 @@ where
         let mut context = crate::modules::headless::domain::models::command::CommandContext::new(
             working_directory,
         );
-        if let Some(sid) = session_id {
-            context = context.with_session(sid);
+        if let Some((Some(session_id), _)) = &session_result {
+            context = context.with_session(session_id.clone());
         }
 
         // Create command
         let mut command = HeadlessCommand::new(command_type, input, context);
 
-        // Execute command
-        self.executor.execute(&mut command, config).await?;
+        if let Some((_, output)) = session_result {
+            command.complete(output);
+        } else {
+            // Execute command
+            if let Err(error) = self.executor.execute(&mut command, config).await {
+                command.fail(error.to_string());
+                return Err(error);
+            }
+        }
 
         Ok(command)
     }
@@ -125,8 +148,4 @@ where
 }
 
 #[cfg(test)]
-mod tests {
-
-    // Mock implementations would go here
-    // For brevity, we'll skip full mock implementations
-}
+mod tests {}

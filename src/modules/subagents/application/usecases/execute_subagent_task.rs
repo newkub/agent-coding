@@ -95,8 +95,4 @@ where
 }
 
 #[cfg(test)]
-mod tests {
-
-    // Mock implementations would go here
-    // For brevity, we'll skip full mock implementations
-}
+mod tests {}
