@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use reqwest::Client;
 
 use crate::adapters::external::github_parser::{parse_issue_from_json, parse_pr_from_json};
+use crate::adapters::external::http_retry::send_with_retry;
 use crate::modules::automation::domain::models::issue_pr::{Issue, PullRequest};
 use crate::modules::automation::ports::GitHubClient;
 use crate::shared::kernel::result::AppError;
@@ -35,14 +36,13 @@ impl GitHubClient for ReqwestGitHubClient {
     async fn get_issue(&self, repository: &str, number: u32) -> Result<Issue, AppError> {
         let url = format!("{}/repos/{}/issues/{}", self.base_url, repository, number);
 
-        let response = self
-            .client
-            .get(&url)
-            .header("Authorization", format!("Bearer {}", self.token))
-            .header("User-Agent", "agent-tui")
-            .send()
-            .await
-            .map_err(|e| AppError::State(format!("GitHub API error: {}", e)))?;
+        let response = send_with_retry(|| {
+            self.client
+                .get(&url)
+                .header("Authorization", format!("Bearer {}", self.token))
+                .header("User-Agent", "agent-tui")
+        })
+        .await?;
 
         if !response.status().is_success() {
             return Err(AppError::State(format!(
@@ -77,15 +77,14 @@ impl GitHubClient for ReqwestGitHubClient {
             "base": target_branch,
         });
 
-        let response = self
-            .client
-            .post(&url)
-            .header("Authorization", format!("Bearer {}", self.token))
-            .header("User-Agent", "agent-tui")
-            .json(&payload)
-            .send()
-            .await
-            .map_err(|e| AppError::State(format!("GitHub API error: {}", e)))?;
+        let response = send_with_retry(|| {
+            self.client
+                .post(&url)
+                .header("Authorization", format!("Bearer {}", self.token))
+                .header("User-Agent", "agent-tui")
+                .json(&payload)
+        })
+        .await?;
 
         if !response.status().is_success() {
             return Err(AppError::State(format!(
@@ -116,15 +115,14 @@ impl GitHubClient for ReqwestGitHubClient {
             "body": pr.body,
         });
 
-        let response = self
-            .client
-            .patch(&url)
-            .header("Authorization", format!("Bearer {}", self.token))
-            .header("User-Agent", "agent-tui")
-            .json(&payload)
-            .send()
-            .await
-            .map_err(|e| AppError::State(format!("GitHub API error: {}", e)))?;
+        let response = send_with_retry(|| {
+            self.client
+                .patch(&url)
+                .header("Authorization", format!("Bearer {}", self.token))
+                .header("User-Agent", "agent-tui")
+                .json(&payload)
+        })
+        .await?;
 
         if !response.status().is_success() {
             return Err(AppError::State(format!(
@@ -153,15 +151,14 @@ impl GitHubClient for ReqwestGitHubClient {
             self.base_url, repository, issue_number
         );
 
-        let response = self
-            .client
-            .post(&url)
-            .header("Authorization", format!("Bearer {}", self.token))
-            .header("User-Agent", "agent-tui")
-            .json(&labels)
-            .send()
-            .await
-            .map_err(|e| AppError::State(format!("GitHub API error: {}", e)))?;
+        let response = send_with_retry(|| {
+            self.client
+                .post(&url)
+                .header("Authorization", format!("Bearer {}", self.token))
+                .header("User-Agent", "agent-tui")
+                .json(&labels)
+        })
+        .await?;
 
         if !response.status().is_success() {
             return Err(AppError::State(format!(
@@ -185,15 +182,14 @@ impl GitHubClient for ReqwestGitHubClient {
             self.base_url, repository, pr_number
         );
 
-        let response = self
-            .client
-            .post(&url)
-            .header("Authorization", format!("Bearer {}", self.token))
-            .header("User-Agent", "agent-tui")
-            .json(&reviewers)
-            .send()
-            .await
-            .map_err(|e| AppError::State(format!("GitHub API error: {}", e)))?;
+        let response = send_with_retry(|| {
+            self.client
+                .post(&url)
+                .header("Authorization", format!("Bearer {}", self.token))
+                .header("User-Agent", "agent-tui")
+                .json(&reviewers)
+        })
+        .await?;
 
         if !response.status().is_success() {
             return Err(AppError::State(format!(
@@ -209,14 +205,13 @@ impl GitHubClient for ReqwestGitHubClient {
     async fn get_default_branch(&self, repository: &str) -> Result<String, AppError> {
         let url = format!("{}/repos/{}", self.base_url, repository);
 
-        let response = self
-            .client
-            .get(&url)
-            .header("Authorization", format!("Bearer {}", self.token))
-            .header("User-Agent", "agent-tui")
-            .send()
-            .await
-            .map_err(|e| AppError::State(format!("GitHub API error: {}", e)))?;
+        let response = send_with_retry(|| {
+            self.client
+                .get(&url)
+                .header("Authorization", format!("Bearer {}", self.token))
+                .header("User-Agent", "agent-tui")
+        })
+        .await?;
 
         if !response.status().is_success() {
             return Err(AppError::State(format!(

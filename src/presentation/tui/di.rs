@@ -37,7 +37,7 @@ use crate::modules::share::ports::ShareRepository as ShareRepoPort;
 use crate::shared::kernel::result::{AppError, AppResult};
 use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::SqlitePool;
-use std::str::FromStr;
+use std::path::PathBuf;
 
 // Type aliases for use cases with concrete types
 type AnalyzeCodebaseUseCaseConcrete =
@@ -170,6 +170,14 @@ impl DIContainer {
         Ok(self)
     }
 
+    /// Resolve the SQLite database path. `AGENT_TUI_DB_PATH` overrides the
+    /// repository-local default used by the CLI/TUI.
+    pub(crate) fn database_path() -> PathBuf {
+        std::env::var("AGENT_TUI_DB_PATH")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| PathBuf::from("agent_tui.db"))
+    }
+
     /// Initialize the shared SQLite pool and wire every persistent adapter.
     ///
     /// Runs the embedded migrations once, then creates the repositories on the
@@ -177,11 +185,12 @@ impl DIContainer {
     /// untouched.
     pub(crate) async fn init_db(&mut self) -> AppResult<()> {
         if self.db_pool.is_none() {
-            let options =
-                SqliteConnectOptions::from_str("sqlite:agent_tui.db")?.create_if_missing(true);
+            let options = SqliteConnectOptions::new()
+                .filename(Self::database_path())
+                .create_if_missing(true);
             let pool = SqlitePool::connect_with(options).await?;
             migrations::run_migrations(&pool).await?;
-            tracing::info!("sqlite database initialized (agent_tui.db)");
+            tracing::info!(path = %Self::database_path().display(), "sqlite database initialized");
             self.db_pool = Some(pool);
         }
 

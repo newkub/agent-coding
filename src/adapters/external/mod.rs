@@ -8,6 +8,7 @@ pub(crate) mod guardrail_checker;
 pub(crate) mod guardrail_manager;
 pub(crate) mod headless_command_executor;
 pub(crate) mod headless_session_manager;
+pub(crate) mod http_retry;
 pub(crate) mod macro_executor;
 pub(crate) mod metrics_collector;
 #[cfg(test)]
