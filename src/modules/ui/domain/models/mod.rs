@@ -26,7 +26,8 @@ pub use mouse::{DragItemType, DragState, MousePosition, MouseState};
 pub use tab_content::TabContent;
 pub use tab_states::{
     AgentMessage, AgentTabState, ApiTabState, CliTabState, DatabaseTabState, FilesTabState,
-    GitTabState, LogsTabState, NotesTabState, PackagesTabState, SettingsTabState, SkillsTabState,
-    SnippetTabState, SystemTabState, TabState, TasksTabState, TerminalTabState, WorkflowsTabState,
+    GitTabState, LogsTabState, NoteItem, NotesTabState, PackageItem, PackagesTabState,
+    SettingsTabState, SkillItem, SkillsTabState, SnippetItem, SnippetTabState, SystemTabState,
+    TabState, TasksTabState, TerminalTabState, WorkflowItem, WorkflowsTabState,
 };
 pub use toast::{ToastKind, ToastNotification};

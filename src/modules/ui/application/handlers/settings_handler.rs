@@ -3,7 +3,7 @@ use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
 
 /// Settings tab action handler
-pub(super) fn handle_settings_action(state: &mut AppState, action: TabAction) -> AppResult<()> {
+pub(crate) fn handle_settings_action(state: &mut AppState, action: TabAction) -> AppResult<()> {
     match action {
         TabAction::ApplySettings => {
             // Apply and save settings

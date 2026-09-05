@@ -16,6 +16,7 @@ use crate::modules::ui::domain::models::{AppState, Command, ToastKind};
 use crate::modules::ui::ports::{InputHandler, UIRenderer};
 use crate::presentation::tui::components::styles::set_theme;
 use crate::presentation::tui::components::theme::Theme;
+use crate::presentation::tui::di::DIContainer;
 use crate::shared::kernel::result::AppResult;
 use crate::shared::types::Tab;
 use crossterm::event::{KeyCode, KeyModifiers};
@@ -24,10 +25,15 @@ pub(crate) struct TUIApp {
     state: AppState,
     renderer: RatatuiAdapter,
     input_handler: CrosstermInputHandler,
+    di: DIContainer,
 }
 
 impl TUIApp {
-    pub(crate) fn new() -> AppResult<Self> {
+    /// Create a new TUI application.
+    ///
+    /// Builds the DI container, connects the backing SQLite database, and
+    /// preloads every tab with real data before opening the UI.
+    pub(crate) async fn new() -> AppResult<Self> {
         // Load user settings and initialize theme from config (fallback to modern dark)
         let loader = ConfigLoader::new();
         let settings = loader.load().unwrap_or_default();
@@ -35,13 +41,24 @@ impl TUIApp {
         let theme = Theme::from_name(&settings.ui.theme);
         set_theme(theme);
 
+        // Build the DI container and connect the database
+        let mut di = DIContainer::new().build().await?;
+        di.init_db().await?;
+
+        // Initialize state and preload real data into every tab
+        let mut state = initialize_app_state();
+        state.settings_tab_state.theme = settings.ui.theme.clone();
+        state.settings_tab_state.font_size = u16::from(settings.ui.font_size);
+        state.load_from_di(&di).await?;
+
         let mut renderer = RatatuiAdapter::new();
         renderer.initialize()?;
 
         Ok(Self {
-            state: initialize_app_state(),
+            state,
             renderer,
             input_handler: CrosstermInputHandler::new(),
+            di,
         })
     }
 
@@ -79,7 +96,7 @@ impl TUIApp {
 
         // Command palette intercepts all input while open
         if self.state.show_command_palette {
-            self.handle_palette_key(key)?;
+            self.handle_palette_key(key).await?;
             return Ok(false);
         }
 
@@ -99,10 +116,12 @@ impl TUIApp {
                 self.state.command_palette_selected = 0;
             }
             KeyCode::Char('n') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                self.handle_tab_shortcut(Tab::Agent, TabAction::StartSession)?;
+                self.handle_tab_shortcut(Tab::Agent, TabAction::StartSession)
+                    .await?;
             }
             KeyCode::Char('l') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                self.handle_tab_shortcut(Tab::Terminal, TabAction::Clear)?;
+                self.handle_tab_shortcut(Tab::Terminal, TabAction::Clear)
+                    .await?;
             }
             KeyCode::Tab => {
                 switch_next_tab(&mut self.state);
@@ -123,7 +142,7 @@ impl TUIApp {
                 navigate_tab_item(&mut self.state, NavigationDirection::Down);
             }
             KeyCode::Enter => {
-                self.handle_enter_key()?;
+                self.handle_enter_key().await?;
             }
             KeyCode::Backspace => match self.state.ui_state.current_tab {
                 Tab::Terminal => {
@@ -141,7 +160,7 @@ impl TUIApp {
                 toggle_focus(&mut self.state);
             }
             KeyCode::Char(c) if key.modifiers.is_empty() => {
-                self.handle_tab_char(c)?;
+                self.handle_tab_char(c).await?;
             }
             _ => {}
         }
@@ -149,13 +168,14 @@ impl TUIApp {
     }
 
     /// Enter dispatches the primary action of the current tab
-    fn handle_enter_key(&mut self) -> AppResult<()> {
+    async fn handle_enter_key(&mut self) -> AppResult<()> {
         let action = match self.state.ui_state.current_tab {
             Tab::Agent => {
                 if self.state.agent_tab_state.session_id.is_none() {
                     Some(TabAction::StartSession)
                 } else {
-                    None
+                    // Load the selected session from the repository list
+                    Some(TabAction::Select)
                 }
             }
             Tab::Terminal => Some(TabAction::Execute),
@@ -163,16 +183,25 @@ impl TUIApp {
                 let cmd = self.state.cli_tab_state.command_input.clone();
                 Some(TabAction::RunCommand(cmd))
             }
+            Tab::Files => Some(TabAction::OpenFile),
+            Tab::Database => {
+                if self.state.database_tab_state.query_input.trim().is_empty() {
+                    // Preview the selected table
+                    Some(TabAction::Select)
+                } else {
+                    Some(TabAction::Execute)
+                }
+            }
             _ => Some(TabAction::Select),
         };
         if let Some(action) = action {
-            handle_tab_action(&mut self.state, action)?;
+            handle_tab_action(&mut self.state, action, &self.di).await?;
         }
         Ok(())
     }
 
     /// Plain character keys: input fields first, then per-tab shortcuts
-    fn handle_tab_char(&mut self, c: char) -> AppResult<()> {
+    async fn handle_tab_char(&mut self, c: char) -> AppResult<()> {
         match self.state.ui_state.current_tab {
             Tab::Terminal => {
                 self.state.terminal_tab_state.terminal_input.push(c);
@@ -185,39 +214,50 @@ impl TUIApp {
             }
             Tab::Git => match c {
                 's' => {
-                    handle_tab_action(&mut self.state, TabAction::Stage)?;
+                    handle_tab_action(&mut self.state, TabAction::Stage, &self.di).await?;
                     self.state
                         .push_toast(ToastKind::Success, "Staged selected file");
                 }
                 'u' => {
-                    handle_tab_action(&mut self.state, TabAction::Unstage)?;
+                    handle_tab_action(&mut self.state, TabAction::Unstage, &self.di).await?;
                     self.state
                         .push_toast(ToastKind::Success, "Unstaged selected file");
                 }
+                'p' => {
+                    handle_tab_action(&mut self.state, TabAction::Push, &self.di).await?;
+                    self.state
+                        .push_toast(ToastKind::Info, "Pushed current branch");
+                }
+                'r' => {
+                    handle_tab_action(&mut self.state, TabAction::Refresh, &self.di).await?;
+                }
                 _ => {}
             },
+            Tab::Files | Tab::Logs | Tab::System | Tab::Packages if c == 'r' => {
+                handle_tab_action(&mut self.state, TabAction::Refresh, &self.di).await?;
+            }
             _ => {}
         }
         Ok(())
     }
 
     /// Run a tab action only when the current tab matches
-    fn handle_tab_shortcut(&mut self, tab: Tab, action: TabAction) -> AppResult<()> {
+    async fn handle_tab_shortcut(&mut self, tab: Tab, action: TabAction) -> AppResult<()> {
         if self.state.ui_state.current_tab == tab {
-            handle_tab_action(&mut self.state, action)?;
+            handle_tab_action(&mut self.state, action, &self.di).await?;
         }
         Ok(())
     }
 
     /// Keys while the command palette is open
-    fn handle_palette_key(&mut self, key: crossterm::event::KeyEvent) -> AppResult<()> {
+    async fn handle_palette_key(&mut self, key: crossterm::event::KeyEvent) -> AppResult<()> {
         match key.code {
             KeyCode::Esc => self.close_command_palette(),
             KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.close_command_palette();
             }
             KeyCode::Enter => {
-                self.execute_palette_command()?;
+                self.execute_palette_command().await?;
                 self.close_command_palette();
             }
             KeyCode::Up => {
@@ -259,7 +299,7 @@ impl TUIApp {
     }
 
     /// Execute the selected palette command against the current tab
-    fn execute_palette_command(&mut self) -> AppResult<()> {
+    async fn execute_palette_command(&mut self) -> AppResult<()> {
         let Some(cmd) = self
             .filtered_palette_commands()
             .get(self.state.command_palette_selected)
@@ -270,19 +310,61 @@ impl TUIApp {
 
         let executed = match (self.state.ui_state.current_tab, cmd.name.as_str()) {
             (Tab::Agent, "New Session") => {
-                handle_tab_action(&mut self.state, TabAction::StartSession)?;
+                handle_tab_action(&mut self.state, TabAction::StartSession, &self.di).await?;
                 true
             }
             (Tab::Terminal, "Clear") => {
-                handle_tab_action(&mut self.state, TabAction::Clear)?;
+                handle_tab_action(&mut self.state, TabAction::Clear, &self.di).await?;
                 true
             }
             (Tab::Files, "New File") => {
-                handle_tab_action(&mut self.state, TabAction::CreateFile)?;
+                handle_tab_action(&mut self.state, TabAction::CreateFile, &self.di).await?;
                 true
             }
-            (Tab::System, "Refresh") => {
-                handle_tab_action(&mut self.state, TabAction::Refresh)?;
+            (Tab::Files, "Refresh") | (Tab::Packages, "Refresh") | (Tab::Git, "Refresh") => {
+                handle_tab_action(&mut self.state, TabAction::Refresh, &self.di).await?;
+                true
+            }
+            (Tab::Git, "Commit") => {
+                handle_tab_action(
+                    &mut self.state,
+                    TabAction::Commit("Update from TUI".to_string()),
+                    &self.di,
+                )
+                .await?;
+                true
+            }
+            (Tab::Git, "Push") => {
+                handle_tab_action(&mut self.state, TabAction::Push, &self.di).await?;
+                true
+            }
+            (Tab::Database, "Run Query") => {
+                handle_tab_action(&mut self.state, TabAction::Execute, &self.di).await?;
+                true
+            }
+            (Tab::Logs, "Refresh") | (Tab::System, "Refresh") => {
+                handle_tab_action(&mut self.state, TabAction::Refresh, &self.di).await?;
+                true
+            }
+            (Tab::Snippets, "New Snippet") | (Tab::Snippet, "New Snippet") => {
+                handle_tab_action(&mut self.state, TabAction::CreateSnippet, &self.di).await?;
+                true
+            }
+            (Tab::Skills, "Run") => {
+                handle_tab_action(&mut self.state, TabAction::RunSkill, &self.di).await?;
+                true
+            }
+            (Tab::Workflows, "Run") => {
+                handle_tab_action(&mut self.state, TabAction::RunWorkflow, &self.di).await?;
+                true
+            }
+            (Tab::Notes, "New Note") => {
+                handle_tab_action(
+                    &mut self.state,
+                    TabAction::Add("New note".to_string()),
+                    &self.di,
+                )
+                .await?;
                 true
             }
             _ => false,

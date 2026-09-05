@@ -29,7 +29,10 @@ pub(crate) fn navigate_database_tab(state: &mut AppState, direction: NavigationD
             }
         }
         NavigationDirection::Down => {
-            state.database_tab_state.selected_table_index += 1;
+            let max = state.database_tab_state.tables.len().saturating_sub(1);
+            if state.database_tab_state.selected_table_index < max {
+                state.database_tab_state.selected_table_index += 1;
+            }
         }
         NavigationDirection::Left => {
             state.ui_state.current_column = Column::Left;
@@ -69,7 +72,10 @@ pub(crate) fn navigate_notes_tab(state: &mut AppState, direction: NavigationDire
             }
         }
         NavigationDirection::Down => {
-            state.notes_tab_state.selected_note_index += 1;
+            let max = state.notes_tab_state.notes.len().saturating_sub(1);
+            if state.notes_tab_state.selected_note_index < max {
+                state.notes_tab_state.selected_note_index += 1;
+            }
         }
         NavigationDirection::Left => {
             state.ui_state.current_column = Column::Left;

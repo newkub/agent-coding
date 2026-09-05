@@ -10,7 +10,10 @@ pub(crate) fn navigate_logs_tab(state: &mut AppState, direction: NavigationDirec
             }
         }
         NavigationDirection::Down => {
-            state.logs_tab_state.selected_log_index += 1;
+            let max = state.logs_tab_state.entries.len().saturating_sub(1);
+            if state.logs_tab_state.selected_log_index < max {
+                state.logs_tab_state.selected_log_index += 1;
+            }
         }
         NavigationDirection::Left => {
             state.ui_state.current_column = Column::Left;
@@ -23,8 +26,16 @@ pub(crate) fn navigate_logs_tab(state: &mut AppState, direction: NavigationDirec
 
 pub(crate) fn navigate_system_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
-        NavigationDirection::Up | NavigationDirection::Down => {
-            // Navigate through processes
+        NavigationDirection::Up => {
+            if state.system_tab_state.selected_metric_index > 0 {
+                state.system_tab_state.selected_metric_index -= 1;
+            }
+        }
+        NavigationDirection::Down => {
+            let max = state.system_tab_state.metrics.len().saturating_sub(1);
+            if state.system_tab_state.selected_metric_index < max {
+                state.system_tab_state.selected_metric_index += 1;
+            }
         }
         NavigationDirection::Left => {
             state.ui_state.current_column = Column::Left;
