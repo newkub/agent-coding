@@ -61,7 +61,7 @@ pub(crate) async fn record_audit_event(di: &DIContainer, action: AuditAction) {
     let Some(repo) = di.audit_repo() else {
         return;
     };
-    let _ = log_entry(
+    if let Err(e) = log_entry(
         repo,
         action,
         Actor {
@@ -75,7 +75,10 @@ pub(crate) async fn record_audit_event(di: &DIContainer, action: AuditAction) {
             path: None,
         },
     )
-    .await;
+    .await
+    {
+        tracing::warn!(error = %e, "failed to record audit event");
+    }
 }
 
 /// Agent tab: sessions from the session repository.

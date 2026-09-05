@@ -2,19 +2,21 @@
 #![allow(dead_code)]
 // Centralized DI for testability and flexibility
 
-use crate::adapters::db::audit_repository::InMemoryAuditRepository;
-use crate::adapters::db::collaboration_repository::InMemoryCollaborationRepository;
-use crate::adapters::db::macro_repository::InMemoryMacroRepository;
-use crate::adapters::db::session_repository::InMemorySessionRepository;
+use crate::adapters::db::audit_repository::SqliteAuditRepository;
+use crate::adapters::db::collaboration_repository::SqliteCollaborationRepository;
+use crate::adapters::db::headless_session_repository::SqliteHeadlessSessionManager;
+use crate::adapters::db::macro_repository::SqliteMacroRepository;
+use crate::adapters::db::migrations;
+use crate::adapters::db::session_repository::SqliteSessionRepository;
 use crate::adapters::db::share_link_repository::SqliteShareLinkRepository;
 use crate::adapters::db::share_repository::SqliteShareRepository;
 use crate::adapters::external::{
     dependency_parser::DefaultDependencyParser, file_scanner::DefaultFileScanner,
     git_operations::Git2Adapter, github_client::ReqwestGitHubClient,
     headless_command_executor::DefaultHeadlessCommandExecutor,
-    headless_session_manager::InMemorySessionManager, macro_executor::InMemoryMacroExecutor,
-    metrics_collector::SystemMetricsCollector, optimization_manager::InMemoryOptimizationManager,
-    snapshot_manager::InMemorySnapshotManager, subagent_manager::InMemorySubagentManager,
+    macro_executor::InMemoryMacroExecutor, metrics_collector::SystemMetricsCollector,
+    optimization_manager::InMemoryOptimizationManager, snapshot_manager::InMemorySnapshotManager,
+    subagent_manager::InMemorySubagentManager,
 };
 use crate::adapters::input::crossterm_handler::CrosstermInputHandler;
 use crate::adapters::ui::ratatui_adapter::RatatuiAdapter;
@@ -37,7 +39,7 @@ type AnalyzeCodebaseUseCaseConcrete =
     AnalyzeCodebaseUseCase<DefaultFileScanner, DefaultDependencyParser>;
 type ExecuteAutomationUseCaseConcrete = ExecuteAutomationUseCase<Git2Adapter, ReqwestGitHubClient>;
 type ExecuteHeadlessUseCaseConcrete =
-    ExecuteHeadlessUseCase<DefaultHeadlessCommandExecutor, InMemorySessionManager>;
+    ExecuteHeadlessUseCase<DefaultHeadlessCommandExecutor, SqliteHeadlessSessionManager>;
 type AnalyzePerformanceUseCaseConcrete = AnalyzePerformanceUseCase<
     SystemMetricsCollector,
     InMemorySnapshotManager,
@@ -46,6 +48,9 @@ type AnalyzePerformanceUseCaseConcrete = AnalyzePerformanceUseCase<
 
 /// DI Container for managing dependencies
 pub(crate) struct DIContainer {
+    // Database pool shared by every SQLite-backed adapter
+    db_pool: Option<SqlitePool>,
+
     // Repositories
     session_repo: Option<Box<dyn SessionRepository>>,
     audit_repo: Option<Box<dyn AuditRepository>>,
@@ -78,6 +83,7 @@ impl DIContainer {
     /// Create new DI container with default implementations
     pub(crate) fn new() -> Self {
         Self {
+            db_pool: None,
             session_repo: None,
             audit_repo: None,
             collaboration_repo: None,
@@ -102,9 +108,24 @@ impl DIContainer {
 
     /// Build and wire all dependencies (optimized for fast startup)
     pub(crate) async fn build(mut self) -> AppResult<Self> {
+        // Warn (but do not fail) when optional integration credentials are
+        // missing so the app still boots for offline/local use.
+        if std::env::var("OPENAI_API_KEY").is_err() {
+            tracing::warn!(
+                "OPENAI_API_KEY is not set; subagent task execution will fail until configured"
+            );
+        }
+        let github_token = std::env::var("GITHUB_TOKEN")
+            .or_else(|_| std::env::var("GH_TOKEN"))
+            .unwrap_or_default();
+        if github_token.is_empty() {
+            tracing::warn!(
+                "GITHUB_TOKEN/GH_TOKEN is not set; GitHub automation features are unavailable"
+            );
+        }
+
         // Create external adapters (fast operations)
         let git_adapter = Git2Adapter::new(".".to_string());
-        let github_token = std::env::var("GITHUB_TOKEN").unwrap_or_else(|_| "".to_string());
         let github_client = ReqwestGitHubClient::new(github_token);
 
         // Create UI adapters (fast operations)
@@ -129,11 +150,6 @@ impl DIContainer {
         let execute_automation =
             ExecuteAutomationUseCase::new(git_adapter.clone(), github_client.clone());
 
-        let headless_executor = DefaultHeadlessCommandExecutor::new();
-        let headless_session_manager = InMemorySessionManager::new();
-        let execute_headless =
-            ExecuteHeadlessUseCase::new(headless_executor, headless_session_manager);
-
         // Performance analysis use case (sysinfo collector + in-memory stores)
         let analyze_performance = AnalyzePerformanceUseCase::new(
             SystemMetricsCollector::new(),
@@ -141,14 +157,10 @@ impl DIContainer {
             InMemoryOptimizationManager::new(),
         );
 
-        // Wire in-memory repositories (fast, no DB connection)
-        self.session_repo = Some(Box::new(InMemorySessionRepository::new()));
-        self.audit_repo = Some(Box::new(InMemoryAuditRepository::new()));
-        self.collaboration_repo = Some(Box::new(InMemoryCollaborationRepository::new()));
-        self.macro_repo = Some(Box::new(InMemoryMacroRepository::new()));
+        // The macro executor performs real local playback; it has no DB state.
         self.macro_executor = Some(Box::new(InMemoryMacroExecutor::new()));
 
-        // Wire dependencies (skip DB connection - defer to when needed)
+        // Wire dependencies (skip DB connection - defer to `init_db()`)
         self.git_adapter = Some(git_adapter);
         self.github_client = Some(github_client);
         self.file_scanner = Some(file_scanner);
@@ -159,31 +171,61 @@ impl DIContainer {
         self.renderer = Some(renderer);
         self.analyze_codebase = Some(analyze_codebase);
         self.execute_automation = Some(execute_automation);
-        self.execute_headless = Some(execute_headless);
         self.analyze_performance = Some(analyze_performance);
 
-        // Note: share_link_repo with DB connection is deferred to when actually needed
-        // This reduces startup time by ~500ms
+        // Note: all SQLite-backed adapters are wired in `init_db()` so that
+        // `build()` stays fast and tests can inject repositories first.
 
         Ok(self)
     }
 
-    /// Initialize database connection lazily when needed
+    /// Initialize the shared SQLite pool and wire every persistent adapter.
+    ///
+    /// Runs the embedded migrations once, then creates the repositories on the
+    /// same pool. Slots already populated via the `with_*` test hooks are left
+    /// untouched.
     pub(crate) async fn init_db(&mut self) -> AppResult<()> {
-        if self.share_link_repo.is_none() {
+        if self.db_pool.is_none() {
             let options =
-                SqliteConnectOptions::from_str("sqlite:share_links.db")?.create_if_missing(true);
+                SqliteConnectOptions::from_str("sqlite:agent_tui.db")?.create_if_missing(true);
             let pool = SqlitePool::connect_with(options).await?;
+            migrations::run_migrations(&pool).await?;
+            tracing::info!("sqlite database initialized (agent_tui.db)");
+            self.db_pool = Some(pool);
+        }
 
-            // Wire ShareLinkRepository on the same pool
+        let Some(pool) = self.db_pool.clone() else {
+            return Ok(());
+        };
+
+        if self.session_repo.is_none() {
+            self.session_repo = Some(Box::new(SqliteSessionRepository::new(pool.clone())));
+        }
+        if self.audit_repo.is_none() {
+            self.audit_repo = Some(Box::new(SqliteAuditRepository::new(pool.clone())));
+        }
+        if self.collaboration_repo.is_none() {
+            self.collaboration_repo =
+                Some(Box::new(SqliteCollaborationRepository::new(pool.clone())));
+        }
+        if self.macro_repo.is_none() {
+            self.macro_repo = Some(Box::new(SqliteMacroRepository::new(pool.clone())));
+        }
+        if self.share_link_repo.is_none() {
             let share_link_repo = SqliteShareLinkRepository::new(pool.clone());
             share_link_repo.init_table().await?;
             self.share_link_repo = Some(share_link_repo);
-
-            // Wire ShareRepository (session export/import) on the same pool
-            let share_repo = SqliteShareRepository::new(pool);
+        }
+        if self.share_repo.is_none() {
+            let share_repo = SqliteShareRepository::new(pool.clone());
             share_repo.init_table().await?;
             self.share_repo = Some(Box::new(share_repo));
+        }
+        if self.execute_headless.is_none() {
+            self.execute_headless = Some(ExecuteHeadlessUseCase::new(
+                DefaultHeadlessCommandExecutor::new(),
+                SqliteHeadlessSessionManager::new(pool),
+            ));
         }
         Ok(())
     }
@@ -346,6 +388,7 @@ impl Default for DIContainer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::adapters::external::headless_session_manager::InMemorySessionManager;
 
     #[test]
     fn test_di_container_creation() {

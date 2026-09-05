@@ -17,10 +17,12 @@ pub fn validate_performance_metrics(metrics: &PerformanceMetrics) -> Result<(), 
         ));
     }
 
-    if metrics.error_rate < 0.0 || metrics.error_rate > 1.0 {
-        return Err(AppError::ValidationError(
-            "Error rate must be between 0 and 1".to_string(),
-        ));
+    if let Some(error_rate) = metrics.error_rate {
+        if !(0.0..=1.0).contains(&error_rate) {
+            return Err(AppError::ValidationError(
+                "Error rate must be between 0 and 1".to_string(),
+            ));
+        }
     }
 
     Ok(())

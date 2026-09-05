@@ -8,7 +8,8 @@ use crate::presentation::tui::di::DIContainer;
 use crate::shared::kernel::result::{AppError, AppResult};
 
 pub(crate) async fn run(command: MacroCommands) -> AppResult<()> {
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let repo = container
         .macro_repo()
         .ok_or_else(|| AppError::State("Macro repository not available".to_string()))?;

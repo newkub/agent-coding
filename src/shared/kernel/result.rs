@@ -11,6 +11,7 @@ pub enum AppError {
     NotFound(String),
     PermissionDenied(String),
     ValidationError(String),
+    Database(String),
 }
 
 impl fmt::Display for AppError {
@@ -23,6 +24,7 @@ impl fmt::Display for AppError {
             Self::NotFound(msg) => write!(f, "Not Found: {}", msg),
             Self::PermissionDenied(msg) => write!(f, "Permission Denied: {}", msg),
             Self::ValidationError(msg) => write!(f, "Validation Error: {}", msg),
+            Self::Database(msg) => write!(f, "Database Error: {}", msg),
         }
     }
 }
@@ -43,6 +45,6 @@ impl From<git2::Error> for AppError {
 
 impl From<sqlx::Error> for AppError {
     fn from(err: sqlx::Error) -> Self {
-        Self::Io(err.to_string())
+        Self::Database(err.to_string())
     }
 }

@@ -3,6 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Performance metrics entity
+///
+/// `response_time_ms`, `throughput` and `error_rate` are application-level
+/// metrics that a host collector cannot measure directly; they are `None`
+/// until a probe supplies real values instead of fabricating zeros.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PerformanceMetrics {
     pub id: String,
@@ -10,9 +14,9 @@ pub struct PerformanceMetrics {
     pub cpu_usage: f64,
     pub memory_usage: u64,
     pub memory_total: u64,
-    pub response_time_ms: u64,
-    pub throughput: f64,
-    pub error_rate: f64,
+    pub response_time_ms: Option<u64>,
+    pub throughput: Option<f64>,
+    pub error_rate: Option<f64>,
     pub custom_metrics: HashMap<String, f64>,
 }
 
@@ -79,9 +83,9 @@ impl PerformanceMetrics {
             cpu_usage: 0.0,
             memory_usage: 0,
             memory_total: 0,
-            response_time_ms: 0,
-            throughput: 0.0,
-            error_rate: 0.0,
+            response_time_ms: None,
+            throughput: None,
+            error_rate: None,
             custom_metrics: HashMap::new(),
         }
     }
@@ -95,7 +99,9 @@ impl PerformanceMetrics {
     }
 
     pub fn is_healthy(&self) -> bool {
-        self.cpu_usage < 80.0 && self.memory_usage_percentage() < 80.0 && self.error_rate < 0.05
+        self.cpu_usage < 80.0
+            && self.memory_usage_percentage() < 80.0
+            && self.error_rate.map_or(true, |rate| rate < 0.05)
     }
 }
 
@@ -120,10 +126,21 @@ impl PerformanceSnapshot {
         Some(PerformanceComparison {
             cpu_diff: self.metrics.cpu_usage - baseline.cpu_usage,
             memory_diff: self.metrics.memory_usage as i64 - baseline.memory_usage as i64,
-            response_time_diff: self.metrics.response_time_ms as i64
-                - baseline.response_time_ms as i64,
-            throughput_diff: self.metrics.throughput - baseline.throughput,
-            error_rate_diff: self.metrics.error_rate - baseline.error_rate,
+            response_time_diff: self
+                .metrics
+                .response_time_ms
+                .zip(baseline.response_time_ms)
+                .map(|(a, b)| a as i64 - b as i64),
+            throughput_diff: self
+                .metrics
+                .throughput
+                .zip(baseline.throughput)
+                .map(|(a, b)| a - b),
+            error_rate_diff: self
+                .metrics
+                .error_rate
+                .zip(baseline.error_rate)
+                .map(|(a, b)| a - b),
         })
     }
 }
@@ -132,9 +149,9 @@ impl PerformanceSnapshot {
 pub struct PerformanceComparison {
     pub cpu_diff: f64,
     pub memory_diff: i64,
-    pub response_time_diff: i64,
-    pub throughput_diff: f64,
-    pub error_rate_diff: f64,
+    pub response_time_diff: Option<i64>,
+    pub throughput_diff: Option<f64>,
+    pub error_rate_diff: Option<f64>,
 }
 
 impl OptimizationSuggestion {

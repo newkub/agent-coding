@@ -75,10 +75,21 @@ impl SnapshotManager for InMemorySnapshotManager {
             cpu_diff: snapshot2.metrics.cpu_usage - snapshot1.metrics.cpu_usage,
             memory_diff: snapshot2.metrics.memory_usage as i64
                 - snapshot1.metrics.memory_usage as i64,
-            response_time_diff: snapshot2.metrics.response_time_ms as i64
-                - snapshot1.metrics.response_time_ms as i64,
-            throughput_diff: snapshot2.metrics.throughput - snapshot1.metrics.throughput,
-            error_rate_diff: snapshot2.metrics.error_rate - snapshot1.metrics.error_rate,
+            response_time_diff: snapshot2
+                .metrics
+                .response_time_ms
+                .zip(snapshot1.metrics.response_time_ms)
+                .map(|(a, b)| a as i64 - b as i64),
+            throughput_diff: snapshot2
+                .metrics
+                .throughput
+                .zip(snapshot1.metrics.throughput)
+                .map(|(a, b)| a - b),
+            error_rate_diff: snapshot2
+                .metrics
+                .error_rate
+                .zip(snapshot1.metrics.error_rate)
+                .map(|(a, b)| a - b),
         })
     }
 }

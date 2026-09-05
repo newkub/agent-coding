@@ -19,6 +19,9 @@ Project has:
 - ✅ Mock implementations in share module converted to production SQLite repository
 - ✅ Lib/bin architecture unified (main.rs uses agent_tui lib)
 - ✅ Clippy clean (0 warnings) with wired session, audit, share, subagent CLI features
+- ✅ SQLite persistence layer with migrations for session, audit, collaboration, macro, headless, share
+- ✅ Production repositories (SqliteSessionRepository, SqliteAuditRepository, SqliteCollaborationRepository, SqliteMacroRepository, SqliteHeadlessSessionManager)
+- ✅ Environment validation (OPENAI_API_KEY, GITHUB_TOKEN) with tracing/observability
 
 ## Workflows
 

@@ -9,9 +9,9 @@ fn test_analyze_performance() {
     metrics.cpu_usage = 10.0;
     metrics.memory_usage = 100;
     metrics.memory_total = 1000;
-    metrics.response_time_ms = 100;
-    metrics.error_rate = 0.001;
-    metrics.throughput = 100.0;
+    metrics.response_time_ms = Some(100);
+    metrics.error_rate = Some(0.001);
+    metrics.throughput = Some(100.0);
     let suggestions = analyze_performance(&metrics);
     // Low metrics should not generate suggestions
     assert!(suggestions.is_empty());
@@ -32,8 +32,8 @@ fn test_calculate_performance_score() {
     metrics.cpu_usage = 30.0;
     metrics.memory_usage = 300;
     metrics.memory_total = 1000;
-    metrics.response_time_ms = 300;
-    metrics.error_rate = 0.01;
+    metrics.response_time_ms = Some(300);
+    metrics.error_rate = Some(0.01);
 
     let score = calculate_performance_score(&metrics);
     assert!(score > 0.8);

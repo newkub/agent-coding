@@ -70,16 +70,12 @@ impl MetricsCollector for SystemMetricsCollector {
             .map_err(|e| AppError::State(format!("metrics collector task join error: {e}")))??;
 
         // response_time_ms / throughput / error_rate are application-level
-        // metrics that the host collector cannot measure directly. We expose
-        // them as zero so downstream consumers can layer their own probes on
-        // top instead of receiving misleading placeholder values.
+        // metrics that the host collector cannot measure directly. They are
+        // left as `None` so downstream consumers never see fabricated zeros.
         Ok(PerformanceMetrics {
             cpu_usage: f64::from(snapshot.cpu_usage),
             memory_usage: snapshot.memory_used,
             memory_total: snapshot.memory_total,
-            response_time_ms: 0,
-            throughput: 0.0,
-            error_rate: 0.0,
             ..PerformanceMetrics::new()
         })
     }

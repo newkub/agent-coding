@@ -22,7 +22,8 @@ pub(crate) async fn run(command: SessionCommands) -> AppResult<()> {
 async fn list_sessions() -> AppResult<()> {
     output::print_section("Sessions");
 
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let repo = container
         .session_repo()
         .ok_or_else(|| AppError::State("Session repository not available".to_string()))?;
@@ -38,7 +39,8 @@ async fn create_session_cmd(name: String) -> AppResult<()> {
 
     let session = create_session(name).map_err(|e| AppError::ValidationError(e.to_string()))?;
 
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let repo = container
         .session_repo()
         .ok_or_else(|| AppError::State("Session repository not available".to_string()))?;
@@ -54,7 +56,8 @@ async fn create_session_cmd(name: String) -> AppResult<()> {
 async fn delete_session_cmd(id: String) -> AppResult<()> {
     output::print_section(&format!("Deleting session: {}", id));
 
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let repo = container
         .session_repo()
         .ok_or_else(|| AppError::State("Session repository not available".to_string()))?;
@@ -68,7 +71,8 @@ async fn delete_session_cmd(id: String) -> AppResult<()> {
 async fn search_session_cmd(query: String) -> AppResult<()> {
     output::print_section(&format!("Searching sessions: {}", query));
 
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let repo = container
         .session_repo()
         .ok_or_else(|| AppError::State("Session repository not available".to_string()))?;
