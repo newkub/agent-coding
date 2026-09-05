@@ -15,13 +15,13 @@ Project has:
 - ✅ README.md with comprehensive documentation
 - ✅ Clean Architecture (FP-style) implementation
 - ✅ idea-features.md with 40 features for markdown rendering, streaming animation, and UX/UI improvements
-- ✅ All TODO items resolved (git operations removed, events implemented)
-- ✅ Mock implementations in share module converted to production SQLite repository
+- ✅ Placeholder execution paths converted to real implementations (headless filesystem/shell/OpenAI, GitHub issue lookup, persistent automation workflows)
+- ✅ Share links use `AGENT_TUI_SHARE_BASE_URL`; optional real notifications use `AGENT_TUI_SHARE_WEBHOOK_URL`
 - ✅ Lib/bin architecture unified (main.rs uses agent_tui lib)
-- ✅ Clippy clean (0 warnings) with wired session, audit, share, subagent CLI features
-- ✅ SQLite persistence layer with migrations for session, audit, collaboration, macro, headless, share
-- ✅ Production repositories (SqliteSessionRepository, SqliteAuditRepository, SqliteCollaborationRepository, SqliteMacroRepository, SqliteHeadlessSessionManager)
-- ✅ Environment validation (OPENAI_API_KEY, GITHUB_TOKEN) with tracing/observability
+- ✅ Clippy clean (0 warnings) with wired session, audit, share, subagent, guardrail, and performance CLI features
+- ✅ SQLite persistence layer with migrations for session, audit, collaboration, macro, headless, share, performance, automation, subagent, guardrail, notes, and snippets
+- ✅ Production repositories (SqliteSessionRepository, SqliteAuditRepository, SqliteCollaborationRepository, SqliteMacroRepository, SqliteHeadlessSessionManager, SqliteSnapshotManager, SqliteOptimizationManager, SqliteAutomationWorkflowRepository, SqliteSubagentManager, SqliteGuardrailManager, SqliteUiContentRepository)
+- ✅ Environment validation (OPENAI_API_KEY, GITHUB_TOKEN, share-link URL/webhook configuration) with tracing/observability
 
 ## Workflows
 

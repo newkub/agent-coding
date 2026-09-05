@@ -41,6 +41,8 @@ pub struct OptimizationSuggestion {
     pub effort: EffortLevel,
     pub estimated_improvement: f64,
     pub created_at: DateTime<Utc>,
+    #[serde(default)]
+    pub applied_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -172,7 +174,12 @@ impl OptimizationSuggestion {
             effort,
             estimated_improvement,
             created_at: Utc::now(),
+            applied_at: None,
         }
+    }
+
+    pub fn mark_applied(&mut self) {
+        self.applied_at = Some(Utc::now());
     }
 
     pub fn priority_score(&self) -> f64 {

@@ -20,9 +20,16 @@ pub(crate) async fn run(command: HeadlessCommands) -> AppResult<()> {
             directory,
             format,
         } => {
+            let working_directory = std::fs::canonicalize(&directory).map_err(|e| {
+                AppError::Io(format!(
+                    "failed to resolve working directory '{directory}': {e}"
+                ))
+            })?;
+            let working_directory = working_directory.to_string_lossy().to_string();
+
             output::print_section(&format!(
                 "Executing headless command: {} in {}",
-                command, directory
+                command, working_directory
             ));
 
             let output_format = parse_output_format(&format);
@@ -31,7 +38,7 @@ pub(crate) async fn run(command: HeadlessCommands) -> AppResult<()> {
                 ..HeadlessConfig::default()
             };
 
-            match use_case.execute(command, directory, &config).await {
+            match use_case.execute(command, working_directory, &config).await {
                 Ok(cmd) => {
                     if let Some(result) = cmd.output {
                         println!("{}", result);
@@ -69,9 +76,13 @@ pub(crate) async fn run(command: HeadlessCommands) -> AppResult<()> {
         }
         HeadlessCommands::Batch { commands } => {
             output::print_section(&format!("Executing {} headless commands", commands.len()));
+            let working_directory = std::env::current_dir()
+                .map_err(|e| AppError::Io(e.to_string()))?
+                .to_string_lossy()
+                .to_string();
             let config = HeadlessConfig::default();
             match use_case
-                .execute_batch(commands, ".".to_string(), &config)
+                .execute_batch(commands, working_directory, &config)
                 .await
             {
                 Ok(results) => {

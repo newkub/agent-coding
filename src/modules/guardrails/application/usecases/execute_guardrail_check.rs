@@ -96,7 +96,4 @@ pub(crate) struct GuardrailResult {
 }
 
 #[cfg(test)]
-mod tests {
-
-    // Mock implementations would go here
-}
+mod tests {}

@@ -7,6 +7,7 @@ pub(crate) fn handle_notes_action(state: &mut AppState, action: TabAction) -> Ap
     match action {
         TabAction::Add(title) => {
             state.notes_tab_state.notes.push(NoteItem {
+                id: uuid::Uuid::new_v4().to_string(),
                 title,
                 content: String::new(),
             });

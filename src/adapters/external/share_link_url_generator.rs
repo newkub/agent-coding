@@ -13,8 +13,26 @@ impl DefaultShareLinkUrlGenerator {
         Self { base_url }
     }
 
-    pub(crate) fn default() -> Self {
-        Self::new("https://share.agent-tui.com".to_string())
+    /// Load the share-link base URL from `AGENT_TUI_SHARE_BASE_URL`.
+    ///
+    /// There is no built-in share service endpoint in this repository, so a
+    /// production URL must be supplied explicitly; no built-in share-service
+    /// endpoint is assumed.
+    pub(crate) fn from_env() -> Result<Self, AppError> {
+        let base_url = std::env::var("AGENT_TUI_SHARE_BASE_URL").map_err(|_| {
+            AppError::State(
+                "AGENT_TUI_SHARE_BASE_URL is not set; share links cannot be generated".to_string(),
+            )
+        })?;
+        let parsed = reqwest::Url::parse(&base_url).map_err(|e| {
+            AppError::ValidationError(format!("AGENT_TUI_SHARE_BASE_URL is not a valid URL: {e}"))
+        })?;
+        if !matches!(parsed.scheme(), "http" | "https") {
+            return Err(AppError::ValidationError(
+                "AGENT_TUI_SHARE_BASE_URL must use http or https".to_string(),
+            ));
+        }
+        Ok(Self::new(base_url.trim_end_matches('/').to_string()))
     }
 }
 

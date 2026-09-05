@@ -15,6 +15,7 @@ use crate::modules::macros::application::usecases as macro_usecases;
 use crate::modules::macros::domain::models::MacroId;
 use crate::modules::session::domain::models::{Message, MessageRole, Session, SessionId};
 use crate::modules::ui::domain::models::{AppState, ToastKind};
+use crate::modules::ui::ports::UiContentRepository;
 use crate::presentation::tui::di::DIContainer;
 use crate::shared::kernel::result::AppResult;
 use crate::shared::kernel::types::Tab;
@@ -48,10 +49,44 @@ pub(crate) async fn apply_tab_effects(
             state.cli_tab_state.command_input.clear();
             run_shell_command(state, &command, ShellTarget::Cli, di).await;
         }
+        (Tab::Notes, TabAction::Add(_) | TabAction::Edit(_, _) | TabAction::Remove(_)) => {
+            persist_notes(state, di).await;
+        }
+        (
+            Tab::Snippets | Tab::Snippet,
+            TabAction::SaveSnippet | TabAction::Edit(_, _) | TabAction::Remove(_),
+        ) => {
+            persist_snippets(state, di).await;
+        }
         (Tab::Settings, TabAction::ApplySettings) => settings_effects(state),
         _ => {}
     }
     Ok(())
+}
+
+/// Persist the Notes tab state and reload it from SQLite.
+async fn persist_notes(state: &mut AppState, di: &DIContainer) {
+    let Some(repo) = di.ui_content_repo() else {
+        return;
+    };
+    match repo.replace_notes(&state.notes_tab_state.notes).await {
+        Ok(()) => services::refresh_notes(state, di).await,
+        Err(e) => state.push_toast(ToastKind::Error, format!("Failed to save notes: {e}")),
+    }
+}
+
+/// Persist the Snippet(s) tab state and reload it from SQLite.
+async fn persist_snippets(state: &mut AppState, di: &DIContainer) {
+    let Some(repo) = di.ui_content_repo() else {
+        return;
+    };
+    match repo
+        .replace_snippets(&state.snippet_tab_state.snippets)
+        .await
+    {
+        Ok(()) => services::refresh_snippets(state, di).await,
+        Err(e) => state.push_toast(ToastKind::Error, format!("Failed to save snippets: {e}")),
+    }
 }
 
 /// Agent tab: persist sessions/messages via the session repository.

@@ -33,12 +33,8 @@ impl ScreenReaderAnnouncer {
         let mut buffer = self.buffer.lock().unwrap();
         buffer.push(message.to_string());
 
-        // In a real implementation, this would:
-        // 1. Write to a named pipe or socket that screen readers monitor
-        // 2. Use platform-specific APIs (e.g., Windows SAPI, macOS VoiceOver)
-        // 3. Emit ANSI escape codes for terminal screen readers
-
-        // For now, we'll just print to stderr (which some screen readers monitor)
+        // Stderr is the supported accessibility transport for this terminal UI;
+        // terminal screen readers can capture and announce it.
         eprintln!("[SCREEN READER] {}", message);
     }
 

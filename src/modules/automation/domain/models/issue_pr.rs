@@ -66,6 +66,7 @@ pub enum WorkflowStatus {
     InProgress,
     Completed,
     Failed,
+    Cancelled,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

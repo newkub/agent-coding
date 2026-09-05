@@ -42,7 +42,13 @@ pub struct GuardrailRule {
     pub rule_type: RuleType,
     pub pattern: Option<String>,
     pub action: GuardrailAction,
+    #[serde(default = "default_rule_severity")]
+    pub severity: Severity,
     pub enabled: bool,
+}
+
+fn default_rule_severity() -> Severity {
+    Severity::Medium
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -80,7 +86,13 @@ pub struct GuardrailViolation {
     pub rule_name: String,
     pub message: String,
     pub severity: Severity,
+    #[serde(default = "default_violation_action")]
+    pub action: GuardrailAction,
     pub suggested_action: String,
+}
+
+fn default_violation_action() -> GuardrailAction {
+    GuardrailAction::Warn
 }
 
 impl Guardrail {
@@ -128,8 +140,14 @@ impl GuardrailRule {
             rule_type,
             pattern: None,
             action,
+            severity: Severity::Medium,
             enabled: true,
         }
+    }
+
+    pub const fn with_severity(mut self, severity: Severity) -> Self {
+        self.severity = severity;
+        self
     }
 
     pub fn with_pattern(mut self, pattern: String) -> Self {
@@ -201,6 +219,7 @@ mod tests {
             rule_name: "Test Rule".to_string(),
             message: "Violation detected".to_string(),
             severity: Severity::High,
+            action: GuardrailAction::Block,
             suggested_action: "Remove content".to_string(),
         };
         check.add_violation(violation);

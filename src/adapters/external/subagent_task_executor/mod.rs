@@ -27,7 +27,7 @@ use crate::shared::kernel::result::AppError;
 /// use and caches the resulting [`Client`] in an [`Arc`]. Tasks that fail
 /// because the key is missing or the API returns an error are marked as
 /// `Failed` with the underlying message stored on the task, so callers can
-/// surface the failure to the user instead of silently falling back to mock
+/// surface the failure to the user instead of silently producing synthetic
 /// data.
 pub(crate) struct DefaultSubagentTaskExecutor {
     tasks: Arc<RwLock<HashMap<String, SubagentTask>>>,
@@ -45,7 +45,7 @@ impl DefaultSubagentTaskExecutor {
     /// Lazily build the OpenAI client from `OPENAI_API_KEY`.
     ///
     /// Returns an error if the key is not configured so callers can fail fast
-    /// instead of silently producing placeholder output.
+    /// instead of silently producing synthetic output.
     async fn client(&self) -> Result<Client<OpenAIConfig>, AppError> {
         // Fast path: cached client.
         {

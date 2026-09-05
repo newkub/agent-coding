@@ -9,6 +9,7 @@ use crate::shared::kernel::result::AppResult;
 /// Entry point for the CLI presentation layer.
 /// Parses the command line and dispatches to a handler.
 pub async fn run() -> AppResult<()> {
+    init_tracing();
     let cli = Cli::parse();
 
     match cli.command {
@@ -24,4 +25,11 @@ pub async fn run() -> AppResult<()> {
             }
         }
     }
+}
+
+fn init_tracing() {
+    let filter = std::env::var("RUST_LOG")
+        .map(tracing_subscriber::EnvFilter::new)
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
+    let _ = tracing_subscriber::fmt().with_env_filter(filter).try_init();
 }

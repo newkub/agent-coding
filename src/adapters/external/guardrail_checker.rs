@@ -37,7 +37,7 @@ where
         let mut checks = Vec::new();
 
         for guardrail in guardrails {
-            let check = check_input_against_guardrail(input, &guardrail);
+            let check = check_input_against_guardrail(input, &guardrail)?;
             checks.push(check);
         }
 
@@ -52,9 +52,7 @@ where
         guardrail_validators::validate_input_for_check(input)?;
 
         let guardrail = self.manager.get_guardrail(guardrail_id).await?;
-        let check = check_input_against_guardrail(input, &guardrail);
-
-        Ok(check)
+        check_input_against_guardrail(input, &guardrail)
     }
 
     async fn filter_output(&self, output: &str) -> Result<String, AppError> {
@@ -80,7 +78,4 @@ where
 }
 
 #[cfg(test)]
-mod tests {
-
-    // Mock implementations would go here
-}
+mod tests {}

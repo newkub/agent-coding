@@ -74,6 +74,19 @@ pub(crate) trait GitOperations: Send + Sync {
     async fn remote_branch_exists(&self, branch_name: &str) -> Result<bool, AppError>;
 }
 
+/// Port for persisting automation workflow state.
+#[async_trait]
+pub(crate) trait AutomationWorkflowRepository: Send + Sync {
+    /// Save a new workflow.
+    async fn save(&self, workflow: &AutomationWorkflow) -> Result<(), AppError>;
+
+    /// Update an existing workflow.
+    async fn update(&self, workflow: &AutomationWorkflow) -> Result<(), AppError>;
+
+    /// Find a workflow by ID.
+    async fn find_by_id(&self, workflow_id: &str) -> Result<AutomationWorkflow, AppError>;
+}
+
 /// Port for automation workflow execution
 #[async_trait]
 pub(crate) trait AutomationWorkflowExecutor: Send + Sync {

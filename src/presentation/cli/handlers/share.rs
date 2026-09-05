@@ -1,6 +1,6 @@
 // Share link handler - creates, deactivates, and accesses share links
 
-use crate::adapters::external::share_link_notifier::LogShareLinkNotifier;
+use crate::adapters::external::share_link_notifier::ConfiguredShareLinkNotifier;
 use crate::adapters::external::share_link_url_generator::DefaultShareLinkUrlGenerator;
 use crate::modules::share::application::usecases::{
     access_share_link::AccessShareLinkUseCase, create_share_link::CreateShareLinkUseCase,
@@ -46,8 +46,8 @@ async fn create_share_link(session_name: String) -> AppResult<()> {
 
     let use_case = CreateShareLinkUseCase::new(
         share_link_repo.clone(),
-        DefaultShareLinkUrlGenerator::default(),
-        LogShareLinkNotifier::new(),
+        DefaultShareLinkUrlGenerator::from_env()?,
+        ConfiguredShareLinkNotifier::from_env()?,
     );
 
     let (link, url) = use_case
@@ -67,8 +67,10 @@ async fn deactivate_share_link(token: String) -> AppResult<()> {
         .share_link_repo()
         .ok_or_else(|| AppError::State("Share link repository not available".to_string()))?;
 
-    let use_case =
-        DeactivateShareLinkUseCase::new(share_link_repo.clone(), LogShareLinkNotifier::new());
+    let use_case = DeactivateShareLinkUseCase::new(
+        share_link_repo.clone(),
+        ConfiguredShareLinkNotifier::from_env()?,
+    );
     let link = use_case.execute_by_token(&token).await?;
     output::print_share_link_deactivated(&link);
     Ok(())
@@ -84,8 +86,10 @@ async fn access_share_link(token: String) -> AppResult<()> {
         .share_link_repo()
         .ok_or_else(|| AppError::State("Share link repository not available".to_string()))?;
 
-    let use_case =
-        AccessShareLinkUseCase::new(share_link_repo.clone(), LogShareLinkNotifier::new());
+    let use_case = AccessShareLinkUseCase::new(
+        share_link_repo.clone(),
+        ConfiguredShareLinkNotifier::from_env()?,
+    );
     let link = use_case.execute(&token, ShareAction::Read).await?;
     output::print_share_link_accessed(&link);
     Ok(())

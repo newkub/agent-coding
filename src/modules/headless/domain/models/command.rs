@@ -101,13 +101,6 @@ impl HeadlessCommand {
     pub const fn is_interactive(&self) -> bool {
         matches!(self.command_type, CommandType::Chat)
     }
-
-    pub const fn requires_session(&self) -> bool {
-        matches!(
-            self.command_type,
-            CommandType::Chat | CommandType::FileRead | CommandType::FileWrite
-        )
-    }
 }
 
 impl CommandContext {
