@@ -12,6 +12,7 @@ pub(crate) use data_tabs::{
     navigate_api_tab, navigate_database_tab, navigate_notes_tab, navigate_tasks_tab,
 };
 pub(crate) use development_tabs::{
-    navigate_packages_tab, navigate_skills_tab, navigate_snippets_tab, navigate_workflows_tab,
+    navigate_collaboration_tab, navigate_macros_tab, navigate_packages_tab, navigate_skills_tab,
+    navigate_snippets_tab, navigate_workflows_tab,
 };
 pub(crate) use system_tabs::{navigate_logs_tab, navigate_system_tab};

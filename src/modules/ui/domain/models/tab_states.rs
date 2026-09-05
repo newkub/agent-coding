@@ -1,4 +1,6 @@
 use crate::modules::audit::domain::models::AuditEntry;
+use crate::modules::collaboration::domain::models::{CollaborationSession, SharedMessage};
+use crate::modules::macros::domain::models::Macro;
 use crate::modules::session::domain::models::Session;
 use serde::{Deserialize, Serialize};
 use task_tui::TaskManagerUseCase;
@@ -189,6 +191,44 @@ pub struct SystemTabState {
     pub metrics: Vec<(String, String)>,
     /// Alerts raised by threshold checks
     pub alerts: Vec<String>,
+    /// Performance score (0-100) from the last analysis run
+    pub performance_score: Option<f64>,
+    /// Optimization suggestions produced by the optimization manager
+    pub suggestions: Vec<String>,
+    /// Names/ids of stored performance snapshots
+    pub snapshots: Vec<String>,
+}
+
+/// Collaboration tab state
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct CollaborationTabState {
+    /// Active collaboration sessions loaded from the repository
+    pub sessions: Vec<CollaborationSession>,
+    /// Messages of the currently selected session
+    pub messages: Vec<SharedMessage>,
+    /// Input line: session name when creating, chat text when joined
+    pub input: String,
+    pub selected_session_index: usize,
+    /// Whether the local user hosts the selected session
+    pub is_host: bool,
+    /// Participant id of the local user within the joined session
+    pub local_participant_id: Option<String>,
+}
+
+/// Macros tab state
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct MacroTabState {
+    /// Macros loaded from the macro repository
+    pub macros: Vec<Macro>,
+    pub selected_index: usize,
+    /// Whether a recording is in progress
+    pub recording: bool,
+    /// Input line: macro name when starting a recording
+    pub input: String,
+    /// Id of the macro currently being recorded
+    pub recording_id: Option<String>,
+    /// Status line describing the last action (playback result, errors)
+    pub status: Option<String>,
 }
 
 /// Tab state enum
@@ -208,6 +248,8 @@ pub enum TabState {
     Notes(NotesTabState),
     Packages(PackagesTabState),
     System(SystemTabState),
+    Collaboration(CollaborationTabState),
+    Macros(MacroTabState),
 }
 
 /// Tasks tab state
@@ -227,4 +269,8 @@ pub struct TerminalTabState {
     pub history: Vec<String>,
     /// Captured output lines of executed commands
     pub output: Vec<String>,
+    /// Headless session ids managed by the headless session manager
+    pub headless_sessions: Vec<String>,
+    /// Selection within `headless_sessions`
+    pub selected_session_index: usize,
 }

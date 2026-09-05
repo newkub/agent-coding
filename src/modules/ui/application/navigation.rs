@@ -1,9 +1,10 @@
 use crate::modules::ui::application::tab_navigation::NavigationDirection;
 use crate::modules::ui::application::tab_navigators::{
-    navigate_agent_tab, navigate_api_tab, navigate_cli_tab, navigate_database_tab,
-    navigate_files_tab, navigate_git_tab, navigate_logs_tab, navigate_notes_tab,
-    navigate_packages_tab, navigate_skills_tab, navigate_snippets_tab, navigate_system_tab,
-    navigate_tasks_tab, navigate_terminal_tab, navigate_workflows_tab,
+    navigate_agent_tab, navigate_api_tab, navigate_cli_tab, navigate_collaboration_tab,
+    navigate_database_tab, navigate_files_tab, navigate_git_tab, navigate_logs_tab,
+    navigate_macros_tab, navigate_notes_tab, navigate_packages_tab, navigate_skills_tab,
+    navigate_snippets_tab, navigate_system_tab, navigate_tasks_tab, navigate_terminal_tab,
+    navigate_workflows_tab,
 };
 use crate::modules::ui::domain::models::AppState;
 use crate::shared::types::{Column, Tab};
@@ -73,5 +74,7 @@ pub(crate) fn navigate_tab_item(state: &mut AppState, direction: NavigationDirec
         Tab::Workflows => navigate_workflows_tab(state, direction),
         Tab::Settings => {}
         Tab::Cli => navigate_cli_tab(state, direction),
+        Tab::Collaboration => navigate_collaboration_tab(state, direction),
+        Tab::Macros => navigate_macros_tab(state, direction),
     }
 }

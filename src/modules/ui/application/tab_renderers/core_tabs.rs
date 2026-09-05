@@ -192,10 +192,36 @@ pub(crate) fn render_files_tab(state: &AppState) -> TabColumns {
 }
 
 /// Render Terminal tab columns — backed by `terminal_tab_state`
+/// (shell history plus headless sessions from the headless session manager)
 pub(crate) fn render_terminal_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.terminal_tab_state;
 
-    let left = if tab_state.history.is_empty() {
+    let sessions = if tab_state.headless_sessions.is_empty() {
+        "Sessions: (none)".to_string()
+    } else {
+        let items = tab_state
+            .headless_sessions
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                let marker = if i == tab_state.selected_session_index {
+                    ">"
+                } else {
+                    " "
+                };
+                let short: String = s.chars().take(13).collect();
+                format!("{marker} {short}")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        format!(
+            "Sessions ({}):\n{}",
+            tab_state.headless_sessions.len(),
+            items
+        )
+    };
+
+    let history = if tab_state.history.is_empty() {
         "No commands yet".to_string()
     } else {
         tab_state
@@ -216,6 +242,8 @@ pub(crate) fn render_terminal_tab(state: &AppState) -> TabColumns {
             .join("\n")
     };
 
+    let left = format!("{sessions}\n\nHistory:\n{history}");
+
     let center = if tab_state.output.is_empty() {
         format!("$ {}\n\nOutput:\n  (no output)", tab_state.terminal_input)
     } else {
@@ -235,12 +263,13 @@ pub(crate) fn render_terminal_tab(state: &AppState) -> TabColumns {
     };
 
     let right = format!(
-        "History: {} commands\nSelected: {}\n\n[Enter] Execute\n[Ctrl+L] Clear\n[Up/Down] History",
+        "History: {} commands\nSelected: {}\nSessions: {}\n\n[Enter] Execute\n[Ctrl+L] Clear\n[Up/Down] History\n[Ctrl+K] Session actions",
         tab_state.history.len(),
         tab_state
             .selected_history_index
             .map(|i| i.to_string())
-            .unwrap_or_else(|| "-".to_string())
+            .unwrap_or_else(|| "-".to_string()),
+        tab_state.headless_sessions.len(),
     );
 
     TabColumns::new(left, center, right)

@@ -5,7 +5,7 @@ use agent_tui::shared::kernel::types::{Column, Tab};
 #[test]
 fn test_tab_all() {
     let tabs = Tab::all();
-    assert_eq!(tabs.len(), 17);
+    assert_eq!(tabs.len(), 19);
     assert!(tabs.contains(&Tab::Agent));
     assert!(tabs.contains(&Tab::Git));
     assert!(tabs.contains(&Tab::Cli));
@@ -23,6 +23,8 @@ fn test_tab_all() {
     assert!(tabs.contains(&Tab::Notes));
     assert!(tabs.contains(&Tab::Logs));
     assert!(tabs.contains(&Tab::System));
+    assert!(tabs.contains(&Tab::Collaboration));
+    assert!(tabs.contains(&Tab::Macros));
 }
 
 #[test]
@@ -43,12 +45,16 @@ fn test_tab_next() {
     assert_eq!(Tab::Skills.next(), Tab::Workflows);
     assert_eq!(Tab::Workflows.next(), Tab::Settings);
     assert_eq!(Tab::Settings.next(), Tab::Cli);
-    assert_eq!(Tab::Cli.next(), Tab::Agent);
+    assert_eq!(Tab::Cli.next(), Tab::Collaboration);
+    assert_eq!(Tab::Collaboration.next(), Tab::Macros);
+    assert_eq!(Tab::Macros.next(), Tab::Agent);
 }
 
 #[test]
 fn test_tab_prev() {
-    assert_eq!(Tab::Agent.prev(), Tab::Cli);
+    assert_eq!(Tab::Agent.prev(), Tab::Macros);
+    assert_eq!(Tab::Macros.prev(), Tab::Collaboration);
+    assert_eq!(Tab::Collaboration.prev(), Tab::Cli);
     assert_eq!(Tab::Packages.prev(), Tab::Agent);
     assert_eq!(Tab::Files.prev(), Tab::Packages);
     assert_eq!(Tab::Git.prev(), Tab::Files);

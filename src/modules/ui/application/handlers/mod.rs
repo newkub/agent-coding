@@ -1,7 +1,9 @@
 pub mod agent_handler;
 mod cli_handler;
+mod collaboration_handler;
 mod files_handler;
 mod git_handler;
+mod macro_handler;
 mod quick_action;
 mod settings_handler;
 mod skills_handler;
@@ -22,8 +24,10 @@ mod terminal_handler;
 
 pub use agent_handler::handle_agent_action;
 pub(crate) use cli_handler::handle_cli_action;
+pub(crate) use collaboration_handler::handle_collaboration_action;
 pub(crate) use files_handler::handle_files_action;
 pub(crate) use git_handler::handle_git_action;
+pub(crate) use macro_handler::handle_macros_action;
 pub(crate) use settings_handler::handle_settings_action;
 pub(crate) use skills_handler::handle_skills_action;
 pub(crate) use snippet_handler::handle_snippet_action;

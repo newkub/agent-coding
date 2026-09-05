@@ -74,6 +74,54 @@ pub(crate) fn navigate_skills_tab(state: &mut AppState, direction: NavigationDir
     }
 }
 
+pub(crate) fn navigate_collaboration_tab(state: &mut AppState, direction: NavigationDirection) {
+    match direction {
+        NavigationDirection::Up => {
+            if state.collaboration_tab_state.selected_session_index > 0 {
+                state.collaboration_tab_state.selected_session_index -= 1;
+            }
+        }
+        NavigationDirection::Down => {
+            let max = state
+                .collaboration_tab_state
+                .sessions
+                .len()
+                .saturating_sub(1);
+            if state.collaboration_tab_state.selected_session_index < max {
+                state.collaboration_tab_state.selected_session_index += 1;
+            }
+        }
+        NavigationDirection::Left => {
+            state.ui_state.current_column = Column::Left;
+        }
+        NavigationDirection::Right => {
+            state.ui_state.current_column = Column::Right;
+        }
+    }
+}
+
+pub(crate) fn navigate_macros_tab(state: &mut AppState, direction: NavigationDirection) {
+    match direction {
+        NavigationDirection::Up => {
+            if state.macros_tab_state.selected_index > 0 {
+                state.macros_tab_state.selected_index -= 1;
+            }
+        }
+        NavigationDirection::Down => {
+            let max = state.macros_tab_state.macros.len().saturating_sub(1);
+            if state.macros_tab_state.selected_index < max {
+                state.macros_tab_state.selected_index += 1;
+            }
+        }
+        NavigationDirection::Left => {
+            state.ui_state.current_column = Column::Left;
+        }
+        NavigationDirection::Right => {
+            state.ui_state.current_column = Column::Right;
+        }
+    }
+}
+
 pub(crate) fn navigate_workflows_tab(state: &mut AppState, direction: NavigationDirection) {
     match direction {
         NavigationDirection::Up => {

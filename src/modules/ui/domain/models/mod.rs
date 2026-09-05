@@ -25,9 +25,9 @@ pub use legacy_states::{
 pub use mouse::{DragItemType, DragState, MousePosition, MouseState};
 pub use tab_content::TabContent;
 pub use tab_states::{
-    AgentMessage, AgentTabState, ApiTabState, CliTabState, DatabaseTabState, FilesTabState,
-    GitTabState, LogsTabState, NoteItem, NotesTabState, PackageItem, PackagesTabState,
-    SettingsTabState, SkillItem, SkillsTabState, SnippetItem, SnippetTabState, SystemTabState,
-    TabState, TasksTabState, TerminalTabState, WorkflowItem, WorkflowsTabState,
+    AgentMessage, AgentTabState, ApiTabState, CliTabState, CollaborationTabState, DatabaseTabState,
+    FilesTabState, GitTabState, LogsTabState, MacroTabState, NoteItem, NotesTabState, PackageItem,
+    PackagesTabState, SettingsTabState, SkillItem, SkillsTabState, SnippetItem, SnippetTabState,
+    SystemTabState, TabState, TasksTabState, TerminalTabState, WorkflowItem, WorkflowsTabState,
 };
 pub use toast::{ToastKind, ToastNotification};
