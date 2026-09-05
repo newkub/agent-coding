@@ -24,6 +24,9 @@ Project has:
 - ✅ Environment validation (OPENAI_API_KEY, GITHUB_TOKEN, share-link URL/webhook configuration, AGENT_TUI_DB_PATH) with tracing/observability
 - ✅ SQLite backup/restore/verify CLI via `database` subcommands using online `VACUUM INTO` and `PRAGMA integrity_check`
 - ✅ Bounded exponential HTTP retries with backoff for GitHub and share webhook requests
+- ✅ x-correlation-id tracing and structured response-time logging for external HTTP and OpenAI calls
+- ✅ Token-bucket rate limiting for GitHub and OpenAI API calls
+- ✅ SQLite indexes added for common lookup paths in sessions, macros, headless, share, subagents, guardrails, and UI content
 - ✅ End-to-end CLI test coverage for database backup/restore lifecycle
 
 ## Workflows
