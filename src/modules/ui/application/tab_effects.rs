@@ -6,7 +6,11 @@
 
 use super::handlers::TabAction;
 use super::services;
+use crate::adapters::config::loader::load_automation_config;
+use crate::adapters::external::subagent_task_executor::DefaultSubagentTaskExecutor;
 use crate::modules::audit::domain::models::AuditAction;
+use crate::modules::automation::domain::models::issue_pr::AutomationWorkflow;
+use crate::modules::automation::ports::{AutomationWorkflowExecutor, GitHubClient};
 use crate::modules::collaboration::application::usecases as collaboration_usecases;
 use crate::modules::collaboration::domain::models::{
     CollaborationId, Participant, ParticipantId, ParticipantRole, SharedMessageType,
@@ -14,6 +18,8 @@ use crate::modules::collaboration::domain::models::{
 use crate::modules::macros::application::usecases as macro_usecases;
 use crate::modules::macros::domain::models::MacroId;
 use crate::modules::session::domain::models::{Message, MessageRole, Session, SessionId};
+use crate::modules::subagents::domain::models::subagent::{SubagentTask, TaskContext, TaskType};
+use crate::modules::subagents::ports::SubagentTaskExecutor;
 use crate::modules::ui::domain::models::{AppState, ToastKind};
 use crate::modules::ui::ports::UiContentRepository;
 use crate::presentation::tui::di::DIContainer;
@@ -33,12 +39,14 @@ pub(crate) async fn apply_tab_effects(
         (Tab::Files, _) => files_effects(state, action, di).await,
         (Tab::Git, _) => git_effects(state, action, di).await,
         (Tab::Packages, TabAction::Refresh) => services::refresh_packages(state, di).await,
+        (Tab::Api, _) => api_effects(state, action).await,
         (Tab::Database, _) => database_effects(state, action, di).await,
         (Tab::Logs, _) => logs_effects(state, action, di).await,
         (Tab::System, _) => system_effects(state, action, di).await,
         (Tab::Skills, _) => skills_effects(state, action, di).await,
         (Tab::Collaboration, _) => collaboration_effects(state, action, di).await,
         (Tab::Macros, _) => macros_effects(state, action, di).await,
+        (Tab::Workflows, _) => workflows_effects(state, action, di).await,
         (Tab::Terminal, TabAction::Execute) => {
             let command = state.terminal_tab_state.terminal_input.clone();
             run_shell_command(state, &command, ShellTarget::Terminal, di).await;
@@ -48,6 +56,12 @@ pub(crate) async fn apply_tab_effects(
             let command = command.clone();
             state.cli_tab_state.command_input.clear();
             run_shell_command(state, &command, ShellTarget::Cli, di).await;
+        }
+        (
+            Tab::Tasks,
+            TabAction::Add(_) | TabAction::Edit(_, _) | TabAction::Remove(_) | TabAction::Toggle(_),
+        ) => {
+            services::persist_tasks(state);
         }
         (Tab::Notes, TabAction::Add(_) | TabAction::Edit(_, _) | TabAction::Remove(_)) => {
             persist_notes(state, di).await;
@@ -86,6 +100,154 @@ async fn persist_snippets(state: &mut AppState, di: &DIContainer) {
     {
         Ok(()) => services::refresh_snippets(state, di).await,
         Err(e) => state.push_toast(ToastKind::Error, format!("Failed to save snippets: {e}")),
+    }
+}
+
+/// API tab: execute the configured request through the `api-tui` HTTP client.
+async fn api_effects(state: &mut AppState, action: &TabAction) {
+    if !matches!(action, TabAction::Execute) || !state.api_tab_state.is_executing {
+        return;
+    }
+
+    let url = state.api_tab_state.request_url.clone();
+    if url.is_empty() {
+        state.api_tab_state.response = "Error: request URL is empty".to_string();
+        state.api_tab_state.is_executing = false;
+        state.push_toast(ToastKind::Error, "API request URL is empty".to_string());
+        return;
+    }
+
+    let method = match state.api_tab_state.request_method.as_str() {
+        "POST" => api_tui::HttpMethod::Post,
+        "PUT" => api_tui::HttpMethod::Put,
+        "DELETE" => api_tui::HttpMethod::Delete,
+        "PATCH" => api_tui::HttpMethod::Patch,
+        _ => api_tui::HttpMethod::Get,
+    };
+    let body = if state.api_tab_state.request_body.is_empty() {
+        None
+    } else {
+        Some(state.api_tab_state.request_body.clone())
+    };
+    let request = api_tui::ApiRequest {
+        url,
+        method,
+        headers: vec![],
+        body,
+    };
+
+    match api_tui::adapters::http_client::HttpClient::new()
+        .execute(&request)
+        .await
+    {
+        Ok(resp) => {
+            state.api_tab_state.response = format!("Status: {}\n\n{}", resp.status, resp.body);
+        }
+        Err(e) => {
+            state.api_tab_state.response = format!("Error: {e}");
+            state.push_toast(ToastKind::Error, format!("API request failed: {e}"));
+        }
+    }
+    state.api_tab_state.is_executing = false;
+}
+
+/// Workflows tab: run or cancel issue-to-PR automation against the real
+/// GitHub/Git adapters and the configured `AutomationConfig`.
+async fn workflows_effects(state: &mut AppState, action: &TabAction, di: &DIContainer) {
+    match action {
+        TabAction::RunWorkflow => {
+            let input = state
+                .workflows_tab_state
+                .automation_input
+                .trim()
+                .to_string();
+            let Some((repository, number_str)) = input.split_once('#') else {
+                state.workflows_tab_state.execution_status = Some("invalid input".to_string());
+                state.push_toast(
+                    ToastKind::Error,
+                    "Use owner/repo#issue_number to run automation".to_string(),
+                );
+                return;
+            };
+            let Ok(number) = number_str.trim().parse::<u32>() else {
+                state.workflows_tab_state.execution_status =
+                    Some("invalid issue number".to_string());
+                state.push_toast(ToastKind::Error, "Invalid issue number".to_string());
+                return;
+            };
+            let Some(github) = di.github_client() else {
+                state.workflows_tab_state.execution_status = Some("github unavailable".to_string());
+                state.push_toast(ToastKind::Error, "GitHub client not configured".to_string());
+                return;
+            };
+            let Some(use_case) = di.execute_automation_use_case() else {
+                state.workflows_tab_state.execution_status =
+                    Some("automation unavailable".to_string());
+                state.push_toast(
+                    ToastKind::Error,
+                    "Automation use case not configured".to_string(),
+                );
+                return;
+            };
+            let issue = match github.get_issue(repository, number).await {
+                Ok(issue) => issue,
+                Err(e) => {
+                    state.workflows_tab_state.execution_status = Some(format!("failed: {e}"));
+                    state.push_toast(ToastKind::Error, format!("Failed to load issue: {e}"));
+                    return;
+                }
+            };
+            let mut workflow = AutomationWorkflow::new(issue);
+            let config = load_automation_config();
+            match use_case.execute(&mut workflow, &config).await {
+                Ok(()) => {
+                    state.workflows_tab_state.execution_status = Some("completed".to_string());
+                    state.workflows_tab_state.current_workflow_id = Some(workflow.id.clone());
+                    state.workflows_tab_state.workflows.push(
+                        crate::modules::ui::domain::models::WorkflowItem {
+                            name: format!(
+                                "{}#{}",
+                                workflow.issue.repository, workflow.issue.number
+                            ),
+                            status: format!("{:?}", workflow.status),
+                            steps: workflow
+                                .steps
+                                .iter()
+                                .map(|s| format!("{}: {:?}", s.name, s.status))
+                                .collect(),
+                        },
+                    );
+                }
+                Err(e) => {
+                    state.workflows_tab_state.execution_status = Some(format!("failed: {e}"));
+                    state.push_toast(ToastKind::Error, format!("Automation failed: {e}"));
+                }
+            }
+        }
+        TabAction::StopWorkflow => {
+            let Some(workflow_id) = state.workflows_tab_state.current_workflow_id.clone() else {
+                state.workflows_tab_state.execution_status =
+                    Some("no workflow running".to_string());
+                return;
+            };
+            let Some(use_case) = di.execute_automation_use_case() else {
+                state.workflows_tab_state.execution_status =
+                    Some("automation unavailable".to_string());
+                return;
+            };
+            match use_case.cancel(&workflow_id).await {
+                Ok(()) => {
+                    state.workflows_tab_state.execution_status = Some("cancelled".to_string());
+                    state.workflows_tab_state.current_workflow_id = None;
+                }
+                Err(e) => {
+                    state.workflows_tab_state.execution_status =
+                        Some(format!("cancel failed: {e}"));
+                    state.push_toast(ToastKind::Error, format!("Cancel failed: {e}"));
+                }
+            }
+        }
+        _ => {}
     }
 }
 
@@ -142,6 +304,48 @@ async fn agent_effects(state: &mut AppState, action: &TabAction, di: &DIContaine
                 },
             )
             .await;
+
+            let executor = DefaultSubagentTaskExecutor::new();
+            let mut task = SubagentTask::new(
+                "assistant".to_string(),
+                TaskType::Custom("chat".to_string()),
+                content.clone(),
+                TaskContext::new().with_session(session_id.as_str().to_string()),
+            );
+            match executor.execute_task(&mut task).await {
+                Ok(()) => {
+                    if let Some(output) = task.output {
+                        state.agent_tab_state.messages.push(
+                            crate::modules::ui::domain::models::AgentMessage {
+                                role: "agent".to_string(),
+                                content: output.clone(),
+                                timestamp: chrono::Utc::now(),
+                            },
+                        );
+                        if let Ok(Some(mut session)) = repo.find_by_id(&session_id).await {
+                            session.add_message(Message::create(
+                                uuid::Uuid::new_v4().to_string(),
+                                MessageRole::Assistant,
+                                output,
+                                chrono::Utc::now(),
+                            ));
+                            let _ = repo.save(&session).await;
+                        }
+                        services::record_audit_event(
+                            di,
+                            AuditAction::AiRequest {
+                                model: std::env::var("SUBAGENT_MODEL")
+                                    .unwrap_or_else(|_| "gpt-4o-mini".to_string()),
+                                tokens: 0,
+                            },
+                        )
+                        .await;
+                    }
+                }
+                Err(e) => {
+                    state.push_toast(ToastKind::Error, format!("Assistant response failed: {e}"));
+                }
+            }
         }
         TabAction::Select => {
             let idx = state.agent_tab_state.selected_session_index;

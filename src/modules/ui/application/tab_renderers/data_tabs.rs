@@ -1,27 +1,32 @@
 use super::TabColumns;
 use crate::modules::ui::domain::models::AppState;
 
-/// Render API tab columns — uses api-app for data
+/// Render API tab columns — backed by `api_tab_state` request/response fields.
 pub(crate) fn render_api_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.api_tab_state;
-    let api_uc = api_tui::ApiUseCase::new();
 
     let left = format!(
-        "Endpoints: {}\nSelected: {}",
-        api_uc.endpoints().len(),
-        tab_state.selected_endpoint_index,
+        "Selected: {}\nExecuting: {}",
+        tab_state.selected_endpoint_index, tab_state.is_executing
     );
 
     let center = if tab_state.is_editing {
-        "Editing request…".to_string()
+        format!(
+            "Editing request\nURL: {}\nMethod: {}\nBody: {}",
+            tab_state.request_url, tab_state.request_method, tab_state.request_body
+        )
     } else {
-        "No request selected".to_string()
+        format!(
+            "Request\nURL: {}\nMethod: {}",
+            tab_state.request_url, tab_state.request_method
+        )
     };
 
-    let right = api_uc
-        .last_response()
-        .map(|r| format!("Status: {}\n\n{}", r.status, r.body))
-        .unwrap_or_else(|| "No response".to_string());
+    let right = if tab_state.response.is_empty() {
+        "No response".to_string()
+    } else {
+        tab_state.response.clone()
+    };
 
     TabColumns::new(left, center, right)
 }

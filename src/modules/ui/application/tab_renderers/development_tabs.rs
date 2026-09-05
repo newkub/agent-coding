@@ -172,7 +172,7 @@ pub(crate) fn render_workflows_tab(state: &AppState) -> TabColumns {
     };
 
     let center = if tab_state.is_editing {
-        "Editing workflow…".to_string()
+        format!("Automation input: {}", tab_state.automation_input)
     } else {
         match tab_state.workflows.get(tab_state.selected_workflow_index) {
             Some(w) => format!("{}\n\nSteps:\n{}", w.name, w.steps.join("\n")),
@@ -181,9 +181,14 @@ pub(crate) fn render_workflows_tab(state: &AppState) -> TabColumns {
     };
 
     let right = format!(
-        "Status: {}\nWorkflows: {}\n\n[Ctrl+K → Run] Execute",
+        "Status: {}\nWorkflows: {}\nInput: {}\n\n[Ctrl+K → Run] Execute",
         tab_state.execution_status.as_deref().unwrap_or("idle"),
         tab_state.workflows.len(),
+        if tab_state.automation_input.is_empty() {
+            "owner/repo#issue"
+        } else {
+            tab_state.automation_input.as_str()
+        },
     );
 
     TabColumns::new(left, center, right)
