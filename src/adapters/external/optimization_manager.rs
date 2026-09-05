@@ -90,7 +90,7 @@ mod tests {
         let manager = InMemoryOptimizationManager::new();
         let metrics =
             crate::modules::performance::domain::models::metrics::PerformanceMetrics::new();
-        let suggestions = manager.generate_suggestions(&metrics).await.unwrap();
+        let _suggestions = manager.generate_suggestions(&metrics).await.unwrap();
         // Should generate suggestions based on metrics
     }
 

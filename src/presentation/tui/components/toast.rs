@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::VecDeque;
 
 use ratatui::{layout::Rect, text::Line, Frame};

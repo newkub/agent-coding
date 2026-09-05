@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use moka::future::Cache;
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;

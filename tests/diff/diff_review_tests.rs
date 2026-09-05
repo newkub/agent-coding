@@ -27,7 +27,7 @@ fn test_diff_review_empty() {
 
 #[test]
 fn test_diff_review_next_hunk() {
-    let mut hunk1 = DiffHunk::create(
+    let hunk1 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -1 @@".to_string(),
         1,
@@ -36,7 +36,7 @@ fn test_diff_review_next_hunk() {
         1,
         vec![],
     );
-    let mut hunk2 = DiffHunk::create(
+    let hunk2 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -5 @@".to_string(),
         5,
@@ -57,7 +57,7 @@ fn test_diff_review_next_hunk() {
 
 #[test]
 fn test_diff_review_prev_hunk() {
-    let mut hunk1 = DiffHunk::create(
+    let hunk1 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -1 @@".to_string(),
         1,
@@ -66,7 +66,7 @@ fn test_diff_review_prev_hunk() {
         1,
         vec![],
     );
-    let mut hunk2 = DiffHunk::create(
+    let hunk2 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -5 @@".to_string(),
         5,
@@ -88,7 +88,7 @@ fn test_diff_review_prev_hunk() {
 
 #[test]
 fn test_diff_review_approve_current_hunk() {
-    let mut hunk = DiffHunk::create(
+    let hunk = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -1 @@".to_string(),
         1,
@@ -107,7 +107,7 @@ fn test_diff_review_approve_current_hunk() {
 
 #[test]
 fn test_diff_review_reject_current_hunk() {
-    let mut hunk = DiffHunk::create(
+    let hunk = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ -1 @@".to_string(),
         1,
@@ -136,7 +136,7 @@ fn test_diff_review_approved_count() {
         vec![],
     );
     hunk1.approve();
-    let mut hunk2 = DiffHunk::create(
+    let hunk2 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ @@".to_string(),
         1,
@@ -156,7 +156,7 @@ fn test_diff_review_approved_count() {
 
 #[test]
 fn test_diff_review_pending_count() {
-    let mut hunk1 = DiffHunk::create(
+    let hunk1 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ @@".to_string(),
         1,
@@ -165,7 +165,7 @@ fn test_diff_review_pending_count() {
         1,
         vec![],
     );
-    let mut hunk2 = DiffHunk::create(
+    let hunk2 = DiffHunk::create(
         uuid::Uuid::new_v4().to_string(),
         "@@ @@".to_string(),
         1,

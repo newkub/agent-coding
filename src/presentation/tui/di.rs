@@ -1,6 +1,9 @@
 // Dependency Injection Container for Clean Architecture
+#![allow(dead_code)]
 // Centralized DI for testability and flexibility
 
+use crate::adapters::db::audit_repository::InMemoryAuditRepository;
+use crate::adapters::db::session_repository::InMemorySessionRepository;
 use crate::adapters::db::share_link_repository::SqliteShareLinkRepository;
 use crate::adapters::db::share_repository::SqliteShareRepository;
 use crate::adapters::external::{
@@ -17,10 +20,11 @@ use crate::modules::collaboration::ports::CollaborationRepository;
 use crate::modules::headless::application::usecases::execute_headless::ExecuteHeadlessUseCase;
 use crate::modules::onboarding::application::usecases::analyze_codebase::AnalyzeCodebaseUseCase;
 use crate::modules::session::ports::SessionRepository;
-use crate::modules::share::ports::ShareLinkRepository as ShareLinkRepoPort;
 use crate::modules::share::ports::ShareRepository as ShareRepoPort;
 use crate::shared::kernel::result::AppResult;
+use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::SqlitePool;
+use std::str::FromStr;
 
 // Type aliases for use cases with concrete types
 type AnalyzeCodebaseUseCaseConcrete =
@@ -35,7 +39,7 @@ pub(crate) struct DIContainer {
     session_repo: Option<Box<dyn SessionRepository>>,
     audit_repo: Option<Box<dyn AuditRepository>>,
     collaboration_repo: Option<Box<dyn CollaborationRepository>>,
-    share_link_repo: Option<Box<dyn ShareLinkRepoPort>>,
+    share_link_repo: Option<SqliteShareLinkRepository>,
     share_repo: Option<Box<dyn ShareRepoPort>>,
 
     // External services
@@ -95,6 +99,10 @@ impl DIContainer {
         let execute_headless =
             ExecuteHeadlessUseCase::new(headless_executor, headless_session_manager);
 
+        // Wire in-memory repositories (fast, no DB connection)
+        self.session_repo = Some(Box::new(InMemorySessionRepository::new()));
+        self.audit_repo = Some(Box::new(InMemoryAuditRepository::new()));
+
         // Wire dependencies (skip DB connection - defer to when needed)
         self.git_adapter = Some(git_adapter);
         self.github_client = Some(github_client);
@@ -113,8 +121,13 @@ impl DIContainer {
     /// Initialize database connection lazily when needed
     pub(crate) async fn init_db(&mut self) -> AppResult<()> {
         if self.share_link_repo.is_none() {
-            let pool = SqlitePool::connect("sqlite:share_links.db").await?;
-            let share_link_repo = Box::new(SqliteShareLinkRepository::new(pool.clone()));
+            let options =
+                SqliteConnectOptions::from_str("sqlite:share_links.db")?.create_if_missing(true);
+            let pool = SqlitePool::connect_with(options).await?;
+
+            // Wire ShareLinkRepository on the same pool
+            let share_link_repo = SqliteShareLinkRepository::new(pool.clone());
+            share_link_repo.init_table().await?;
             self.share_link_repo = Some(share_link_repo);
 
             // Wire ShareRepository (session export/import) on the same pool
@@ -126,28 +139,28 @@ impl DIContainer {
     }
 
     /// Get session repository
-    pub(crate) fn session_repo(&self) -> Option<&Box<dyn SessionRepository>> {
-        self.session_repo.as_ref()
+    pub(crate) fn session_repo(&self) -> Option<&dyn SessionRepository> {
+        self.session_repo.as_deref()
     }
 
     /// Get audit repository
-    pub(crate) fn audit_repo(&self) -> Option<&Box<dyn AuditRepository>> {
-        self.audit_repo.as_ref()
+    pub(crate) fn audit_repo(&self) -> Option<&dyn AuditRepository> {
+        self.audit_repo.as_deref()
     }
 
     /// Get collaboration repository
-    pub(crate) fn collaboration_repo(&self) -> Option<&Box<dyn CollaborationRepository>> {
-        self.collaboration_repo.as_ref()
+    pub(crate) fn collaboration_repo(&self) -> Option<&dyn CollaborationRepository> {
+        self.collaboration_repo.as_deref()
     }
 
     /// Get share link repository
-    pub(crate) fn share_link_repo(&self) -> Option<&Box<dyn ShareLinkRepoPort>> {
+    pub(crate) fn share_link_repo(&self) -> Option<&SqliteShareLinkRepository> {
         self.share_link_repo.as_ref()
     }
 
     /// Get share repository (session export/import)
-    pub(crate) fn share_repo(&self) -> Option<&Box<dyn ShareRepoPort>> {
-        self.share_repo.as_ref()
+    pub(crate) fn share_repo(&self) -> Option<&dyn ShareRepoPort> {
+        self.share_repo.as_deref()
     }
 
     /// Get git adapter
@@ -213,7 +226,7 @@ impl DIContainer {
     }
 
     /// Set custom share link repository (for testing)
-    pub(crate) fn with_share_link_repo(mut self, repo: Box<dyn ShareLinkRepoPort>) -> Self {
+    pub(crate) fn with_share_link_repo(mut self, repo: SqliteShareLinkRepository) -> Self {
         self.share_link_repo = Some(repo);
         self
     }
@@ -245,7 +258,7 @@ mod tests {
     #[tokio::test]
     async fn test_di_container_build() {
         // Skip SQLite connection for unit test - test only DI wiring
-        let container = DIContainer::new();
+        let _container = DIContainer::new();
 
         // Test that we can create use cases without DB connection
         let file_scanner = DefaultFileScanner::new();
@@ -264,6 +277,5 @@ mod tests {
             ExecuteHeadlessUseCase::new(headless_executor, headless_session_manager);
 
         // If we reach here, all use cases were created successfully
-        assert!(true);
     }
 }

@@ -73,7 +73,7 @@ pub struct EntryPoint {
 pub enum EntryPointType {
     Main,
     Library,
-    CLI,
+    Cli,
     Server,
     Worker,
 }

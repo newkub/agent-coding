@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use super::theme::Theme;
 use ratatui::style::Color;
 use ratatui_ui::Theme as RatatuiTheme;

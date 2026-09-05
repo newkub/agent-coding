@@ -1,4 +1,5 @@
 // Design Tokens for TUI (Terminal User Interface)
+#![allow(dead_code)]
 // Follows design system principles for consistency and accessibility
 
 use ratatui::style::Color;

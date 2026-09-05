@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 mod color_palette;
 mod spacing;
 mod typography;

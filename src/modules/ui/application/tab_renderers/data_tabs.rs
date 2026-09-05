@@ -1,42 +1,66 @@
-use super::TabRenderResult;
+use super::TabColumns;
 use crate::modules::ui::domain::models::AppState;
-use ratatui::layout::Rect;
-use ratatui::widgets::Paragraph;
 
-/// Render API tab content — uses api-app for data
-pub(crate) fn render_api_tab(state: &AppState) -> TabRenderResult<'_> {
+/// Render API tab columns — uses api-app for data
+pub(crate) fn render_api_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.api_tab_state;
     let api_uc = api_tui::ApiUseCase::new();
 
-    let content = Paragraph::new(format!(
-        "API\n\nSelected Endpoint: {}\n\n(api-app: {} endpoints, last response: {})",
-        tab_state.selected_endpoint_index,
+    let left = format!(
+        "Endpoints: {}\nSelected: {}",
         api_uc.endpoints().len(),
-        api_uc
-            .last_response()
-            .map(|r| format!("{} {}", r.status, r.body))
-            .unwrap_or_else(|| "None".to_string()),
-    ));
-    TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
+        tab_state.selected_endpoint_index,
+    );
+
+    let center = if tab_state.is_editing {
+        "Editing request…".to_string()
+    } else {
+        "No request selected".to_string()
+    };
+
+    let right = api_uc
+        .last_response()
+        .map(|r| format!("Status: {}\n\n{}", r.status, r.body))
+        .unwrap_or_else(|| "No response".to_string());
+
+    TabColumns::new(left, center, right)
 }
 
-/// Render Database tab content — uses database-app for data
-pub(crate) fn render_database_tab(state: &AppState) -> TabRenderResult<'_> {
+/// Render Database tab columns — uses database-app for data
+pub(crate) fn render_database_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.database_tab_state;
-    let db_uc = database_tui::DatabaseUseCase::new();
+    let db_uc = database_tui::DatabaseUseCase::new(
+        database_tui::ConnectionConfig {
+            url: String::new(),
+            database: String::new(),
+        },
+        Box::new(database_tui::SqliteDbPort::new()),
+    );
 
-    let content = Paragraph::new(format!(
-        "Database\n\nSelected Table: {}\nQuery: {}\n\n(database-app: {} tables, result: {})",
-        tab_state.selected_table_index,
-        tab_state.query_input,
+    let left = format!(
+        "Tables: {}\nSelected: {}",
         db_uc.tables().len(),
-        db_uc.formatted_result(),
-    ));
-    TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
+        tab_state.selected_table_index,
+    );
+
+    let center = if tab_state.query_input.is_empty() {
+        "Query:\n  (type a query)".to_string()
+    } else {
+        format!("Query:\n{}", tab_state.query_input)
+    };
+
+    let result = db_uc.formatted_result();
+    let right = if result.is_empty() {
+        "No result".to_string()
+    } else {
+        result
+    };
+
+    TabColumns::new(left, center, right)
 }
 
-/// Render Tasks tab content — uses the task-tui task manager.
-pub(crate) fn render_tasks_tab(state: &AppState) -> TabRenderResult<'_> {
+/// Render Tasks tab columns — uses the task-tui task manager
+pub(crate) fn render_tasks_tab(state: &AppState) -> TabColumns {
     let tab = &state.tasks_tab_state;
     let tm = &tab.task_manager;
 
@@ -60,28 +84,55 @@ pub(crate) fn render_tasks_tab(state: &AppState) -> TabRenderResult<'_> {
         })
     });
 
-    let total = tm.tasks().len();
-    let filtered = tm.filtered_tasks().len();
-    let selected = tm.selected_task().map(|t| t.title.as_str()).unwrap_or("-");
-    let path_str = path.as_deref().unwrap_or("No workspace");
+    let left = {
+        let path_str = path.as_deref().unwrap_or("No workspace");
+        let items: Vec<String> = tm
+            .filtered_tasks()
+            .iter()
+            .take(15)
+            .enumerate()
+            .map(|(i, t)| {
+                let marker = if i == tab.selected_task_index {
+                    ">"
+                } else {
+                    " "
+                };
+                format!("{marker} {}", t.title)
+            })
+            .collect();
+        if items.is_empty() {
+            format!("{path_str}\n\n(no tasks)")
+        } else {
+            format!("{path_str}\n\n{}", items.join("\n"))
+        }
+    };
 
-    let content = Paragraph::new(format!(
-        "Tasks\n\n{path_str}\n\nSelected Task: {selected} ({})\nShow Completed: {}\n\n(task-tui: {} total, {} filtered)",
-        tab.selected_task_index,
+    let center = tm
+        .selected_task()
+        .map(|t| t.title.clone())
+        .unwrap_or_else(|_| "No task selected".to_string());
+
+    let right = format!(
+        "Show Completed: {}\n\n{} total, {} filtered",
         tab.show_completed,
-        total,
-        filtered,
-    ));
-    TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
+        tm.tasks().len(),
+        tm.filtered_tasks().len(),
+    );
+
+    TabColumns::new(left, center, right)
 }
 
-/// Render Notes tab content
-pub(crate) fn render_notes_tab(state: &AppState) -> TabRenderResult<'_> {
+/// Render Notes tab columns
+pub(crate) fn render_notes_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.notes_tab_state;
 
-    let content = Paragraph::new(format!(
-        "Notes\n\nSelected Note: {}",
-        tab_state.selected_note_index
-    ));
-    TabRenderResult::new(content, Rect::new(0, 0, 0, 0))
+    let left = format!("Selected note: {}", tab_state.selected_note_index);
+    let center = if tab_state.is_editing {
+        "Editing note…".to_string()
+    } else {
+        "No note selected".to_string()
+    };
+    let right = "Tags: -".to_string();
+
+    TabColumns::new(left, center, right)
 }

@@ -1,4 +1,6 @@
 // Snippet domain events
+#![allow(clippy::module_inception)]
+
 pub mod events;
 
 pub use events::SnippetEvent;

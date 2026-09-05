@@ -1,3 +1,5 @@
+#![allow(clippy::field_reassign_with_default)]
+
 use agent_tui::modules::headless::domain::models::command::{
     CommandContext, CommandType, HeadlessCommand, HeadlessConfig,
 };

@@ -10,7 +10,6 @@ pub(crate) fn render_markdown(text: &str) -> Vec<Line<'static>> {
     let mut lines = Vec::new();
     let mut current_line: Vec<Span<'static>> = Vec::new();
     let mut in_code_block = false;
-    let mut in_list = false;
     let mut list_level = 0;
 
     for event in parser {
@@ -56,7 +55,6 @@ pub(crate) fn render_markdown(text: &str) -> Vec<Line<'static>> {
                     }
                 }
                 Tag::List(_) => {
-                    in_list = true;
                     list_level += 1;
                 }
                 Tag::Item => {
@@ -105,7 +103,6 @@ pub(crate) fn render_markdown(text: &str) -> Vec<Line<'static>> {
                     lines.push(Line::from(""));
                 }
                 TagEnd::List(_) => {
-                    in_list = false;
                     list_level = list_level.saturating_sub(1);
                 }
                 TagEnd::Item if !current_line.is_empty() => {

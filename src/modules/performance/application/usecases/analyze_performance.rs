@@ -128,7 +128,6 @@ pub(crate) struct PerformanceComparisonResult {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     // Mock implementations would go here
 }

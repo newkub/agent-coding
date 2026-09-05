@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn test_validate_analysis_completeness_no_files() {
-        let mut analysis = CodebaseAnalysis::new(PathBuf::from("/test"));
+        let analysis = CodebaseAnalysis::new(PathBuf::from("/test"));
         assert!(validate_analysis_completeness(&analysis).is_err());
     }
 

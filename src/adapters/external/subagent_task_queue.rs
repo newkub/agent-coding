@@ -8,11 +8,13 @@ use crate::modules::subagents::ports::TaskQueue;
 use crate::shared::kernel::result::AppError;
 
 /// In-memory task queue
+#[allow(dead_code)]
 pub(crate) struct InMemoryTaskQueue {
     queue: Arc<RwLock<VecDeque<SubagentTask>>>,
 }
 
 impl InMemoryTaskQueue {
+    #[allow(dead_code)]
     pub(crate) fn new() -> Self {
         Self {
             queue: Arc::new(RwLock::new(VecDeque::new())),

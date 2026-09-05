@@ -8,7 +8,6 @@ mod validation_tests;
 
 use agent_tui::modules::session::domain::models::*;
 use agent_tui::modules::session::domain::operations::*;
-use agent_tui::modules::session::types::*;
 use chrono::Utc;
 
 fn create_test_message(role: MessageRole, content: String) -> Message {

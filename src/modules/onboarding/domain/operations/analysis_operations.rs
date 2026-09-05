@@ -76,7 +76,7 @@ pub fn calculate_language_distribution(structure: &mut ProjectStructure) {
     // Normalize percentages to sum to 100%
     let total: f64 = structure.languages.values().sum();
     if total > 0.0 {
-        for (_, percentage) in structure.languages.iter_mut() {
+        for percentage in structure.languages.values_mut() {
             *percentage = (*percentage / total) * 100.0;
         }
     }
@@ -157,6 +157,7 @@ pub enum ComplexityLevel {
 }
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
     use std::path::PathBuf;

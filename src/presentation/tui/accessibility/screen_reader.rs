@@ -1,4 +1,5 @@
 // Screen reader support for TUI
+#![allow(dead_code)]
 // Provides announcements and accessibility features for screen readers
 
 use crate::adapters::config::settings::AccessibilitySettings;

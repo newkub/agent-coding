@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::modules::share::ports::ShareLinkUrlGenerator;
 use crate::shared::kernel::result::AppError;
 use async_trait::async_trait;

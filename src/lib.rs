@@ -4,11 +4,11 @@ pub mod shared;
 // Modules - re-export for external use
 pub mod modules;
 
-// Adapters - private implementation details
-pub(crate) mod adapters;
+// Adapters - implementation details exposed for the binary
+pub mod adapters;
 
-// Presentation - private implementation details
-pub(crate) mod presentation;
+// Presentation - implementation details exposed for the binary
+pub mod presentation;
 
 // Re-exports for common types from shared kernel
 pub use shared::kernel::encryption::{EncryptionError, SessionEncryptor};

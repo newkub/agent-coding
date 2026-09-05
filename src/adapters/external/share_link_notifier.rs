@@ -51,6 +51,7 @@ impl ShareLinkNotifier for LogShareLinkNotifier {
 }
 
 /// No-op implementation for testing or when notifications are disabled
+#[allow(dead_code)]
 pub(crate) struct NoopShareLinkNotifier;
 
 #[async_trait]

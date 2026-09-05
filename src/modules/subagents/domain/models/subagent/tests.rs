@@ -1,6 +1,5 @@
 //! Subagent domain model - Tests
 
-use super::model::*;
 use super::types::*;
 
 #[test]

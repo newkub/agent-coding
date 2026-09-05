@@ -7,6 +7,7 @@ use crate::modules::share::ports::ShareLinkRepository;
 use crate::shared::kernel::result::AppError;
 
 /// SQLite implementation of ShareLinkRepository
+#[derive(Clone)]
 pub(crate) struct SqliteShareLinkRepository {
     pool: SqlitePool,
 }

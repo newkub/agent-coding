@@ -1,8 +1,6 @@
-use agent_tui::modules::performance::domain::models::metrics::{
-    EffortLevel, ImpactLevel, OptimizationCategory, PerformanceMetrics,
-};
+use agent_tui::modules::performance::domain::models::metrics::PerformanceMetrics;
 use agent_tui::modules::performance::domain::operations::performance_operations::{
-    analyze_performance, calculate_performance_score, sort_suggestions_by_priority,
+    analyze_performance, calculate_performance_score,
 };
 
 #[test]

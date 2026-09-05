@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 /// Typography tokens for TUI
 /// TUI only supports monospace fonts
 #[derive(Debug, Clone, Copy)]

@@ -70,6 +70,7 @@ pub fn validate_command_for_headless(command: &HeadlessCommand) -> Result<(), Ap
 }
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
     use crate::modules::headless::domain::models::command::{CommandContext, CommandType};
