@@ -93,6 +93,12 @@ pub(crate) enum Commands {
         command: SessionCommands,
     },
 
+    /// Backup, restore, or verify the SQLite database
+    Database {
+        #[command(subcommand)]
+        command: DatabaseCommands,
+    },
+
     /// Show version information
     Version,
 }
@@ -253,6 +259,25 @@ pub(crate) enum AuditCommands {
 }
 
 #[derive(Debug, Subcommand)]
+pub(crate) enum DatabaseCommands {
+    /// Create a verified online SQLite backup
+    Backup {
+        /// Destination backup file
+        path: String,
+    },
+    /// Restore the database from a verified backup
+    Restore {
+        /// Backup file to restore
+        path: String,
+        /// Confirm overwriting the active database
+        #[arg(long)]
+        yes: bool,
+    },
+    /// Run SQLite integrity checks
+    Verify,
+}
+
+#[derive(Debug, Subcommand)]
 pub(crate) enum SessionCommands {
     /// List all sessions
     List,
@@ -293,6 +318,7 @@ pub(crate) async fn dispatch(command: Commands) -> AppResult<()> {
         Commands::Share { command } => handlers::share::run(command).await,
         Commands::Audit { command } => handlers::audit::run(command).await,
         Commands::Session { command } => handlers::session::run(command).await,
+        Commands::Database { command } => handlers::database::run(command).await,
         Commands::Version => handlers::version::run(),
     }
 }

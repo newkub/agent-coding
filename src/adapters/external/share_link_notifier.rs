@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use reqwest::Client;
 use tracing::{info, warn};
 
+use crate::adapters::external::http_retry::send_with_retry;
 use crate::modules::share::domain::models::share_link::ShareLink;
 use crate::modules::share::ports::ShareLinkNotifier;
 use crate::shared::kernel::result::AppError;
@@ -99,13 +100,7 @@ impl ConfiguredShareLinkNotifier {
             "access_count": link.access_count,
             "max_access": link.max_access,
         });
-        let response = self
-            .client
-            .post(webhook_url)
-            .json(&payload)
-            .send()
-            .await
-            .map_err(|e| AppError::State(format!("share webhook request failed: {e}")))?;
+        let response = send_with_retry(|| self.client.post(webhook_url).json(&payload)).await?;
         if !response.status().is_success() {
             return Err(AppError::State(format!(
                 "share webhook returned status {}",

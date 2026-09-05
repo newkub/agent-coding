@@ -7,6 +7,7 @@
 pub(crate) mod audit;
 pub(crate) mod automation;
 pub(crate) mod collaboration;
+pub(crate) mod database;
 pub(crate) mod guardrail;
 pub(crate) mod headless;
 pub(crate) mod macros;

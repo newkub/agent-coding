@@ -4,6 +4,7 @@ mod audit;
 mod automation;
 mod collaboration;
 mod config;
+mod database_cli_tests;
 mod diff;
 mod guardrails;
 mod headless;
