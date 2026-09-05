@@ -21,7 +21,10 @@ Project has:
 - ✅ Clippy clean (0 warnings) with wired session, audit, share, subagent, guardrail, and performance CLI features
 - ✅ SQLite persistence layer with migrations for session, audit, collaboration, macro, headless, share, performance, automation, subagent, guardrail, notes, and snippets
 - ✅ Production repositories (SqliteSessionRepository, SqliteAuditRepository, SqliteCollaborationRepository, SqliteMacroRepository, SqliteHeadlessSessionManager, SqliteSnapshotManager, SqliteOptimizationManager, SqliteAutomationWorkflowRepository, SqliteSubagentManager, SqliteGuardrailManager, SqliteUiContentRepository)
-- ✅ Environment validation (OPENAI_API_KEY, GITHUB_TOKEN, share-link URL/webhook configuration) with tracing/observability
+- ✅ Environment validation (OPENAI_API_KEY, GITHUB_TOKEN, share-link URL/webhook configuration, AGENT_TUI_DB_PATH) with tracing/observability
+- ✅ SQLite backup/restore/verify CLI via `database` subcommands using online `VACUUM INTO` and `PRAGMA integrity_check`
+- ✅ Bounded exponential HTTP retries with backoff for GitHub and share webhook requests
+- ✅ End-to-end CLI test coverage for database backup/restore lifecycle
 
 ## Workflows
 
