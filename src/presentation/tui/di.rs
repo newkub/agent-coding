@@ -10,7 +10,8 @@ use crate::adapters::external::{
     dependency_parser::DefaultDependencyParser, file_scanner::DefaultFileScanner,
     git_operations::Git2Adapter, github_client::ReqwestGitHubClient,
     headless_command_executor::DefaultHeadlessCommandExecutor,
-    headless_session_manager::InMemorySessionManager,
+    headless_session_manager::InMemorySessionManager, metrics_collector::SystemMetricsCollector,
+    subagent_manager::InMemorySubagentManager,
 };
 use crate::adapters::input::crossterm_handler::CrosstermInputHandler;
 use crate::adapters::ui::ratatui_adapter::RatatuiAdapter;
@@ -45,6 +46,10 @@ pub(crate) struct DIContainer {
     // External services
     git_adapter: Option<Git2Adapter>,
     github_client: Option<ReqwestGitHubClient>,
+    file_scanner: Option<DefaultFileScanner>,
+    dependency_parser: Option<DefaultDependencyParser>,
+    metrics_collector: Option<SystemMetricsCollector>,
+    subagent_manager: Option<InMemorySubagentManager>,
 
     // UI adapters
     input_handler: Option<CrosstermInputHandler>,
@@ -67,6 +72,10 @@ impl DIContainer {
             share_repo: None,
             git_adapter: None,
             github_client: None,
+            file_scanner: None,
+            dependency_parser: None,
+            metrics_collector: None,
+            subagent_manager: None,
             input_handler: None,
             renderer: None,
             analyze_codebase: None,
@@ -89,7 +98,17 @@ impl DIContainer {
         // Create use cases (fast operations)
         let file_scanner = DefaultFileScanner::new();
         let dependency_parser = DefaultDependencyParser::new();
-        let analyze_codebase = AnalyzeCodebaseUseCase::new(file_scanner, dependency_parser);
+        let analyze_codebase =
+            AnalyzeCodebaseUseCase::new(DefaultFileScanner::new(), DefaultDependencyParser::new());
+
+        // System metrics collector (sysinfo-backed)
+        let metrics_collector = SystemMetricsCollector::new();
+
+        // Subagent manager seeded with the built-in agent roster
+        let subagent_manager = InMemorySubagentManager::new();
+        if let Err(e) = subagent_manager.initialize_default_subagents().await {
+            tracing::warn!("failed to seed default subagents: {e}");
+        }
 
         let execute_automation =
             ExecuteAutomationUseCase::new(git_adapter.clone(), github_client.clone());
@@ -106,6 +125,10 @@ impl DIContainer {
         // Wire dependencies (skip DB connection - defer to when needed)
         self.git_adapter = Some(git_adapter);
         self.github_client = Some(github_client);
+        self.file_scanner = Some(file_scanner);
+        self.dependency_parser = Some(dependency_parser);
+        self.metrics_collector = Some(metrics_collector);
+        self.subagent_manager = Some(subagent_manager);
         self.input_handler = Some(input_handler);
         self.renderer = Some(renderer);
         self.analyze_codebase = Some(analyze_codebase);
@@ -171,6 +194,26 @@ impl DIContainer {
     /// Get GitHub client
     pub(crate) const fn github_client(&self) -> Option<&ReqwestGitHubClient> {
         self.github_client.as_ref()
+    }
+
+    /// Get file scanner
+    pub(crate) const fn file_scanner(&self) -> Option<&DefaultFileScanner> {
+        self.file_scanner.as_ref()
+    }
+
+    /// Get dependency parser
+    pub(crate) const fn dependency_parser(&self) -> Option<&DefaultDependencyParser> {
+        self.dependency_parser.as_ref()
+    }
+
+    /// Get system metrics collector
+    pub(crate) const fn metrics_collector(&self) -> Option<&SystemMetricsCollector> {
+        self.metrics_collector.as_ref()
+    }
+
+    /// Get subagent manager
+    pub(crate) const fn subagent_manager(&self) -> Option<&InMemorySubagentManager> {
+        self.subagent_manager.as_ref()
     }
 
     /// Get input handler

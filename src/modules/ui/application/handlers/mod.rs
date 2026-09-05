@@ -21,9 +21,14 @@ mod tasks_handler;
 mod terminal_handler;
 
 pub use agent_handler::handle_agent_action;
+pub(crate) use cli_handler::handle_cli_action;
 pub(crate) use files_handler::handle_files_action;
 pub(crate) use git_handler::handle_git_action;
+pub(crate) use settings_handler::handle_settings_action;
+pub(crate) use skills_handler::handle_skills_action;
+pub(crate) use snippet_handler::handle_snippet_action;
 pub use tab_action_types::TabAction;
+pub(crate) use workflows_handler::handle_workflows_action;
 
 // New tab handler exports
 pub(crate) use api_handler::handle_api_action;

@@ -3,7 +3,7 @@ use crate::modules::ui::domain::models::AppState;
 use crate::shared::kernel::result::AppResult;
 
 /// CLI tab action handler
-pub(super) fn handle_cli_action(state: &mut AppState, action: TabAction) -> AppResult<()> {
+pub(crate) fn handle_cli_action(state: &mut AppState, action: TabAction) -> AppResult<()> {
     match action {
         TabAction::RunCommand(cmd) => {
             state.cli_tab_state.command_input = cmd;
@@ -11,6 +11,8 @@ pub(super) fn handle_cli_action(state: &mut AppState, action: TabAction) -> AppR
         }
         TabAction::ClearOutput => {
             state.cli_tab_state.command_input.clear();
+            state.cli_tab_state.output.clear();
+            state.cli_tab_state.history.clear();
         }
         _ => {}
     }

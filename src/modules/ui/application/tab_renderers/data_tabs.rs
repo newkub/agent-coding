@@ -26,34 +26,51 @@ pub(crate) fn render_api_tab(state: &AppState) -> TabColumns {
     TabColumns::new(left, center, right)
 }
 
-/// Render Database tab columns — uses database-app for data
+/// Render Database tab columns — backed by `database_tab_state`
+/// (tables queried from the real SQLite database)
 pub(crate) fn render_database_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.database_tab_state;
-    let db_uc = database_tui::DatabaseUseCase::new(
-        database_tui::ConnectionConfig {
-            url: String::new(),
-            database: String::new(),
-        },
-        Box::new(database_tui::SqliteDbPort::new()),
-    );
 
-    let left = format!(
-        "Tables: {}\nSelected: {}",
-        db_uc.tables().len(),
-        tab_state.selected_table_index,
-    );
+    let left = {
+        let tables: Vec<String> = tab_state
+            .tables
+            .iter()
+            .enumerate()
+            .map(|(i, t)| {
+                let marker = if i == tab_state.selected_table_index {
+                    ">"
+                } else {
+                    " "
+                };
+                format!("{marker} {t}")
+            })
+            .collect();
+        if tables.is_empty() {
+            "(no tables)".to_string()
+        } else {
+            tables.join("\n")
+        }
+    };
 
     let center = if tab_state.query_input.is_empty() {
-        "Query:\n  (type a query)".to_string()
+        "Query:\n  (type a query, Enter runs it)".to_string()
     } else {
         format!("Query:\n{}", tab_state.query_input)
     };
 
-    let result = db_uc.formatted_result();
-    let right = if result.is_empty() {
-        "No result".to_string()
+    let right = if tab_state.results.is_empty() {
+        "Results:\n  (none — Enter on a table previews rows)".to_string()
     } else {
-        result
+        format!(
+            "Results:\n{}",
+            tab_state
+                .results
+                .iter()
+                .take(30)
+                .cloned()
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
     };
 
     TabColumns::new(left, center, right)
@@ -122,17 +139,47 @@ pub(crate) fn render_tasks_tab(state: &AppState) -> TabColumns {
     TabColumns::new(left, center, right)
 }
 
-/// Render Notes tab columns
+/// Render Notes tab columns — backed by `notes_tab_state`
 pub(crate) fn render_notes_tab(state: &AppState) -> TabColumns {
     let tab_state = &state.notes_tab_state;
 
-    let left = format!("Selected note: {}", tab_state.selected_note_index);
-    let center = if tab_state.is_editing {
-        "Editing note…".to_string()
-    } else {
-        "No note selected".to_string()
+    let left = {
+        let notes: Vec<String> = tab_state
+            .notes
+            .iter()
+            .enumerate()
+            .map(|(i, n)| {
+                let marker = if i == tab_state.selected_note_index {
+                    ">"
+                } else {
+                    " "
+                };
+                format!("{marker} {}", n.title)
+            })
+            .collect();
+        if notes.is_empty() {
+            "(no notes)".to_string()
+        } else {
+            notes.join("\n")
+        }
     };
-    let right = "Tags: -".to_string();
+
+    let center = match tab_state.notes.get(tab_state.selected_note_index) {
+        Some(note) => {
+            if tab_state.is_editing {
+                format!("Editing: {}\n\n{}", note.title, note.content)
+            } else {
+                format!("{}\n\n{}", note.title, note.content)
+            }
+        }
+        None => "No note selected".to_string(),
+    };
+
+    let right = format!(
+        "Notes: {}\nEditing: {}\n\n[Enter] Toggle edit",
+        tab_state.notes.len(),
+        tab_state.is_editing,
+    );
 
     TabColumns::new(left, center, right)
 }

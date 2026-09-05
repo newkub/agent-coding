@@ -24,6 +24,34 @@ impl Default for DefaultFileScanner {
     }
 }
 
+impl DefaultFileScanner {
+    /// List the direct children of a directory (shallow, no recursive walk).
+    ///
+    /// Directories are suffixed with `/` so callers can distinguish them from
+    /// files. Entries are sorted alphabetically with directories first.
+    pub(crate) async fn list_entries(&self, path: &Path) -> Result<Vec<String>, AppError> {
+        let mut dirs = Vec::new();
+        let mut files = Vec::new();
+
+        let mut entries = fs::read_dir(path).await?;
+        while let Some(entry) = entries.next_entry().await? {
+            let Some(name) = entry.file_name().to_str().map(str::to_string) else {
+                continue;
+            };
+            if entry.path().is_dir() {
+                dirs.push(format!("{name}/"));
+            } else {
+                files.push(name);
+            }
+        }
+
+        dirs.sort();
+        files.sort();
+        dirs.extend(files);
+        Ok(dirs)
+    }
+}
+
 #[async_trait]
 impl FileScanner for DefaultFileScanner {
     async fn scan_directory(&self, path: &Path) -> Result<ProjectStructure, AppError> {

@@ -21,6 +21,8 @@ pub(crate) fn handle_terminal_action(state: &mut AppState, action: TabAction) ->
         }
         TabAction::Clear => {
             state.terminal_tab_state.terminal_input.clear();
+            state.terminal_tab_state.output.clear();
+            state.terminal_tab_state.history.clear();
             uc.clear_history();
         }
         _ => {}

@@ -17,6 +17,12 @@ impl SqliteShareLinkRepository {
         Self { pool }
     }
 
+    /// Access the underlying SQLite pool (used by the Database tab for
+    /// ad-hoc queries and table listing).
+    pub(crate) const fn pool(&self) -> &SqlitePool {
+        &self.pool
+    }
+
     /// Initialize the share_links table
     pub(crate) async fn init_table(&self) -> Result<(), AppError> {
         sqlx::query(
