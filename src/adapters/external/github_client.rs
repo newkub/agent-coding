@@ -6,6 +6,7 @@ use crate::adapters::external::github_parser::{parse_issue_from_json, parse_pr_f
 use crate::adapters::external::http_retry::send_with_retry;
 use crate::modules::automation::domain::models::issue_pr::{Issue, PullRequest};
 use crate::modules::automation::ports::GitHubClient;
+use crate::shared::kernel::rate_limiter::RateLimiter;
 use crate::shared::kernel::result::AppError;
 
 /// GitHub API client using reqwest
@@ -14,6 +15,7 @@ pub(crate) struct ReqwestGitHubClient {
     client: Client,
     token: String,
     base_url: String,
+    rate_limiter: RateLimiter,
 }
 
 impl ReqwestGitHubClient {
@@ -22,6 +24,7 @@ impl ReqwestGitHubClient {
             client: Client::new(),
             token,
             base_url: "https://api.github.com".to_string(),
+            rate_limiter: RateLimiter::new(1.5, 5.0),
         }
     }
 
@@ -34,6 +37,7 @@ impl ReqwestGitHubClient {
 #[async_trait]
 impl GitHubClient for ReqwestGitHubClient {
     async fn get_issue(&self, repository: &str, number: u32) -> Result<Issue, AppError> {
+        self.rate_limiter.acquire().await;
         let url = format!("{}/repos/{}/issues/{}", self.base_url, repository, number);
 
         let response = send_with_retry(|| {
@@ -68,6 +72,7 @@ impl GitHubClient for ReqwestGitHubClient {
         source_branch: &str,
         target_branch: &str,
     ) -> Result<PullRequest, AppError> {
+        self.rate_limiter.acquire().await;
         let url = format!("{}/repos/{}/pulls", self.base_url, repository);
 
         let payload = serde_json::json!({
@@ -108,6 +113,7 @@ impl GitHubClient for ReqwestGitHubClient {
         number: u32,
         pr: &PullRequest,
     ) -> Result<PullRequest, AppError> {
+        self.rate_limiter.acquire().await;
         let url = format!("{}/repos/{}/pulls/{}", self.base_url, repository, number);
 
         let payload = serde_json::json!({
@@ -146,6 +152,7 @@ impl GitHubClient for ReqwestGitHubClient {
         issue_number: u32,
         labels: Vec<String>,
     ) -> Result<(), AppError> {
+        self.rate_limiter.acquire().await;
         let url = format!(
             "{}/repos/{}/issues/{}/labels",
             self.base_url, repository, issue_number
@@ -177,6 +184,7 @@ impl GitHubClient for ReqwestGitHubClient {
         pr_number: u32,
         reviewers: Vec<String>,
     ) -> Result<(), AppError> {
+        self.rate_limiter.acquire().await;
         let url = format!(
             "{}/repos/{}/pulls/{}/requested_reviewers",
             self.base_url, repository, pr_number
@@ -203,6 +211,7 @@ impl GitHubClient for ReqwestGitHubClient {
     }
 
     async fn get_default_branch(&self, repository: &str) -> Result<String, AppError> {
+        self.rate_limiter.acquire().await;
         let url = format!("{}/repos/{}", self.base_url, repository);
 
         let response = send_with_retry(|| {

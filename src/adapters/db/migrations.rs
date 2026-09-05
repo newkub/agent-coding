@@ -203,6 +203,37 @@ const MIGRATIONS: &[(&str, &str)] = &[
         );
         "#,
     ),
+    (
+        "0011_indexes",
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_sessions_name
+            ON sessions (name);
+        CREATE INDEX IF NOT EXISTS idx_sessions_created_at
+            ON sessions (created_at);
+        CREATE INDEX IF NOT EXISTS idx_macros_name
+            ON macros (name);
+        CREATE INDEX IF NOT EXISTS idx_headless_sessions_created_at
+            ON headless_sessions (created_at);
+        CREATE INDEX IF NOT EXISTS idx_headless_sessions_last_accessed
+            ON headless_sessions (last_accessed);
+        CREATE INDEX IF NOT EXISTS idx_share_links_session_id
+            ON share_links (session_id);
+        CREATE INDEX IF NOT EXISTS idx_share_links_token
+            ON share_links (token);
+        CREATE INDEX IF NOT EXISTS idx_shared_sessions_name
+            ON shared_sessions (name);
+        CREATE INDEX IF NOT EXISTS idx_subagents_name
+            ON subagents (name);
+        CREATE INDEX IF NOT EXISTS idx_guardrails_name
+            ON guardrails (name);
+        CREATE INDEX IF NOT EXISTS idx_guardrails_enabled
+            ON guardrails (enabled);
+        CREATE INDEX IF NOT EXISTS idx_ui_notes_created_at
+            ON ui_notes (created_at);
+        CREATE INDEX IF NOT EXISTS idx_ui_snippets_created_at
+            ON ui_snippets (created_at);
+        "#,
+    ),
 ];
 
 /// Run all embedded migrations against the pool. Idempotent.

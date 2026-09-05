@@ -19,6 +19,7 @@ use tokio::sync::RwLock;
 
 use crate::modules::subagents::domain::models::subagent::{SubagentTask, TaskStatus};
 use crate::modules::subagents::ports::SubagentTaskExecutor;
+use crate::shared::kernel::rate_limiter::RateLimiter;
 use crate::shared::kernel::result::AppError;
 
 /// Production subagent task executor backed by the OpenAI Chat Completions API.
@@ -32,6 +33,7 @@ use crate::shared::kernel::result::AppError;
 pub(crate) struct DefaultSubagentTaskExecutor {
     tasks: Arc<RwLock<HashMap<String, SubagentTask>>>,
     client: Arc<RwLock<Option<Client<OpenAIConfig>>>>,
+    rate_limiter: RateLimiter,
 }
 
 impl DefaultSubagentTaskExecutor {
@@ -39,6 +41,7 @@ impl DefaultSubagentTaskExecutor {
         Self {
             tasks: Arc::new(RwLock::new(HashMap::new())),
             client: Arc::new(RwLock::new(None)),
+            rate_limiter: RateLimiter::new(10.0, 10.0),
         }
     }
 
@@ -102,6 +105,8 @@ impl DefaultSubagentTaskExecutor {
             correlation_id = %correlation_id,
             task_id = %task.id
         );
+
+        self.rate_limiter.acquire().await;
 
         let mut delay = std::time::Duration::from_millis(500);
         let mut last_error = None;
@@ -275,6 +280,7 @@ impl Clone for DefaultSubagentTaskExecutor {
         Self {
             tasks: Arc::clone(&self.tasks),
             client: Arc::clone(&self.client),
+            rate_limiter: self.rate_limiter.clone(),
         }
     }
 }
