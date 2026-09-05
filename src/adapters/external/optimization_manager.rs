@@ -97,8 +97,11 @@ mod tests {
     #[tokio::test]
     async fn test_list_suggestions() {
         let manager = InMemoryOptimizationManager::new();
-        let metrics =
+        let mut metrics =
             crate::modules::performance::domain::models::metrics::PerformanceMetrics::new();
+        // A real low-throughput measurement triggers a suggestion; unmeasured
+        // (None) application metrics generate none.
+        metrics.throughput = Some(1.0);
         manager.generate_suggestions(&metrics).await.unwrap();
 
         let suggestions = manager.list_suggestions().await.unwrap();

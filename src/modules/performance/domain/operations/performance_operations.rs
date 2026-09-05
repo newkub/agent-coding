@@ -31,8 +31,8 @@ pub fn analyze_performance(metrics: &PerformanceMetrics) -> Vec<OptimizationSugg
         ));
     }
 
-    // Response time analysis
-    if metrics.response_time_ms > 1000 {
+    // Response time analysis (only when a probe reported a real value)
+    if metrics.response_time_ms.is_some_and(|ms| ms > 1000) {
         suggestions.push(OptimizationSuggestion::new(
             OptimizationCategory::Caching,
             "Improve response time".to_string(),
@@ -44,7 +44,7 @@ pub fn analyze_performance(metrics: &PerformanceMetrics) -> Vec<OptimizationSugg
     }
 
     // Error rate analysis
-    if metrics.error_rate > 0.05 {
+    if metrics.error_rate.is_some_and(|rate| rate > 0.05) {
         suggestions.push(OptimizationSuggestion::new(
             OptimizationCategory::AlgorithmImprovement,
             "Reduce error rate".to_string(),
@@ -56,7 +56,7 @@ pub fn analyze_performance(metrics: &PerformanceMetrics) -> Vec<OptimizationSugg
     }
 
     // Throughput analysis
-    if metrics.throughput < 10.0 {
+    if metrics.throughput.is_some_and(|t| t < 10.0) {
         suggestions.push(OptimizationSuggestion::new(
             OptimizationCategory::AsyncOperations,
             "Increase throughput".to_string(),
@@ -88,23 +88,31 @@ pub fn calculate_performance_score(metrics: &PerformanceMetrics) -> f64 {
         0.3
     };
 
-    let response_score = if metrics.response_time_ms < 500 {
-        1.0
-    } else if metrics.response_time_ms < 1000 {
-        0.7
-    } else {
-        0.3
-    };
+    // Sub-scores for application-level metrics are only included when a real
+    // measurement exists; unmeasured metrics are not treated as zero.
+    let mut scores = vec![cpu_score, memory_score];
 
-    let error_score = if metrics.error_rate < 0.01 {
-        1.0
-    } else if metrics.error_rate < 0.05 {
-        0.7
-    } else {
-        0.3
-    };
+    if let Some(response_time_ms) = metrics.response_time_ms {
+        scores.push(if response_time_ms < 500 {
+            1.0
+        } else if response_time_ms < 1000 {
+            0.7
+        } else {
+            0.3
+        });
+    }
 
-    (cpu_score + memory_score + response_score + error_score) / 4.0
+    if let Some(error_rate) = metrics.error_rate {
+        scores.push(if error_rate < 0.01 {
+            1.0
+        } else if error_rate < 0.05 {
+            0.7
+        } else {
+            0.3
+        });
+    }
+
+    scores.iter().sum::<f64>() / scores.len() as f64
 }
 
 /// Pure function to sort suggestions by priority
@@ -136,8 +144,8 @@ mod tests {
         metrics.cpu_usage = 30.0;
         metrics.memory_usage = 300;
         metrics.memory_total = 1000;
-        metrics.response_time_ms = 300;
-        metrics.error_rate = 0.01;
+        metrics.response_time_ms = Some(300);
+        metrics.error_rate = Some(0.01);
 
         let score = calculate_performance_score(&metrics);
         assert!(score > 0.8);

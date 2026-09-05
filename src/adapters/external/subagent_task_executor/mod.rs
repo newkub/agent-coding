@@ -96,11 +96,10 @@ impl DefaultSubagentTaskExecutor {
             .build()
             .map_err(|e| AppError::State(format!("openai request build error: {e}")))?;
 
-        let response = client
-            .chat()
-            .create(request)
-            .await
-            .map_err(|e| AppError::State(format!("openai chat completion error: {e}")))?;
+        let response = client.chat().create(request).await.map_err(|e| {
+            tracing::error!(task_id = %task.id, error = %e, "openai chat completion failed");
+            AppError::State(format!("openai chat completion error: {e}"))
+        })?;
 
         let content = response
             .choices

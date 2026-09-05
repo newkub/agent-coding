@@ -44,7 +44,8 @@ fn build_action(category: &str, message: &str) -> AuditAction {
 async fn log_audit_entry(message: String, category: String) -> AppResult<()> {
     output::print_section(&format!("Audit log: [{}] {}", category, message));
 
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let repo = container
         .audit_repo()
         .ok_or_else(|| AppError::State("Audit repository not available".to_string()))?;
@@ -69,7 +70,8 @@ async fn log_audit_entry(message: String, category: String) -> AppResult<()> {
 async fn query_audit_entries(from: Option<String>, level: Option<String>) -> AppResult<()> {
     output::print_section("Audit log query");
 
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
     let repo = container
         .audit_repo()
         .ok_or_else(|| AppError::State("Audit repository not available".to_string()))?;

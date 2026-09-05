@@ -122,9 +122,21 @@ pub(crate) fn print_performance_analysis(result: &PerformanceAnalysisResult) {
         m.memory_total / (1024 * 1024),
         m.memory_usage_percentage()
     );
-    println!("  Response Time: {}ms", m.response_time_ms);
-    println!("  Throughput: {:.1} req/s", m.throughput);
-    println!("  Error Rate: {:.2}%", m.error_rate * 100.0);
+    println!(
+        "  Response Time: {}",
+        m.response_time_ms
+            .map_or_else(|| "n/a".to_string(), |ms| format!("{ms}ms"))
+    );
+    println!(
+        "  Throughput: {}",
+        m.throughput
+            .map_or_else(|| "n/a".to_string(), |t| format!("{t:.1} req/s"))
+    );
+    println!(
+        "  Error Rate: {}",
+        m.error_rate
+            .map_or_else(|| "n/a".to_string(), |e| format!("{:.2}%", e * 100.0))
+    );
     println!("  Score: {:.1}/100", result.score);
     println!("  Healthy: {}", result.is_healthy);
 }

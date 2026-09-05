@@ -7,7 +7,8 @@ use crate::presentation::tui::di::DIContainer;
 use crate::shared::kernel::result::{AppError, AppResult};
 
 pub(crate) async fn run(command: HeadlessCommands) -> AppResult<()> {
-    let container = DIContainer::new().build().await?;
+    let mut container = DIContainer::new().build().await?;
+    container.init_db().await?;
 
     let use_case = container
         .execute_headless_use_case()

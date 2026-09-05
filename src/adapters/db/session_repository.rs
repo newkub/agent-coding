@@ -1,65 +1,110 @@
 use async_trait::async_trait;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use sqlx::{Row, SqlitePool};
 
+use crate::adapters::db::db_err;
 use crate::modules::session::domain::models::{Session, SessionId};
 use crate::modules::session::ports::SessionRepository;
-use crate::shared::kernel::result::AppResult;
+use crate::shared::kernel::result::{AppError, AppResult};
 
-/// In-memory session repository for fast startup and CLI wiring.
-pub(crate) struct InMemorySessionRepository {
-    sessions: Arc<RwLock<HashMap<SessionId, Session>>>,
+/// SQLite-backed session repository.
+///
+/// The full `Session` (messages, metadata, tags, ...) is stored as a JSON blob
+/// in `data` so it round-trips losslessly; `name`, `model`, `created_at` and
+/// `updated_at` are kept as derived columns for filtering and ordering.
+pub(crate) struct SqliteSessionRepository {
+    pool: SqlitePool,
 }
 
-impl InMemorySessionRepository {
-    pub(crate) fn new() -> Self {
-        Self {
-            sessions: Arc::new(RwLock::new(HashMap::new())),
-        }
+impl SqliteSessionRepository {
+    pub(crate) const fn new(pool: SqlitePool) -> Self {
+        Self { pool }
     }
-}
 
-impl Default for InMemorySessionRepository {
-    fn default() -> Self {
-        Self::new()
+    fn row_to_session(row: &sqlx::sqlite::SqliteRow) -> AppResult<Session> {
+        let data: String = row.get("data");
+        serde_json::from_str::<Session>(&data)
+            .map_err(|e| AppError::Database(format!("failed to decode session row: {e}")))
     }
 }
 
 #[async_trait]
-impl SessionRepository for InMemorySessionRepository {
+impl SessionRepository for SqliteSessionRepository {
     async fn save(&self, session: &Session) -> AppResult<()> {
-        let mut sessions = self.sessions.write().await;
-        sessions.insert(session.id.clone(), session.clone());
+        let data = serde_json::to_string(session)
+            .map_err(|e| AppError::Database(format!("failed to encode session: {e}")))?;
+
+        sqlx::query(
+            r#"
+            INSERT INTO sessions (id, name, model, created_at, updated_at, data)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                name = excluded.name,
+                model = excluded.model,
+                updated_at = excluded.updated_at,
+                data = excluded.data
+            "#,
+        )
+        .bind(session.id.as_str())
+        .bind(&session.name)
+        .bind(&session.metadata.model)
+        .bind(session.created_at.to_rfc3339())
+        .bind(session.updated_at.to_rfc3339())
+        .bind(&data)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| db_err("sessions.save", e))?;
+
         Ok(())
     }
 
     async fn find_by_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
-        let sessions = self.sessions.read().await;
-        Ok(sessions.get(id).cloned())
+        let row = sqlx::query("SELECT data FROM sessions WHERE id = ?")
+            .bind(id.as_str())
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| db_err("sessions.find_by_id", e))?;
+
+        row.as_ref().map(Self::row_to_session).transpose()
     }
 
     async fn find_all(&self) -> AppResult<Vec<Session>> {
-        let sessions = self.sessions.read().await;
-        Ok(sessions.values().cloned().collect())
+        let rows = sqlx::query("SELECT data FROM sessions ORDER BY updated_at DESC")
+            .fetch_all(&self.pool)
+            .await
+            .map_err(|e| db_err("sessions.find_all", e))?;
+
+        rows.iter().map(Self::row_to_session).collect()
     }
 
     async fn delete(&self, id: &SessionId) -> AppResult<()> {
-        let mut sessions = self.sessions.write().await;
-        sessions.remove(id);
+        sqlx::query("DELETE FROM sessions WHERE id = ?")
+            .bind(id.as_str())
+            .execute(&self.pool)
+            .await
+            .map_err(|e| db_err("sessions.delete", e))?;
         Ok(())
     }
 
     async fn find_by_name(&self, name: &str) -> AppResult<Option<Session>> {
-        let sessions = self.sessions.read().await;
-        Ok(sessions.values().find(|s| s.name == name).cloned())
+        let row = sqlx::query("SELECT data FROM sessions WHERE name = ? LIMIT 1")
+            .bind(name)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| db_err("sessions.find_by_name", e))?;
+
+        row.as_ref().map(Self::row_to_session).transpose()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::adapters::db::test_pool;
     use chrono::Utc;
+
+    async fn repo() -> SqliteSessionRepository {
+        SqliteSessionRepository::new(test_pool().await)
+    }
 
     fn sample(name: &str) -> Session {
         Session::create(
@@ -72,7 +117,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_save_and_find_by_id() {
-        let repo = InMemorySessionRepository::new();
+        let repo = repo().await;
         let session = sample("test");
         repo.save(&session).await.unwrap();
 
@@ -83,7 +128,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_by_name() {
-        let repo = InMemorySessionRepository::new();
+        let repo = repo().await;
         let session = sample("named");
         repo.save(&session).await.unwrap();
 
@@ -93,7 +138,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_find_all_and_delete() {
-        let repo = InMemorySessionRepository::new();
+        let repo = repo().await;
         let a = sample("a");
         let b = sample("b");
         repo.save(&a).await.unwrap();
@@ -105,5 +150,24 @@ mod tests {
         repo.delete(&a.id).await.unwrap();
         let all = repo.find_all().await.unwrap();
         assert_eq!(all.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_save_upsert_updates_messages() {
+        let repo = repo().await;
+        let mut session = sample("chat");
+        repo.save(&session).await.unwrap();
+
+        session.add_message(crate::modules::session::domain::models::Message::create(
+            "m1".to_string(),
+            crate::modules::session::domain::models::MessageRole::User,
+            "hello".to_string(),
+            Utc::now(),
+        ));
+        repo.save(&session).await.unwrap();
+
+        let found = repo.find_by_id(&session.id).await.unwrap().unwrap();
+        assert_eq!(found.message_count(), 1);
+        assert_eq!(repo.find_all().await.unwrap().len(), 1);
     }
 }
